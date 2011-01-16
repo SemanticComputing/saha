@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE project>
+<configuration debug="false">
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"> 
+      <pattern>%5level %date{HH:mm:ss.SSS} %logger - %m%n</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>DENY</onMatch>
+      <onMismatch>NEUTRAL</onMismatch>
+    </filter>
+  </appender>
+  <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+    <param name="target" value="System.err"/>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>ERROR</level>
+    </filter>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder"> 
+      <pattern>%5level %date{HH:mm:ss.SSS} %class.%method\(%file:%line\) - %m%n</pattern>
+    </encoder> 
+  </appender>
+  
+  <logger name="fi.seco" level="TRACE"/>
+
+  <logger name="programs" level="TRACE"/>
+
+  <logger name="org.directwebremoting" level="INFO"/>
+
+  <logger name="com.hp.hpl.jena.sdb.engine.QueryEngineSDB" level="ERROR"/>
+
+  <logger name="org.springframework.beans.factory" level="WARN"/>
+  
+  <logger name="org.directwebremoting.util.LocalUtil" level="ERROR"/>
+
+<!--  <logger name="org.springframework.web.servlet.DispatcherServlet" level="DEBUG"/> --> 
+
+  <root>
+    <level value="INFO" /> 
+    <appender-ref ref="STDOUT" /> 
+    <appender-ref ref="STDERR" /> 
+  </root>
+  
+</configuration>

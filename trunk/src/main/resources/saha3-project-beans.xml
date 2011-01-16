@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+  xsi:schemaLocation="
+  	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-2.0.xsd" 
+  default-lazy-init="true" 
+  default-autowire="byType" 
+  default-dependency-check="none">
+
+	<description>SAHA3 project specific beans</description>
+	
+	<bean id="caching" class="java.lang.Boolean">
+		<constructor-arg value="false"/>
+	</bean>
+	
+	<bean id="model" class="com.hp.hpl.jena.tdb.TDBFactory" factory-method="createModel" destroy-method="close">
+		<constructor-arg ref="projectPath"/>
+	</bean>
+	
+	<bean id="onkiWebService" class="fi.seco.saha3.infrastructure.OnkiWebService">
+		<property name="accessKey"><value>51d3cdaa81331c9117d77f443a2c5404</value></property>
+	</bean>
+		
+	<bean id="config" class="fi.seco.saha3.model.configuration.ConfigService">
+		<constructor-arg ref="projectPath"/>
+	</bean>
+	
+	<bean id="index" class="fi.seco.saha3.index.ResourceIndex" destroy-method="close">
+		<constructor-arg ref="model"/>
+		<constructor-arg ref="projectPath"/>
+		<constructor-arg value="false"/><!-- use RAM-based index -->
+	</bean>
+	
+	<bean id="searcher" class="fi.seco.saha3.index.ResourceIndexSearcher">
+		<constructor-arg ref="index"/>
+	</bean>
+	
+	<bean id="rangeCache" class="fi.seco.saha3.index.PropertyRangeCache" 
+	p:caching-ref="caching"/>
+	<bean id="categoryBuilder" class="fi.seco.saha3.index.category.CategoryBuilder"
+	p:caching-ref="caching"/>
+	<bean id="treeBuilder" class="fi.seco.saha3.factory.TreeBuilder" />
+	<bean id="modelEditor" class="fi.seco.saha3.model.ModelEditor" />
+	<bean id="referenceTracker" class="fi.seco.saha3.factory.ReferenceTracker" />	
+	<bean id="uiCategoryBuilder" class="fi.seco.saha3.index.category.UICategoryBuilder"/>
+	<bean id="resourceFactory" class="fi.seco.saha3.factory.ResourceFactory" />
+	<bean id="propertyFactory" class="fi.seco.saha3.factory.PropertyFactory" />
+	
+	<bean id="project" class="fi.seco.saha3.model.SahaProject"/>
+	
+</beans>
