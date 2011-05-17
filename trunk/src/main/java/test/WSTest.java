@@ -4,9 +4,6 @@ import java.net.URL;
 import java.util.concurrent.Executors;
 
 import javax.xml.namespace.QName;
-import javax.xml.ws.BindingProvider;
-
-import com.sun.xml.internal.ws.developer.JAXWSProperties;
 
 import fi.helsinki.cs.seco.onki.service.ArrayOfString;
 import fi.helsinki.cs.seco.onki.service.IOnkiQuery;
@@ -14,7 +11,6 @@ import fi.helsinki.cs.seco.onki.service.IOnkiQueryPortType;
 import fi.helsinki.cs.seco.onki.service.OnkiQueryResult;
 import fi.helsinki.cs.seco.onki.service.OnkiQueryResults;
 
-@SuppressWarnings("restriction")
 public class WSTest {
 
     public static void main(String[] args) throws Exception {
@@ -26,7 +22,7 @@ public class WSTest {
 		oq.setExecutor(Executors.newCachedThreadPool());
 		
 		IOnkiQueryPortType pt = oq.getOnkiQuery();
-		((BindingProvider)pt).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT,10000);
+//		((BindingProvider)pt).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT,10000);
 
 		System.out.println("...");
 		

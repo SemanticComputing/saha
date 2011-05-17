@@ -1,21 +1,17 @@
 package test;
 
 import java.util.Locale;
-
-import com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe;
-
 import fi.seco.saha3.infrastructure.OnkiWebService;
 import fi.seco.saha3.infrastructure.OnkiWebService.OnkiRepository;
 import fi.seco.saha3.model.ISahaProperty;
 
-@SuppressWarnings("restriction")
 public class ONKIWSTest {
 
 	public static void main(String[] args) {
 		OnkiWebService onki = new OnkiWebService();
 		onki.setAccessKey("51d3cdaa81331c9117d77f443a2c5404");
 		
-		HttpTransportPipe.dump=true;
+//		HttpTransportPipe.dump=true;
 		
 		OnkiRepository repository = onki.getOnkiRepository("http://demo.seco.tkk.fi/kulsa/remoting/OnkiAutocompletion?wsdl");
 		
