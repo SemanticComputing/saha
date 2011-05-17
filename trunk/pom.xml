@@ -295,6 +295,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		<!--
 		<repository>
 			<id>jBoss</id>
 			<name>jBoss Released Java Packages</name>
@@ -304,6 +305,7 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
+		-->
 		<repository>
 			<id>dojo</id>
 			<name>Dojo Maven Repository</name>
