@@ -129,7 +129,7 @@
 	</bean>
 	
 	<bean id="SahaChat" class="fi.seco.saha3.chat.SahaChat"	
-	p:projectBaseDirectory="/l/demo/saha/">
+	p:projectBaseDirectory-ref="ProjectBaseDirectory">
 	<!-- p:projectBaseDirectory="/dump/">  -->
 	
 		<dwr:remote javascript="SahaChat">
@@ -198,18 +198,8 @@
 	p:command-class="fi.seco.saha3.web.control.ImageBean"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 	
-	<!-- 
 	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
-	p:projectBaseDirectory="/dump/saha3/">
-		<dwr:remote javascript="SahaProjectRegistry">
-			<dwr:include method="closeSahaProject" />
-			<dwr:include method="gc" />
-	    </dwr:remote>
-	</bean>
-	-->
-	
-	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
-	p:projectBaseDirectory="/l/demo/saha/">
+	p:projectBaseDirectory-ref="ProjectBaseDirectory">
 		<dwr:remote javascript="SahaProjectRegistry">
 			<dwr:include method="closeSahaProject" />
 			<dwr:include method="gc" />
@@ -218,14 +208,15 @@
 	
 	<bean id="SahaBackupManager" class="fi.seco.saha3.infrastructure.SahaBackupManager"
 	lazy-init="false"
-	p:backupDirectory="/l/demo/saha_backups/general/"
+	p:backupDirectory-ref="BackupDirectory"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 	
+	<!--
 	<bean id="SimpleBackupManager" class="fi.seco.saha3.infrastructure.SimpleBackupManager"
 	lazy-init="false"
 	p:backupDirectory="/l/demo/saha_backups/daily/"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
-	
+	-->
 	
 	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver"
 		p:defaultLocale="fi"/>
