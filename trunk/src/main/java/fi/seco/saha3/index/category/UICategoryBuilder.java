@@ -80,8 +80,9 @@ public class UICategoryBuilder {
 		for (CategoryNode value : values) {
 			UICategoryNode renderableValue = buildUICategory(propertyUri,value,filter,locale,queryMap);
 			renderableValue.setChildren(buildUICategories(propertyUri,value.getChildren(),filter,locale,queryMap,allNodes));
-			if (renderableValue.getRecursiveItemCount() > 0)
+			if (renderableValue.getRecursiveItemCount() > 0)			
 				renderableValues.add(renderableValue);
+			
 			allNodes.put(value.getUri(),renderableValue);
 		}
 		

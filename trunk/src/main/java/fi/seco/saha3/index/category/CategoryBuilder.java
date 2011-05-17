@@ -55,16 +55,22 @@ public class CategoryBuilder {
         
         for (String valueUri : rangeCache.getPropertyRange(propertyUri))
             nodeMap.put(valueUri,new CategoryNode(valueUri));
+        for (String valueUri : rangeCache.getPropertyRange(propertyUri))
+            for (String object : searcher.getAllAncestors(valueUri))
+                nodeMap.put(object, new CategoryNode(object));
         
         rootNodes.addAll(nodeMap.values());
         
         for (CategoryNode node : nodeMap.values())
             for (String object : searcher.getAncestors(node.getUri()))
+            {
+                System.out.println("checking presence of superclass " + object + " in nodes");
                 if (nodeMap.containsKey(object)) {
+                    System.out.println("removing " + node.getUri() + " from root nodes, superclass: " + object);
                     nodeMap.get(object).addChild(node);
                     rootNodes.remove(node);
                 }
-        
+            }
         return rootNodes.toArray(new CategoryNode[rootNodes.size()]);
     }
     

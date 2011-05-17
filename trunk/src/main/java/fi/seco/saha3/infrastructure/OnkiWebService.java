@@ -10,10 +10,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Map.Entry;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
@@ -22,9 +22,6 @@ import javax.xml.ws.BindingProvider;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Required;
-
-import com.sun.xml.internal.ws.developer.JAXWSProperties;
-import com.sun.xml.internal.ws.transport.http.client.HttpTransportPipe;
 
 import fi.helsinki.cs.seco.onki.service.ArrayOfStatement;
 import fi.helsinki.cs.seco.onki.service.ArrayOfString;
@@ -40,13 +37,13 @@ import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.PropertyConfig;
 
-@SuppressWarnings("restriction")
 public class OnkiWebService {
 
 	public class OnkiProperty implements ISahaProperty {
-		private Statement s;
+		private final Statement s;
 		private boolean literal;
 		private String label;
+
 		public OnkiProperty(Statement s) {
 			this.s = s;
 			this.label = getString(s.getLabel());
@@ -55,27 +52,42 @@ public class OnkiWebService {
 				literal = true;
 			}
 		}
+
+		@Override
 		public String getLabel() {
 			return getString(s.getPredicateLabel());
 		}
+
+		@Override
 		public String getUri() {
 			return getString(s.getPredicateUri());
 		}
+
+		@Override
 		public String getValueLabel() {
 			return label;
 		}
+
+		@Override
 		public String getValueLang() {
 			return getString(s.getLabel());
 		}
+
+		@Override
 		public String getValueShaHex() {
 			return DigestUtils.shaHex(getValueLabel());
 		}
+
+		@Override
 		public String getValueUri() {
 			return getString(s.getUri());
 		}
+
+		@Override
 		public String getValueDatatypeUri() {
 			return "";
 		}
+
 		private String getString(JAXBElement<String> e) {
 			if (e != null) {
 				String s = e.getValue();
@@ -83,91 +95,140 @@ public class OnkiWebService {
 			}
 			return "";
 		}
+
+		@Override
 		public boolean isLiteral() {
 			return literal;
 		}
+
+		@Override
 		public int compareTo(ISahaProperty o) {
-			int c = String.CASE_INSENSITIVE_ORDER.compare(getValueLabel(),o.getValueLabel());
+			int c = String.CASE_INSENSITIVE_ORDER.compare(getValueLabel(), o.getValueLabel());
 			return c != 0 ? c : getValueUri().compareTo(o.getValueUri());
 		}
-		public String getValueTypeLabel() { return ""; }
-		public String getValueTypeUri() { return ""; }
-		public String getComment() { return ""; }
-		public PropertyConfig getConfig() {	return new PropertyConfig(); }
-		public Set<String> getRange() {	return Collections.emptySet(); }
-		public List<UriLabel> getRangeUriLabel() { return Collections.emptyList(); }
-		public Set<UITreeNode> getRangeTree() { return Collections.emptySet(); }
+
+		@Override
+		public String getValueTypeLabel() {
+			return "";
+		}
+
+		@Override
+		public String getValueTypeUri() {
+			return "";
+		}
+
+		@Override
+		public String getComment() {
+			return "";
+		}
+
+		@Override
+		public PropertyConfig getConfig() {
+			return new PropertyConfig();
+		}
+
+		@Override
+		public Set<String> getRange() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		public List<UriLabel> getRangeUriLabel() {
+			return Collections.emptyList();
+		}
+
+		@Override
+		public Set<UITreeNode> getRangeTree() {
+			return Collections.emptySet();
+		}
 	}
-	
+
 	public class OnkiResults implements IResults {
-		private Set<IResults.IResult> results = new LinkedHashSet<IResults.IResult>();
-		private int size;
+		private final Set<IResults.IResult> results = new LinkedHashSet<IResults.IResult>();
+		private final int size;
+
 		private OnkiResults(List<OnkiQueryResult> onkiResults, int size) {
 			for (OnkiQueryResult result : onkiResults)
-				results.add(new IResults.Result(
-						result.getUri().getValue(),
-						result.getTitle().getValue(),
-						result.getAltLabel().getValue()));
+				results.add(new IResults.Result(result.getUri().getValue(), result.getTitle().getValue(), result.getAltLabel().getValue()));
 			this.size = size;
 		}
-        
+
+		@Override
 		public int getSize() {
 			return size;
 		}
-        
+
+		@Override
 		public Iterator<IResults.IResult> iterator() {
 			return results.iterator();
 		}
 	}
-	
+
 	public class OnkiRepository implements IRepository {
-		private IOnkiQueryPortType port;
+		private final IOnkiQueryPortType port;
+		private final String ontology;
+
 		private OnkiRepository(String ontology) {
+			this.ontology = ontology;
+
 			URL url = null;
 			try {
-				url = ontology.startsWith("http://") ? new URL(ontology) : 
-					new URL("http://www.yso.fi/onkiwebservice/wsdl/?o=" + ontology + "&k=" + accessKey);
+				url = ontology.startsWith("http://") ? new URL(ontology) : new URL("http://www.yso.fi/onkiwebservice/wsdl/?o=" + ontology + "&k=" + accessKey);
 			} catch (MalformedURLException e) {
-				log.error("",e);
+				log.error("", e);
 			}
-			
-			IOnkiQuery oq = new IOnkiQuery(url,new QName("http://service.onki.seco.cs.helsinki.fi","IOnkiQuery"));
-			
-			port = oq.getOnkiQuery();
-			((BindingProvider)port).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT,5000);
+			IOnkiQueryPortType tport = null;
+			try {
+				IOnkiQuery oq = new IOnkiQuery(url, new QName("http://service.onki.seco.cs.helsinki.fi", "IOnkiQuery"));
+				tport = oq.getOnkiQuery();
+				((BindingProvider) tport).getRequestContext().put("com.sun.xml.ws.connect.timeout", 5000);
+			} catch (Exception e) {
+				log.error("Couldn't initialize web service to ONKI ontology " + ontology, e);
+			}
+			port = tport;
 		}
-        
-		public synchronized IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris, 
-				Locale locale, int maxResults) 
-		{
-			OnkiQueryResults rs = port.search(queryTerm,locale.getLanguage(),maxResults,
-					toArrayOfString(typeUris),
-					toArrayOfString(parentUris),
-					null);
-			return new OnkiResults(rs.getResults().getValue().getOnkiQueryResult(),
-					rs.getMetadata().getValue().getTotalHitsAmount());
+
+		@Override
+		public synchronized IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris, Locale locale, int maxResults) {
+			try {
+				OnkiQueryResults rs = port.search(queryTerm, locale.getLanguage(), maxResults, toArrayOfString(typeUris), toArrayOfString(parentUris), null);
+				return new OnkiResults(rs.getResults().getValue().getOnkiQueryResult(), rs.getMetadata().getValue().getTotalHitsAmount());
+			} catch (Exception e) {
+				log.error("search(" + queryTerm + ", " + parentUris + ", " + typeUris + ", " + locale + ", " + maxResults + ") web service call to ONKI ontology " + ontology + " failed", e);
+				return null;
+			}
 		}
+
 		private ArrayOfString toArrayOfString(Collection<String> list) {
 			if (list == null || list.isEmpty()) return null;
 			ArrayOfString a = new ArrayOfString();
-			for (String s : list) a.getString().add(s);
+			for (String s : list)
+				a.getString().add(s);
 			return a;
 		}
+
 		public synchronized String getLabel(String uri, Locale locale) {
-			return getLabel(uri,locale.getLanguage());
+			return getLabel(uri, locale.getLanguage());
 		}
+
 		public synchronized String getLabel(String uri, String lang) {
-			OnkiQueryResult r = port.getLabel(uri,lang);
-			String label = r.getTitle().getValue();
-			return !label.contains("*") ? label : uri;
+			try {
+				OnkiQueryResult r = port.getLabel(uri, lang);
+				String label = r.getTitle().getValue();
+				return !label.contains("*") ? label : uri;
+			} catch (Exception e) {
+				log.error("getLabel(" + uri + "," + lang + ") web service call to ONKI ontology " + ontology + " failed", e);
+				return null;
+			}
 		}
+
 		public synchronized Set<ISahaProperty> getProperties(String uri, Locale locale) {
 			Set<ISahaProperty> properties = new TreeSet<ISahaProperty>();
 			ArrayOfStatement statements = null;
 			try {
-				statements = port.getProperties(uri,null,locale.getLanguage());
-			} catch(Exception e) {
-				log.error(e.getMessage());
+				statements = port.getProperties(uri, null, locale.getLanguage());
+			} catch (Exception e) {
+				log.error("getProperties(" + uri + ", " + locale + ") web service call to ONKI ontology " + ontology + " failed", e);
 				return properties;
 			}
 			for (Statement s : statements.getStatement()) {
@@ -177,38 +238,41 @@ public class OnkiWebService {
 			}
 			return properties;
 		}
-		public synchronized Map<UriLabel,Set<ISahaProperty>> getPropertyMap(String uri, Locale locale) {
-			Map<UriLabel,Set<ISahaProperty>> map = new TreeMap<UriLabel,Set<ISahaProperty>>();
-			for (ISahaProperty property : getProperties(uri,locale)) {
-				UriLabel p = new UriLabel(property.getUri(),property.getLabel());
-				if (!map.containsKey(p)) map.put(p,new TreeSet<ISahaProperty>());
+
+		public synchronized Map<UriLabel, Set<ISahaProperty>> getPropertyMap(String uri, Locale locale) {
+			Map<UriLabel, Set<ISahaProperty>> map = new TreeMap<UriLabel, Set<ISahaProperty>>();
+			for (ISahaProperty property : getProperties(uri, locale)) {
+				UriLabel p = new UriLabel(property.getUri(), property.getLabel());
+				if (!map.containsKey(p))
+					map.put(p, new TreeSet<ISahaProperty>());
 				map.get(p).add(property);
 			}
 			return map;
 		}
-		public synchronized Set<Entry<UriLabel,Set<ISahaProperty>>> getPropertyMapEntrySet(String uri, Locale locale) {
-			return getPropertyMap(uri,locale).entrySet();
+
+		public synchronized Set<Entry<UriLabel, Set<ISahaProperty>>> getPropertyMapEntrySet(String uri, Locale locale) {
+			return getPropertyMap(uri, locale).entrySet();
 		}
 	}
-	
-	private Logger log = Logger.getLogger(getClass());
+
+	private final Logger log = Logger.getLogger(getClass());
 	private String accessKey;
-	
-	private Map<String,OnkiRepository> onkiCache = new HashMap<String,OnkiRepository>();
-	
+
+	private final Map<String, OnkiRepository> onkiCache = new HashMap<String, OnkiRepository>();
+
 	public OnkiWebService() {
-		if (log.isDebugEnabled()) HttpTransportPipe.dump=true;
+
 	}
-	
+
 	@Required
 	public void setAccessKey(String accessKey) {
 		this.accessKey = accessKey;
 	}
-	
+
 	public synchronized OnkiRepository getOnkiRepository(String ontology) {
 		if (!onkiCache.containsKey(ontology))
-			onkiCache.put(ontology,new OnkiRepository(ontology));
+			onkiCache.put(ontology, new OnkiRepository(ontology));
 		return onkiCache.get(ontology);
 	}
-	
+
 }

@@ -24,7 +24,7 @@ public class ImportProjectController {
         this.sahaProjectRegistry = sahaProjectRegistry;
     }
     
-    @RequestMapping("/service/import_project/")
+    @RequestMapping("/import_project/")
     protected ModelAndView handle(HttpServletRequest request, 
             HttpServletResponse response, 
             @RequestParam("file") MultipartFile file,

@@ -6,16 +6,31 @@
   xmlns:p="http://www.springframework.org/schema/p"
   xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
   xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:sws="http://www.springframework.org/schema/web-services"
   xsi:schemaLocation="
   	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
-	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd" 
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd
+	http://www.springframework.org/schema/web-services http://www.springframework.org/schema/web-services/web-services-2.0.xsd"
   default-lazy-init="true" 
   default-autowire="no" >
 
 	<description>SAHA3 web tier specific beans</description>
 
+	<bean class="org.springframework.ws.transport.http.WebServiceMessageReceiverHandlerAdapter"
+	p:messageFactory-ref="messageFactory"/>
+	<bean id="messageFactory" class="org.springframework.ws.soap.saaj.SaajSoapMessageFactory"/>
+	<bean class="fi.seco.saha3.infrastructure.SahaWsdlDefinitionHandlerAdapter"
+		p:transformLocations="true"/>
+	<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+
+    <bean id="MessageDispatcher" class="org.springframework.ws.soap.server.SoapMessageDispatcher"/>
+    <bean class="fi.seco.saha3.infrastructure.StacktraceContainingSimpleSoapExceptionResolver"/>
+
+	<sws:static-wsdl id="onkiWSDL" location="classpath:OnkiAutocompletion.WSDL"/>
+	
 	<bean
 		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
 		p:lazy-init-handlers="true" p:always-use-full-path="true">
@@ -32,6 +47,8 @@
 				/service/import_project/**=ImportProjectController
 				/service/instance_search/**=ResourceSearchService
 				/service/pics/**=Saha3ImageController
+           		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
+           		/service/ws/**=MessageDispatcher
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController
@@ -47,6 +64,28 @@
 			</value>
 		</property>
 	</bean>
+	
+	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+        <property name="scopes">
+            <map>
+                <entry key="project">
+					<bean class="fi.seco.saha3.infrastructure.SahaProjectScope"
+						p:sahaProjectRegistry-ref="SahaProjectRegistry"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    
+	<bean id="ScopedProject" scope="project" class="fi.seco.saha3.model.SahaProject">
+		<aop:scoped-proxy/>
+	</bean>
+
+	<bean id="ScopedModel" scope="project" class="com.hp.hpl.jena.rdf.model.Model">
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean id="Saha3OnkiService" class="fi.seco.saha3.service.OnkiService"
+		p:model-ref="ScopedModel" p:sahaProject-ref="ScopedProject"/>
 	
 	<bean id="ResourceEditService" class="fi.seco.saha3.service.ResourceEditService"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
@@ -176,7 +215,6 @@
 			<dwr:include method="gc" />
 	    </dwr:remote>
 	</bean>
-	 
 	
 	<bean id="SahaBackupManager" class="fi.seco.saha3.infrastructure.SahaBackupManager"
 	lazy-init="false"

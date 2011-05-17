@@ -192,7 +192,7 @@ public class ModelEditor implements IModelEditor {
     public boolean removeLiteralProperty(String s, String p, String valueShaHex) {
         for (Statement statement : new IteratorToIIterableIterator<Statement>(model.createResource(s).listProperties(model.createProperty(p))))
             if (statement.getObject().isLiteral())
-                if (DigestUtils.shaHex(statement.getString()).equals(valueShaHex))
+                if (DigestUtils.shaHex(statement.getObject().toString()).equals(valueShaHex))
                     return removeLiteralProperty(s,p,statement.getLiteral());
         log.warn("Failed to remove literal property. s: " + s + " p: " + p + " valueShaHex: " + valueShaHex);
         return false;

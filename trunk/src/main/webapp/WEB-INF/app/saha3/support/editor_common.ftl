@@ -262,10 +262,11 @@
 	[#assign isPicture = property.config.pictureProperty /]
 	[#if !inline && !isPicture]<div style="color:#888;">add new literal</div>[/#if]
 	[#if !inline && isPicture]
-		<form action="upload.shtml?uri=${resourceUri?url}" enctype="multipart/form-data" method="post">
+		<form action="http://media.onki.fi/upload" enctype="multipart/form-data" method="post">
 			<div style="color:#888;margin-bottom:5px;">upload file</div>
 			<input name="image" type="file">
-			<input name="resource" type="hidden" value="${resourceUri}"/>
+			<input name="target" type="hidden" value="${resourceUri}"/>
+			<input name="context" type="hidden" value="saha/${model}"/>
 			<input name="property" type="hidden" value="${property.uri}"/>
 			<input type="submit" value="Upload"/>
 		</form>

@@ -52,6 +52,26 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+			<version>2.2</version>
+			<type>jar</type>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>3.0.5.RELEASE</version>
+			<type>jar</type>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>commons-logging</artifactId>
+					<groupId>commons-logging</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>jena</artifactId>
 			<version>2.6.3</version>
@@ -128,14 +148,7 @@
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr-core</artifactId>
-			<version>3.0.0-rc2-20100530.182202-54</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>maui</groupId>
-			<artifactId>maui</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<version>3.0.0-rc2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
@@ -251,6 +264,21 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>trove</groupId>
+			<artifactId>trove</artifactId>
+			<version>1.0.2</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ws</groupId>
+			<artifactId>spring-ws</artifactId>
+			<version>2.0.1.RELEASE</version>
+			<type>jar</type>
+			<classifier>all</classifier>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
@@ -258,13 +286,6 @@
 	</dependencyManagement>
 
 	<repositories>
-		<repository>
-			<id>Seco</id>
-			<name>Seco packaged Java Packages</name>
-			<url>file:///common/mvn/</url>
-			<layout>default</layout>
-		</repository>
-
 		<repository>
 			<id>oracleReleases</id>
 			<name>Oracle Released Java Packages</name>

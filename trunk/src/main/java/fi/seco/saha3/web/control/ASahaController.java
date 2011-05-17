@@ -17,54 +17,52 @@ import fi.seco.saha3.model.SahaProject;
 public abstract class ASahaController extends AbstractController {
 
 	private static final String SAHA_TEMPLATE_BASE = "saha3";
-	
+
 	private SahaProjectRegistry sahaProjectRegistry;
-	
+
 	@Required
 	public void setSahaProjectRegistry(SahaProjectRegistry sahaProjectRegistry) {
 		this.sahaProjectRegistry = sahaProjectRegistry;
 	}
-	
-    protected SahaProjectRegistry getSahaProjectRegistry() {
-        return this.sahaProjectRegistry;
-    }
-	
+
+	protected SahaProjectRegistry getSahaProjectRegistry() {
+		return this.sahaProjectRegistry;
+	}
+
 	@Override
-	public ModelAndView handleRequestInternal(HttpServletRequest request, 
-			HttpServletResponse response) throws Exception 
-	{
+	public ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String servletPath = request.getServletPath();
 		String model = parseModelName(servletPath);
-		
+
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
 		if (project != null) {
-		    String view = parseViewName(servletPath);
+			String view = parseViewName(servletPath);
 			ModelAndView mav = new ModelAndView(view);
-			mav.addObject("model",model);
-			mav.addObject("lang",locale.getLanguage());
-			mav.addObject("aboutLink",project.getConfig().getAboutLink());
+			mav.addObject("model", model);
+			mav.addObject("lang", locale.getLanguage());
+			mav.addObject("aboutLink", project.getConfig().getAboutLink());
 			mav.addObject("helpText", SahaHelpManager.getHelpString(view));
-			return handleRequest(request,response,project,locale,mav);
+			return handleRequest(request, response, project, locale, mav);
 		} else {
 			ModelAndView mav = new ModelAndView(SAHA_TEMPLATE_BASE + "/add");
-			mav.addObject("model",model);
-			mav.addObject("lang",locale.getLanguage());
+			mav.addObject("model", model);
+			mav.addObject("lang", locale.getLanguage());
 			return mav;
 		}
 	}
-	
-	public abstract ModelAndView handleRequest(HttpServletRequest request, 
-			HttpServletResponse response, SahaProject project, Locale locale, ModelAndView mav) throws Exception;
 
-	protected static String parseModelName(String servletPath) {
-		servletPath = servletPath.substring(0,servletPath.lastIndexOf('/'));
-		return servletPath.substring(servletPath.lastIndexOf('/')+1,servletPath.length());
+	public abstract ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response,
+			SahaProject project, Locale locale, ModelAndView mav) throws Exception;
+
+	public static String parseModelName(String servletPath) {
+		servletPath = servletPath.substring(0, servletPath.lastIndexOf('/'));
+		return servletPath.substring(servletPath.lastIndexOf('/') + 1, servletPath.length());
 	}
-	
+
 	protected static String parseViewName(String servletPath) {
-		return SAHA_TEMPLATE_BASE + servletPath.substring(servletPath.lastIndexOf('/'),servletPath.lastIndexOf('.'));
+		return SAHA_TEMPLATE_BASE + servletPath.substring(servletPath.lastIndexOf('/'), servletPath.lastIndexOf('.'));
 	}
-	
+
 }

@@ -86,6 +86,9 @@ public class PropertyFactory {
 		}
         
 		public String getValueShaHex() {
+			if (isLiteral() && object != null)
+				return DigestUtils.shaHex(object.asLiteral().toString());
+			
 			return DigestUtils.shaHex(getValueLabel());
 		}
         
@@ -140,7 +143,7 @@ public class PropertyFactory {
 	}
 	
 	private final static int compareSahaProperties(ISahaProperty o1, ISahaProperty o2) {
-		int c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueLabel(),o2.getValueLabel());
+		int c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueShaHex(),o2.getValueShaHex());
 		return c != 0 ? c : o1.getValueUri().compareTo(o2.getValueUri());
 	}
 	

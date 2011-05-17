@@ -65,7 +65,7 @@ public class SparqlService extends NamedModelAssembler implements InitializingBe
 			Resource service = josekiConfig.createResource("#service"
 					+ ++serviceNumber);
 			Resource data = josekiConfig
-					.createResource("http://demo.seco.tkk.fi/saha3sandbox/" + modelName);
+					.createResource("http://demo.seco.tkk.fi/saha/joseki_service/" + serviceNumber);
 
 			josekiConfig.add(service, RDF.type, josekiService);
 			josekiConfig.add(service, RDFS.label, "SPARQL");

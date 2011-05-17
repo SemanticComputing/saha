@@ -52,183 +52,298 @@ public class ResourceEditService {
 		this.sahaProjectRegistry = sahaProjectRegistry;
 	}
 
-	public String setObjectProperty(String model, String id, String s, String p, String o, HttpServletRequest request) {
-		log.debug("setObjectProperty(" + model + ", " + id + ", " + s + ", " + p + ", " + o + ", " + request + ")");
+	public String setObjectProperty(String model, String id, String s,
+			String p, String o, HttpServletRequest request) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+			log.debug("setObjectProperty(" + model + ", " + id + ", " + s
+					+ ", " + p + ", " + o + ", " + request + ")");
 
+			Locale locale = RequestContextUtils.getLocale(request);
+
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			UriLabel object = project.addObjectProperty(s, p, o, locale);
+
+			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+
+			return FreeMarkerUtil.process(configuration,
+					OBJECT_PROPERTY_TEMPLATE, modelMap);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
+	}
+
+	public String createInstance(String model, String type, String label,
+			HttpServletRequest request) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("createInstance(" + model + ", " + type + ", " + label
+					+ ")");
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			return project.createResource(type, label);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
+	}
+
+	public String setLiteralProperty(String model, String id, String s,
+			String p, String l, String lang) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("setLiteralProperty(" + model + ", " + id + ", " + s
+					+ ", " + p + ", " + l + ", " + lang + ")");
+
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			UriLabel object = (lang == null) ? project.addLiteralProperty(s, p,
+					l) : project.addLiteralProperty(s, p, l, lang);
+
+			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+
+			return FreeMarkerUtil.process(configuration,
+					LITERAL_PROPERTY_TEMPLATE, modelMap);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
+	}
+
+	public String updateLiteralProperty(String model, String id, String s,
+			String p, String l, String lang, String oldValueShaHex) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("updateLiteralProperty(" + model + ", " + id + ", " + s
+					+ ", " + p + ", " + l + ", " + lang + ", " + oldValueShaHex
+					+ ")");
+
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+
+			project.removeLiteralProperty(s, p, oldValueShaHex);
+			UriLabel object = (lang == null) ? project.addLiteralProperty(s, p,
+					l) : project.addLiteralProperty(s, p, l, lang);
+
+			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+
+			return FreeMarkerUtil.process(configuration,
+					LITERAL_PROPERTY_TEMPLATE, modelMap);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
+	}
+
+	public boolean setMapProperty(String model, String s, String fc,
+			String value) {
+
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("setMapProperty(" + model + ", " + s + ", " + fc + ", "
+					+ value + ")");
+
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			project.setMapProperty(s, fc, value);
+
+			return true;
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
+	}
+
+	public String getLiteralPropertyEditor(String model, String id, String s,
+			String p, String valueShaHex, HttpServletRequest request) {
+		log.debug("getLiteralPropertyEditor(" + model + ", " + id + ", " + s
+				+ ", " + p + ", " + valueShaHex + ", " + request + ")");
+
+		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 		Locale locale = RequestContextUtils.getLocale(request);
 
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		UriLabel object = project.addObjectProperty(s,p,o,locale);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("id", id);
+		modelMap.put("model", model);
+		modelMap.put("resourceUri", s);
+		modelMap.put("inline", true);
 
-		Map<String,Object> modelMap = buildMap(id,model,s,p,object);
-
-		return FreeMarkerUtil.process(configuration,OBJECT_PROPERTY_TEMPLATE,modelMap);
-	}
-
-	public String createInstance(String model, String type, String label, HttpServletRequest request) {
-		log.debug("createInstance(" + model + ", " + type + ", " + label + ")");
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		return project.createResource(type,label);
-	}
-
-	public String setLiteralProperty(String model, String id, String s, String p, String l, String lang) {
-		log.debug("setLiteralProperty(" + model + ", " + id + ", " + s + ", " + p + ", " + l + ", " + lang + ")");
-
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		UriLabel object = (lang == null) ? project.addLiteralProperty(s,p,l) : project.addLiteralProperty(s,p,l,lang);
-
-		Map<String,Object> modelMap = buildMap(id,model,s,p,object);
-
-		return FreeMarkerUtil.process(configuration,LITERAL_PROPERTY_TEMPLATE,modelMap);
-	}
-
-	public String updateLiteralProperty(String model, String id, String s, String p, String l, String lang, String oldValueShaHex) {
-		log.debug("updateLiteralProperty(" + model + ", " + id + ", " + s + ", " + p + ", " + l + ", " + lang + ", " + oldValueShaHex + ")");
-
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-
-		project.removeLiteralProperty(s,p,oldValueShaHex);
-		UriLabel object = (lang == null) ? project.addLiteralProperty(s,p,l) : project.addLiteralProperty(s,p,l,lang);
-
-		Map<String,Object> modelMap = buildMap(id,model,s,p,object);
-
-		return FreeMarkerUtil.process(configuration,LITERAL_PROPERTY_TEMPLATE,modelMap);
-	}
-	
-	public boolean setMapProperty(String model, String s, String fc, String value)
-	{
-	       log.debug("setMapProperty(" + model + ", " + s + ", " + fc + ", " + value + ")");
-	       
-	       SahaProject project = sahaProjectRegistry.getSahaProject(model);
-	       project.setMapProperty(s, fc, value);
-
-	       return true;
-	}
-
-	public String getLiteralPropertyEditor(String model, String id, String s, String p, String valueShaHex, HttpServletRequest request) {
-		log.debug("getLiteralPropertyEditor(" + model + ", " + id + ", " + s + ", " + p + ", " + valueShaHex + ", " + request +")");
-
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		Locale locale = RequestContextUtils.getLocale(request);
-
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("id",id);
-		modelMap.put("model",model);
-		modelMap.put("resourceUri",s);
-		modelMap.put("inline",true);
-
-		for (ISahaProperty property : project.getResource(s,locale).getProperties())
+		for (ISahaProperty property : project.getResource(s, locale)
+				.getProperties())
 			if (property.getValueShaHex().equals(valueShaHex))
-				modelMap.put("property",property);
+				modelMap.put("property", property);
 
 		if (!modelMap.containsKey("property"))
-			throw new RuntimeException("Trying to edit a non-existent literal value: " + s + " " + p + " " + valueShaHex);
+			throw new RuntimeException(
+					"Trying to edit a non-existent literal value: " + s + " "
+							+ p + " " + valueShaHex);
 
-		return FreeMarkerUtil.process(configuration,LITERAL_PROPERTY_EDITOR_TEMPLATE,modelMap);
+		return FreeMarkerUtil.process(configuration,
+				LITERAL_PROPERTY_EDITOR_TEMPLATE, modelMap);
 	}
 
-	public boolean removeLiteralProperty(String model, String s, String p, String valueShaHex) {
-		log.debug("removeLiteralProperty(" + model + ", " + s + ", " + p + ", " + valueShaHex + ")");
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		return project.removeLiteralProperty(s,p,valueShaHex);
+	public boolean removeLiteralProperty(String model, String s, String p,
+			String valueShaHex) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("removeLiteralProperty(" + model + ", " + s + ", " + p
+					+ ", " + valueShaHex + ")");
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			return project.removeLiteralProperty(s, p, valueShaHex);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
 	}
 
 	public boolean removeResource(String model, String uri) {
-		log.debug("removeResource(" + model + ", " + uri + ")");
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		return project.removeResource(uri);
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("removeResource(" + model + ", " + uri + ")");
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			return project.removeResource(uri);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
 	}
 
-	public boolean removeObjectProperty(String model, String s, String p, String o) {
-		log.debug("removeObjectProperty(" + model + ", " + s + ", " + p + ", " + o + ")");
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		return project.removeObjectProperty(s,p,o);
+	public boolean removeObjectProperty(String model, String s, String p,
+			String o) {
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("removeObjectProperty(" + model + ", " + s + ", " + p
+					+ ", " + o + ")");
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			return project.removeObjectProperty(s, p, o);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
 	}
 
 	public boolean removeProperty(String model, String s, String p) {
-		log.debug("removeProperty(" + model + ", " + s + ", " + p + ")");
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		return project.removeProperty(s,p);
+		try {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.lock();
+
+			log.debug("removeProperty(" + model + ", " + s + ", " + p + ")");
+			SahaProject project = sahaProjectRegistry.getSahaProject(model);
+			return project.removeProperty(s, p);
+		} finally {
+			this.sahaProjectRegistry.getLockForProject(model).writeLock()
+					.unlock();
+		}
 	}
 
-	private Map<String,Object> buildMap(String id, String model, String resourceUri,
-			String propertyUri, UriLabel object)
-	{
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("id",id);
-		modelMap.put("model",model);
-		modelMap.put("resourceUri",resourceUri);
-		modelMap.put("propertyUri",propertyUri);
-		modelMap.put("propertyValueUri",object.getUri());
-		modelMap.put("propertyValueLang",object.getLang());
-		modelMap.put("propertyValueLabel",object.getLabel());
-		modelMap.put("propertyValueShaHex",object.getLabelShaHex());
+	private Map<String, Object> buildMap(String id, String model,
+			String resourceUri, String propertyUri, UriLabel object) {
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("id", id);
+		modelMap.put("model", model);
+		modelMap.put("resourceUri", resourceUri);
+		modelMap.put("propertyUri", propertyUri);
+		modelMap.put("propertyValueUri", object.getUri());
+		modelMap.put("propertyValueLang", object.getLang());
+		modelMap.put("propertyValueLabel", object.getLabel());
+		modelMap.put("propertyValueShaHex", object.getLabelShaHex());
 		return modelMap;
 	}
 
-	public String getEditorPropertyTable(String model, String resourceUri, String id, HttpServletRequest request) {
-		log.debug("getEditorPropertyTable(" + model + ", " + resourceUri + ", " + id + ", " + request + ")");
+	public String getEditorPropertyTable(String model, String resourceUri,
+			String id, HttpServletRequest request) {
+		log.debug("getEditorPropertyTable(" + model + ", " + resourceUri + ", "
+				+ id + ", " + request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("model",model);
-		modelMap.put("instance",project.getResource(resourceUri,locale));
-		modelMap.put("editorId",id);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("model", model);
+		modelMap.put("instance", project.getResource(resourceUri, locale));
+		modelMap.put("editorId", id);
 
-		return FreeMarkerUtil.process(configuration,EDITOR_PROPERTY_TABLE_TEMPLATE,modelMap);
+		return FreeMarkerUtil.process(configuration,
+				EDITOR_PROPERTY_TABLE_TEMPLATE, modelMap);
 	}
 
-	public String getPropertyTable(String model, String resourceUri, HttpServletRequest request) {
-		log.debug("getPropertyTable(" + model + ", " + resourceUri + ", " + request + ")");
+	public String getPropertyTable(String model, String resourceUri,
+			HttpServletRequest request) {
+		log.debug("getPropertyTable(" + model + ", " + resourceUri + ", "
+				+ request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("model",model);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("model", model);
 		try {
-			modelMap.put("gmaputil",BeansWrapper.getDefaultInstance().getStaticModels().get("fi.seco.semweb.util.GoogleMapsUtil"));
+			modelMap.put("gmaputil", BeansWrapper.getDefaultInstance()
+					.getStaticModels()
+					.get("fi.seco.semweb.util.GoogleMapsUtil"));
 		} catch (TemplateModelException e) {
 			e.printStackTrace();
 		}
 		modelMap.put("propertyMapEntrySet",
-				project.getResource(resourceUri,locale).getPropertyMapEntrySet());
+				project.getResource(resourceUri, locale)
+						.getPropertyMapEntrySet());
 
-		return FreeMarkerUtil.process(configuration,PROPERTY_TABLE_TEMPLATE,modelMap);
+		return FreeMarkerUtil.process(configuration, PROPERTY_TABLE_TEMPLATE,
+				modelMap);
 	}
-	
-	public String getHakoPropertyTable(String model, String resourceUri, HttpServletRequest request) {
-		log.debug("getHakoPropertyTable(" + model + ", " + resourceUri + ", " + request + ")");
+
+	public String getHakoPropertyTable(String model, String resourceUri,
+			HttpServletRequest request) {
+		log.debug("getHakoPropertyTable(" + model + ", " + resourceUri + ", "
+				+ request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("model",model);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("model", model);
 		modelMap.put("propertyMapEntrySet",
-				project.getResource(resourceUri,locale).getPropertyMapEntrySet());
+				project.getResource(resourceUri, locale)
+						.getPropertyMapEntrySet());
 
-		return FreeMarkerUtil.process(configuration,HAKO_PROPERTY_TABLE_TEMPLATE,modelMap);
+		return FreeMarkerUtil.process(configuration,
+				HAKO_PROPERTY_TABLE_TEMPLATE, modelMap);
 	}
 
-	public String getExternalPropertyTable(String ontology, String resourceUri, HttpServletRequest request) {
-		log.debug("getExternalPropertyTable(" + ontology + ", " + resourceUri + ", " + request + ")");
+	public String getExternalPropertyTable(String ontology, String resourceUri,
+			HttpServletRequest request) {
+		log.debug("getExternalPropertyTable(" + ontology + ", " + resourceUri
+				+ ", " + request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 
-		Map<String,Object> modelMap = new HashMap<String,Object>();
-		modelMap.put("model",ontology);
+		Map<String, Object> modelMap = new HashMap<String, Object>();
+		modelMap.put("model", ontology);
 		try {
-			modelMap.put("gmaputil",BeansWrapper.getDefaultInstance().getStaticModels().get("fi.seco.semweb.util.GoogleMapsUtil"));
+			modelMap.put("gmaputil", BeansWrapper.getDefaultInstance()
+					.getStaticModels()
+					.get("fi.seco.semweb.util.GoogleMapsUtil"));
 		} catch (TemplateModelException e) {
 			e.printStackTrace();
 		}
 		modelMap.put("propertyMapEntrySet",
-				onkiWebService.getOnkiRepository(ontology).getPropertyMapEntrySet(resourceUri,locale));
+				onkiWebService.getOnkiRepository(ontology)
+						.getPropertyMapEntrySet(resourceUri, locale));
 
-		return FreeMarkerUtil.process(configuration,PROPERTY_TABLE_TEMPLATE,modelMap);
+		return FreeMarkerUtil.process(configuration, PROPERTY_TABLE_TEMPLATE,
+				modelMap);
 	}
 
 }

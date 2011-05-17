@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Required;
@@ -28,6 +29,7 @@ public class SahaProjectRegistry {
 	
 	private Map<String,XmlBeanFactory> beanFactoryMap = new HashMap<String,XmlBeanFactory>();
 	private Map<String,SahaProject> projects = new HashMap<String,SahaProject>();
+	private final Map<String, ReentrantReadWriteLock> projectLocks = new HashMap<String, ReentrantReadWriteLock>();
 	
 	@Required
 	public void setProjectBaseDirectory(String projectBaseDirectory) {
@@ -61,6 +63,14 @@ public class SahaProjectRegistry {
 	
 	public Model getModel(String projectName) {
 		return (Model)getBean(projectName,"model");
+	}
+	
+	public ReentrantReadWriteLock getLockForProject(String project)
+	{
+		if (!this.projectLocks.containsKey(project))
+			this.projectLocks.put(project, new ReentrantReadWriteLock());
+		
+		return this.projectLocks.get(project);
 	}
 	
 	private Object getBean(String projectName, String beanName) {
