@@ -64,9 +64,7 @@ public class CategoryBuilder {
         for (CategoryNode node : nodeMap.values())
             for (String object : searcher.getAncestors(node.getUri()))
             {
-                System.out.println("checking presence of superclass " + object + " in nodes");
                 if (nodeMap.containsKey(object)) {
-                    System.out.println("removing " + node.getUri() + " from root nodes, superclass: " + object);
                     nodeMap.get(object).addChild(node);
                     rootNodes.remove(node);
                 }
