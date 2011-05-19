@@ -16,7 +16,7 @@
 			ResourceEditService.createInstance(model,type,null, {
 				callback:function(dataFromServer) {
 					document.body.style.cursor="";
-					location.href='editor.shtml?uri=' + escape(dataFromServer);
+					location.href='editor.shtml?uri=' + encodeURIComponent(dataFromServer);
 				}
 			});
 		}

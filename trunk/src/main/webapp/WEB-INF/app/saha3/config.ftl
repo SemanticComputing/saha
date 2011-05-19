@@ -87,13 +87,13 @@
 						ResourceEditService.setObjectProperty('${model}','',propertyUri,rdfsDomain,'${instanceType.uri?js_string}', {
 							callback:function(dataFromServer) {
 								document.body.style.cursor="";
-								location.href='config.shtml?uri=' + escape('${uri}');
+								location.href='config.shtml?uri=' + encodeURIComponent('${uri}');
 							}
 						});
 					}
 				}
-				var objectProperty = escape('http://www.w3.org/2002/07/owl#ObjectProperty');
-				var datatypeProperty = escape('http://www.w3.org/2002/07/owl#DatatypeProperty');
+				var objectProperty = encodeURIComponent('http://www.w3.org/2002/07/owl#ObjectProperty');
+				var datatypeProperty = encodeURIComponent('http://www.w3.org/2002/07/owl#DatatypeProperty');
 				
 				
 				dojo.addOnLoad(function() {

@@ -185,10 +185,10 @@ function removePoint(marker) {
 
 function startitup() {
 	if (fc == "singlepoint" && !(c == 'false')) {
-		createOld(unescape(c));
+		createOld(decodeURIComponent(c));
 	}
 	else if ((fc == "polygon" || fc == "route") && !(c == 'false')) {
-		createOldOverlay(unescape(c));
+		createOldOverlay(decodeURIComponent(c));
 	}
 }
 

@@ -49,7 +49,7 @@
 	 <script>	 
 		function openInstance(uri) {
 			if (uri.length > 0)
-				location.href='resource.shtml?uri=' + escape(uri);
+				location.href='resource.shtml?uri=' + encodeURIComponent(uri);
 		}
 		
 		var timer;
@@ -447,12 +447,12 @@
 				+ '<br/>';
 				
 				if (allowEdit) {
-					html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${resourceUri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[edit point]</span>';
+					html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[edit point]</span>';
 					html += ' <span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'singlepoint\');">[remove point]</span>';
 					
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${instance.uri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;			
@@ -479,11 +479,11 @@
 				html += '&size=420x300&sensor=false&key=${googleMapsKey}"/>';
 				
 				if (allowEdit) {
-					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${resourceUri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[edit area]</span>';
+					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[edit area]</span>';
 					html += '<span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'polygon\');">[remove area]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${instance.uri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					
@@ -512,11 +512,11 @@
 				html += '&size=420x300&sensor=false&key=${googleMapsKey}"/>';
 				
 				if (allowEdit) {
-					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${resourceUri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[edit route]</span>';
+					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[edit route]</span>';
 					html += ' <span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'route\');">[remove route]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + escape(\'${instance.uri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					
