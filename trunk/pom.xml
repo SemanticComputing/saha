@@ -300,12 +300,12 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>DWRSnapshot</id>
-			<name>DWR Maven Snapshot Repository</name>
-			<url>http://slurm.dojotoolkit.org/nexus/content/repositories/dwr-snapshots/</url>
-			<layout>default</layout>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>DWRSnapshot</id> -->
+<!-- 			<name>DWR Maven Snapshot Repository</name> -->
+<!-- 			<url>http://slurm.dojotoolkit.org/nexus/content/repositories/dwr-snapshots/</url> -->
+<!-- 			<layout>default</layout> -->
+<!-- 		</repository> -->
 		<repository>
 			<id>DWRReleases</id>
 			<name>DWR Maven Releases Repository</name>
@@ -350,11 +350,11 @@
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
-		<repository>
-			<id>sharca.com.repo</id>
-			<name>SharcaConsulting Repository</name>
-			<url>http://www.sharca.com/repository</url>
-		</repository>
+<!-- 		<repository> -->
+<!-- 			<id>sharca.com.repo</id> -->
+<!-- 			<name>SharcaConsulting Repository</name> -->
+<!-- 			<url>http://www.sharca.com/repository</url> -->
+<!-- 		</repository> -->
 		<repository>
 			<id>openjena</id>
 			<name>openjena</name>

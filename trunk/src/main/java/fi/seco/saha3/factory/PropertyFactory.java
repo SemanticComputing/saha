@@ -19,6 +19,7 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.vocabulary.OWL;
+import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
 
 import fi.seco.saha3.index.ResourceIndexSearcher;
@@ -200,6 +201,9 @@ public class PropertyFactory {
 	public Set<ISahaProperty> getAllProperties(String uri, String[] types, Locale locale) {
 		Set<ISahaProperty> set = getDomainProperties(types,locale);
 		set.addAll(getProperties(uri,locale));
+		
+		set.add(getEmptyProperty(RDF.type.getURI(), locale));
+		
 		return set;
 	}
 	
@@ -251,6 +255,11 @@ public class PropertyFactory {
 				if (transitive) 
 					range.addAll(searcher.getAllDescendants(uri));
 			}
+		
+		// type always has class as range		
+		if (propertyUri.equals(RDF.type.getURI()))
+			range.add(OWL.Class.getURI());
+		
 		return range;
 	}
 
