@@ -14,14 +14,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.logging.Logger;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Required;
 
 import fi.helsinki.cs.seco.onki.service.ArrayOfStatement;
 import fi.helsinki.cs.seco.onki.service.ArrayOfString;
@@ -189,7 +186,8 @@ public class OnkiWebService {
 		}
 
 		@Override
-		public synchronized IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris, Locale locale, int maxResults) {
+		public IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris,
+				Locale locale, int maxResults) {
 			try {
 				OnkiQueryResults rs = port.search(queryTerm, locale.getLanguage(), maxResults, toArrayOfString(typeUris), toArrayOfString(parentUris), null);
 				return new OnkiResults(rs.getResults().getValue().getOnkiQueryResult(), rs.getMetadata().getValue().getTotalHitsAmount());
@@ -207,11 +205,11 @@ public class OnkiWebService {
 			return a;
 		}
 
-		public synchronized String getLabel(String uri, Locale locale) {
+		public String getLabel(String uri, Locale locale) {
 			return getLabel(uri, locale.getLanguage());
 		}
 
-		public synchronized String getLabel(String uri, String lang) {
+		public String getLabel(String uri, String lang) {
 			try {
 				OnkiQueryResult r = port.getLabel(uri, lang);
 				String label = r.getTitle().getValue();
@@ -222,7 +220,7 @@ public class OnkiWebService {
 			}
 		}
 
-		public synchronized Set<ISahaProperty> getProperties(String uri, Locale locale) {
+		public Set<ISahaProperty> getProperties(String uri, Locale locale) {
 			Set<ISahaProperty> properties = new TreeSet<ISahaProperty>();
 			ArrayOfStatement statements = null;
 			try {
@@ -233,24 +231,22 @@ public class OnkiWebService {
 			}
 			for (Statement s : statements.getStatement()) {
 				OnkiProperty property = new OnkiProperty(s);
-				if (!property.getValueLabel().isEmpty())
-					properties.add(property);
+				if (!property.getValueLabel().isEmpty()) properties.add(property);
 			}
 			return properties;
 		}
 
-		public synchronized Map<UriLabel, Set<ISahaProperty>> getPropertyMap(String uri, Locale locale) {
+		public Map<UriLabel, Set<ISahaProperty>> getPropertyMap(String uri, Locale locale) {
 			Map<UriLabel, Set<ISahaProperty>> map = new TreeMap<UriLabel, Set<ISahaProperty>>();
 			for (ISahaProperty property : getProperties(uri, locale)) {
 				UriLabel p = new UriLabel(property.getUri(), property.getLabel());
-				if (!map.containsKey(p))
-					map.put(p, new TreeSet<ISahaProperty>());
+				if (!map.containsKey(p)) map.put(p, new TreeSet<ISahaProperty>());
 				map.get(p).add(property);
 			}
 			return map;
 		}
 
-		public synchronized Set<Entry<UriLabel, Set<ISahaProperty>>> getPropertyMapEntrySet(String uri, Locale locale) {
+		public Set<Entry<UriLabel, Set<ISahaProperty>>> getPropertyMapEntrySet(String uri, Locale locale) {
 			return getPropertyMap(uri, locale).entrySet();
 		}
 	}
@@ -269,9 +265,8 @@ public class OnkiWebService {
 		this.accessKey = accessKey;
 	}
 
-	public synchronized OnkiRepository getOnkiRepository(String ontology) {
-		if (!onkiCache.containsKey(ontology))
-			onkiCache.put(ontology, new OnkiRepository(ontology));
+	public OnkiRepository getOnkiRepository(String ontology) {
+		if (!onkiCache.containsKey(ontology)) onkiCache.put(ontology, new OnkiRepository(ontology));
 		return onkiCache.get(ontology);
 	}
 
