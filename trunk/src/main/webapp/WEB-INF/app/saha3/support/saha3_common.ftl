@@ -326,6 +326,11 @@
 									<a href="../service/pics/?name=${label}&model=${model}" style="color:darkblue">
 									${label}</a>
 								</div>
+							[#elseif label?starts_with("http://")]
+								[#if property.config.localized && property.valueLang?length > 0]
+									<span style="color:grey">(${property.valueLang})</span>
+								[/#if]
+								<span style="white-space:pre-wrap;"><a href="${label}" style="color:darkblue">${label}</a></span>[#if property_has_next], [/#if]
 							[#else]
 								[#if property.config.localized && property.valueLang?length > 0]
 									<span style="color:grey">(${property.valueLang})</span>
