@@ -166,8 +166,12 @@ public class ModelEditor implements IModelEditor {
     }
     
     public synchronized boolean readModel(InputStream in, String lang) {
-    	if (allowEditing) {
+    	if (allowEditing) {    		
     		model.read(in,"",lang);
+    		
+    		// Readd internal configuration from model and remove the handled triples
+    		config.addConfigFromModel(model);
+    		
     		clearSubClassOfCache();
     		index.clear();
     		index.reindex();

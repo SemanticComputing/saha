@@ -145,11 +145,11 @@ public class ResourceFactory {
 		return new Comparator<UriLabel>() {
             
 			public int compare(UriLabel u0, UriLabel u1) {
-				boolean firsKnown = propertyOrderMap.containsKey(u0.getUri());
+				boolean firstKnown = propertyOrderMap.containsKey(u0.getUri());
 				boolean secondKnown = propertyOrderMap.containsKey(u1.getUri());
-				if (firsKnown && !secondKnown) return 1;
-				if (!firsKnown && secondKnown) return -1;
-				if (firsKnown && secondKnown)
+				if (firstKnown && !secondKnown) return -1;
+				if (!firstKnown && secondKnown) return 1;
+				if (firstKnown && secondKnown)
 					return propertyOrderMap.get(u0.getUri()).compareTo(propertyOrderMap.get(u1.getUri()));
 				return u0.compareTo(u1);
 			}

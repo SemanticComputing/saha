@@ -161,6 +161,10 @@ public class SahaProject implements IRepository, IModelEditor {
     
 	// delegate methods for ModelEditor
 	
+    public boolean readModel(InputStream in, String lang) {
+		return modelEditor.readModel(in, lang);
+	}
+    
 	public UriLabel addLiteralProperty(String s, String p, String l, String lang) {
 		return modelEditor.addLiteralProperty(s, p, l, lang);
 	}
@@ -187,10 +191,6 @@ public class SahaProject implements IRepository, IModelEditor {
 
 	public String createResource(String type, String label) {
 		return modelEditor.createResource(type, label);
-	}
-
-	public boolean readModel(InputStream in, String lang) {
-		return modelEditor.readModel(in, lang);
 	}
 
 	public boolean removeLiteralProperty(String s, String p, String valueShaHex) {
