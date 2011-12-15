@@ -30,6 +30,12 @@ import fi.seco.saha3.model.configuration.PropertyConfig;
 import fi.seco.semweb.util.JenaHelper;
 import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * Factory class for creating the property-specific data models used in
+ * the user interface templates. A single "property" here means basically
+ * a single property value on a specific resource, i.e., a single triple.
+ * 
+ */
 public class PropertyFactory {
 
 	public class SahaProperty implements ISahaProperty {

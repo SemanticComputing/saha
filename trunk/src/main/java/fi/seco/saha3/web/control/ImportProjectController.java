@@ -13,6 +13,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 
+/**
+ * Controller for handling complete RDF files uploaded from the UI and adding
+ * the data to a new or existing project.  
+ * 
+ */
 @Controller
 public class ImportProjectController {
 

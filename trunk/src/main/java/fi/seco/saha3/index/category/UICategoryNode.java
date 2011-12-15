@@ -3,6 +3,10 @@ package fi.seco.saha3.index.category;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+/**
+ * A single renderable category node for HAKO facets.
+ *
+ */
 public class UICategoryNode implements Comparable<UICategoryNode> {
 	private String propertyUri;
 	

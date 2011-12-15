@@ -22,6 +22,11 @@ import fi.seco.saha3.model.ISahaResource;
 import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.ConfigService;
 
+/**
+ * Factory class for creating resources as data models that readily contain
+ * all needed data for rendering the resource in the UI.  
+ * 
+ */
 public class ResourceFactory {
 
 	private ResourceIndexSearcher searcher;
@@ -43,6 +48,14 @@ public class ResourceFactory {
 		this.config = config;
 	}
 
+	/**
+	 * Takes a URI and returns a complete representation of that resource to
+	 * be used in constructing UI elements.
+	 * 
+	 * @param uri URI of the resource
+	 * @param locale Locale determining the preferred label language
+	 * @return A SAHA representation of the resource based on the data model
+	 */	
 	public ISahaResource getResource(final String uri, final Locale locale) {
 		return new ISahaResource() {
 			private List<ISahaProperty> cachedInverseProperties;
@@ -62,36 +75,66 @@ public class ResourceFactory {
 				return types;
 			}
             
+			/**
+			 * Gets all the properties this resource has 
+			 */
 			public List<ISahaProperty> getProperties() {
 				return propertyFactory.getProperties(uri,locale);
 			}
             
+			/**
+			 * Gets all the properties this resource has along with their labels
+			 */
 			public Map<UriLabel,Set<ISahaProperty>> getPropertyMap() {
 				return mapToProperties(getProperties(),getPropertyOrderMap(uri));
 			}
             
+			/**
+			 * Gets all the properties this resource has along with their labels
+			 */
 			public Set<Entry<UriLabel,Set<ISahaProperty>>> getPropertyMapEntrySet() {
 				return getPropertyMap().entrySet();
 			}
             
+			/**
+			 * Gets all the properties this resource has along with properties
+			 * in the domain of this resource 
+			 */
 			public Set<ISahaProperty> getEditorProperties() {
 				return propertyFactory.getAllProperties(uri,searcher.getTransitiveTypeUris(uri),locale);
 			}
             
+			/**
+			 * Gets all the properties this resource has along with properties
+			 * in the domain of this resource, in correct (configurated / 
+			 * alphabetical) order
+			 */
 			public Map<UriLabel,Set<ISahaProperty>> getEditorPropertyMap() {
 				return mapToProperties(getEditorProperties(),getPropertyOrderMap(uri));
 			}
             
+			/**
+			 * Gets all the properties this resource has along with properties
+			 * in the domain of this resource, in correct (configurated / 
+			 * alphabetical) order
+			 */
 			public Set<Entry<UriLabel,Set<ISahaProperty>>> getEditorPropertyMapEntrySet() {
 				return getEditorPropertyMap().entrySet();
 			}
             
+			/**
+			 * Gets all the properties (triples) that have this resource as object
+			 */
 			public List<ISahaProperty> getInverseProperties() {
 				if (cachedInverseProperties == null)
 					cachedInverseProperties = propertyFactory.getInverseProperties(uri,locale);
 				return cachedInverseProperties;
 			}
             
+			/**
+			 * Gets all the properties (triples) that have this resource as object,
+			 * in natural ordering
+			 */
 			public Iterator<ISahaProperty> getSortedInverseProperties() {
 				return new fi.seco.semweb.util.BinaryHeap<ISahaProperty>(getInverseProperties(),PropertyFactory.getPropertyComparator()).iterator();
 			}
@@ -108,12 +151,25 @@ public class ResourceFactory {
 		};
 	}
 	
+	/**
+	 * Gets the order in which properties should be shown in the UI
+	 * 
+	 * @param uri The URI of the resource to be shown
+	 * @return Property URI - integer map with the order
+	 */
 	public Map<String,Integer> getPropertyOrderMap(String uri) {
 		Map<String,Integer> map = getPropertyOrderMap(searcher.getTypeUris(uri));
 		if (map.isEmpty()) map = getPropertyOrderMap(searcher.getTransitiveTypeUris(uri));
 		return map;
 	}
 	
+	
+	/**
+	 * Gets the order in which properties should be shown in the UI
+	 * 
+	 * @param typeUris Type URIs of the resource to be shown 
+	 * @return Property URI - integer map with the order
+	 */
 	public Map<String,Integer> getPropertyOrderMap(String[] typeUris) {
 		for (String typeUri : typeUris) {
 			Collection<String> propertyOrder = config.getPropertyOrder(typeUri);

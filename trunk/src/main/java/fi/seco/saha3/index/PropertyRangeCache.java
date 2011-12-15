@@ -14,6 +14,10 @@ import com.hp.hpl.jena.rdf.model.Statement;
 
 import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * A class for caching the ranges of properties. 
+ * 
+ */
 public class PropertyRangeCache {
     
     private boolean caching = true;

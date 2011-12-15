@@ -13,6 +13,10 @@ import fi.seco.saha3.infrastructure.ResourceLockManager;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.util.CircularFifoAppender;
 
+/**
+ * Controller for the general admin view of SAHA
+ * 
+ */
 public class AdminController extends AbstractController {
 
 	private SahaProjectRegistry sahaProjectRegistry;

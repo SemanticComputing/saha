@@ -45,6 +45,12 @@ import fi.seco.semweb.util.LRUCache;
 import fi.seco.semweb.util.LString;
 import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * The main class to control the Lucene index which is used in many read and
+ * write operations (alongside the simple TDB RDF graph index) to speed things
+ * up.
+ *
+ */
 public class ResourceIndex {
 	
 	protected class Lock {

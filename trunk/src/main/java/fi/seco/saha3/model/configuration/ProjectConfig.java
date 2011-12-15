@@ -4,6 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuration class that holds all the SAHA project internal configuration -
+ * HAKO configuration not included.
+ * 
+ */
 public class ProjectConfig {
 
 	private String namespace;

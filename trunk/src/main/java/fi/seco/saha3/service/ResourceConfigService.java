@@ -15,8 +15,10 @@ import fi.seco.saha3.model.configuration.RepositoryConfig;
 import fi.seco.semweb.util.FreeMarkerUtil;
 import freemarker.template.Configuration;
 
-//published through DWR
-
+/**
+ * DWR-published class for modifying SAHA and HAKO configurations.
+ * 
+ */
 public class ResourceConfigService {
 	
 	private static final String REPOSITORY_CONFIG_TEMPLATE = "saha3/standalone/repositoryConfig.ftl";

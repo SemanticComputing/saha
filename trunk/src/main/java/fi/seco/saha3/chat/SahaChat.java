@@ -14,6 +14,11 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 
+/**
+ * Bean that handles the internal project-specific SAHA-chats. Each project
+ * has its own chat channel, and admins can broadcast to all channels. 
+ * 
+ */
 public class SahaChat implements DisposableBean {
 
 	private class Channel {

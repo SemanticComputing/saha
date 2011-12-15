@@ -14,6 +14,12 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import fi.seco.semweb.util.LRUCache;
 import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * A generic subject-object -cache with creation-time defined properties. The 
+ * cache can be used both for querying objects by subject and vice versa. Used
+ * in SAHA for storing class (<code>rdfs:subClassOf</code>) hierarchies.
+ *
+ */
 public class SubjectObjectCache {
     
     private Model model;
@@ -21,17 +27,6 @@ public class SubjectObjectCache {
     
     private Map<String,String[]> objectCache = new LRUCache<String,String[]>(10000);
     private Map<String,String[]> subjectCache = new LRUCache<String,String[]>(10000);
-    
-    public SubjectObjectCache(Model model, String propertyUri) {
-        this.model = model;
-        this.hierarchyProperties = new HashSet<Property>();
-        this.hierarchyProperties.add(ResourceFactory.createProperty(propertyUri));
-    }
-    
-    public SubjectObjectCache(Model model, Set<Property> properties) {
-        this.model = model;
-        this.hierarchyProperties = properties;
-    }
     
     public SubjectObjectCache(Model model, Property... properties) {
         this.model = model;

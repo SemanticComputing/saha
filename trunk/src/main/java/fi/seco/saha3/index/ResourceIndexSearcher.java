@@ -29,6 +29,11 @@ import org.apache.lucene.search.highlight.QueryScorer;
 import fi.seco.saha3.index.ResourceIndex.Lock;
 import fi.seco.saha3.model.IResults;
 
+/**
+ * The main class that performs the read operations, i.e., searches, to the
+ * Lucene index.
+ * 
+ */
 public class ResourceIndexSearcher {
 	
 	public class Results implements IResults {

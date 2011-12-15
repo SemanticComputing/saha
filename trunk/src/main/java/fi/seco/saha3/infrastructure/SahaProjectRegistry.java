@@ -21,6 +21,15 @@ import com.hp.hpl.jena.util.FileManager;
 
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * General manager class for SAHA. Controls the creation, deletion and 
+ * management of SAHA projects.
+ * 
+ * The singleton bean instance of this class is injected into many other
+ * beans and is the main point of entry into SAHA projects and their
+ * configuration and data. 
+ * 
+ */
 public class SahaProjectRegistry {
 	
 	private Logger log = Logger.getLogger(getClass());

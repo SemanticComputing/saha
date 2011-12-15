@@ -13,6 +13,10 @@ import com.hp.hpl.jena.vocabulary.RDF;
 import fi.seco.saha3.infrastructure.ResourceLockManager;
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * Controller for the editor view of SAHA
+ * 
+ */
 public class EditorController extends ASahaController {
 
 	private ResourceLockManager lockManager;

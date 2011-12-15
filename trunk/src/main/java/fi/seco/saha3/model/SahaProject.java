@@ -25,6 +25,12 @@ import fi.seco.saha3.index.category.UICategoryBuilder;
 import fi.seco.saha3.model.configuration.ConfigService;
 import fi.seco.saha3.model.configuration.HakoConfig;
 
+/**
+ * A single SAHA project. Contains the data of the model (in both the RDF
+ * graph and Lucene index) and the relevant configuration, both for SAHA and
+ * HAKO.
+ * 
+ */
 public class SahaProject implements IRepository, IModelEditor {
 	
     private ResourceIndexSearcher searcher;
@@ -35,8 +41,6 @@ public class SahaProject implements IRepository, IModelEditor {
     private ModelEditor modelEditor;
     private ConfigService config;
     private UICategoryBuilder categoryBuilder;
-    
-    private HakoConfig hakoConfig;
     
     @Autowired
     public void setConfig(ConfigService config) {
@@ -93,6 +97,8 @@ public class SahaProject implements IRepository, IModelEditor {
     
     public UICategories getUICategories(Map<String,List<String>> queryMap, Locale locale) {
     	if (!isHakoConfig()) return new UICategories();
+    	
+    	HakoConfig hakoConfig = this.config.getHakoConfig();
     	return categoryBuilder.getUICategories(hakoConfig.getTypes(),hakoConfig.getProperties(),queryMap,locale);
     }
     
@@ -135,28 +141,30 @@ public class SahaProject implements IRepository, IModelEditor {
 	// HAKO methods
 	
     public boolean isHakoConfig() {
-    	return hakoConfig != null;
+    	return config.getHakoConfig() != null;
     }
     
     public void setHakoConfig(List<String> types, List<String> properties) {
-    	hakoConfig = new HakoConfig();
+    	HakoConfig hakoConfig = new HakoConfig();
     	hakoConfig.setTypes(types);
     	hakoConfig.setProperties(properties);
+    	
+    	config.setHakoConfig(hakoConfig);
     }
     
 	public void destroyHako() {
-		if (hakoConfig == null) propertyRangeCache.clear();
-		hakoConfig = null;
+		if (config.getHakoConfig() == null) propertyRangeCache.clear();
+		config.setHakoConfig(null);
 	}
     
     public HakoConfig getHakoConfig() {
-    	if (hakoConfig == null) hakoConfig = new HakoConfig();
-    	return hakoConfig;
+    	if (!isHakoConfig()) config.setHakoConfig(new HakoConfig());
+    	return config.getHakoConfig();
     }
     
     public List<String> getHakoTypes() {
     	if (!isHakoConfig()) return Collections.emptyList();
-    	return hakoConfig.getTypes();
+    	return config.getHakoConfig().getTypes();
     }
     
 	// delegate methods for ModelEditor

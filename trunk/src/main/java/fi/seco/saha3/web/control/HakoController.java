@@ -20,6 +20,10 @@ import fi.seco.saha3.index.category.UICategories;
 import fi.seco.saha3.index.category.UICategoryNode;
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * Controller for the HAKO config screen and HAKO itself.
+ * 
+ */
 public class HakoController extends ASahaController {
 
 	@SuppressWarnings("unchecked")

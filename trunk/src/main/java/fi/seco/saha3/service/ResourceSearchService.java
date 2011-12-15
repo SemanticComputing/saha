@@ -29,6 +29,10 @@ import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.PropertyConfig;
 import fi.seco.saha3.model.configuration.RepositoryConfig;
 
+/**
+ * DWR-published class for SAHA autocompletion searches.
+ * 
+ */
 public class ResourceSearchService implements Controller {
     
     @SuppressWarnings("unused")

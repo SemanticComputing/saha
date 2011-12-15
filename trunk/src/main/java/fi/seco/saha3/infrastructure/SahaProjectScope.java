@@ -8,6 +8,11 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import fi.seco.saha3.web.control.ASahaController;
 
+/**
+ * Custom Spring scope for SAHA projects. Used to enable project-specific
+ * beans of many classes instead of global singletons.
+ * 
+ */
 public class SahaProjectScope implements Scope {
 
 	private SahaProjectRegistry spr;

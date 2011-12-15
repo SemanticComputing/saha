@@ -1,5 +1,7 @@
 package fi.seco.saha3.web.control;
 
+import java.util.regex.Pattern;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -10,9 +12,19 @@ import org.springframework.web.servlet.mvc.AbstractController;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.RDFNode;
+import com.hp.hpl.jena.rdf.model.Statement;
+import com.hp.hpl.jena.vocabulary.OWL;
+import com.hp.hpl.jena.vocabulary.RDF;
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
+import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * Controller for exporting data from SAHA. Writes the data model as output
+ * in the desired RDF serialization format.
+ * 
+ */
 public class ExportController extends AbstractController {
 
 	private SahaProjectRegistry sahaProjectRegistry;
@@ -30,20 +42,62 @@ public class ExportController extends AbstractController {
 		response.setContentType("text/plain");
 
 		String uri = request.getParameter("uri");
-		String lang = parseLang(request.getParameter("l"));
+		String config = request.getParameter("config");
+		String schema = request.getParameter("schema");
+		String lang = parseLang(request.getParameter("l"));		
 		String projectName = ASahaController.parseModelName(request.getServletPath());
 
 		try
 		{
 			this.sahaProjectRegistry.getLockForProject(projectName).readLock().lock();
 			
-			if (uri == null)
+			if (config != null)
+			{
+				sahaProjectRegistry
+						.getSahaProject(projectName)
+						.getConfig()
+						.getModelFromConfig(projectName,
+								sahaProjectRegistry.getModel(projectName))
+						.write(response.getWriter(), lang);
+			}
+			else if (schema != null)
+			{
+				// A resource is defined to be a part of the schema here if
+				// its own URI or its type URI matches this pattern
+				
+				Pattern schemaPattern = 
+						Pattern.compile("^" + OWL.getURI() + "\\S*|" +
+										"^" + RDFS.getURI() + "\\S*" +
+										"^" + RDF.getURI() + "\\S*|" +
+										"^" + "http://www.w3.org/2004/02/skos/core#" + "\\S*|");
+				
+				Model m = sahaProjectRegistry.getModel(projectName);
+				Model output = ModelFactory.createDefaultModel();
+				for (Statement s : new IteratorToIIterableIterator<Statement>(m.listStatements(null, RDF.type, (RDFNode) null)))
+				{
+					if (schemaPattern.matcher(s.getSubject().getURI()).matches() ||
+						(s.getObject().isURIResource() && schemaPattern.matcher(s.getResource().getURI()).matches()))
+						output.add(m.listStatements(s.getSubject(), null, (RDFNode) null));
+				}
+				output.setNsPrefixes(m);
+				output.setNsPrefix("rdf", RDF.getURI());
+				output.setNsPrefix("rdfs", RDFS.getURI());
+				output.setNsPrefix("owl", OWL.getURI());
+
+				output.write(response.getWriter(),lang);
+				output.close();
+			}
+			else if (uri == null)
+			{
 				sahaProjectRegistry.getModel(projectName).write(response.getWriter(),lang);
-			else {
+			}
+			else
+			{
 				Model m = sahaProjectRegistry.getModel(projectName);
 				Model output = ModelFactory.createDefaultModel();
 				output.add(m.listStatements(m.createResource(uri),null,(RDFNode)null));
 				output.write(response.getWriter(),lang);
+				output.close();
 			}
 			return null;
 		}

@@ -20,6 +20,10 @@ import org.apache.lucene.search.BooleanClause.Occur;
 
 import com.hp.hpl.jena.vocabulary.RDF;
 
+/**
+ * A helper class to format and parse Lucene queries used in the data index.
+ *
+ */
 public class QueryParser {
 
 	private final Logger log = Logger.getLogger(getClass());

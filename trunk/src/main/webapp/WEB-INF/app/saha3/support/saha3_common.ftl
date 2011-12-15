@@ -229,7 +229,7 @@
 [/#macro]
 
 [#macro searchBar model lang]
-	<div style="position:relative;margin:5px;padding-bottom:5px;padding-top:5px;font-family:sans-serif;border-bottom:medium solid hotpink;font-size:10pt;">
+	<div style="position:relative;margin:5px 5px 5px 5px;padding-bottom:20px;padding-top:5px;font-family:sans-serif;border-bottom:medium solid hotpink;font-size:10pt;">
 		<strong>
 			<a href="../saha3/main.shtml" style="color:black;">SAHA3</a> | 
 		</strong><a href="index.shtml" style="color:black">${model}</a> - search 
@@ -248,26 +248,29 @@
 					document.getElementById('about_link_id').href = element.value;
 				}
 			</script>
-			<div style="display: inline; margin-right: 20px; color: black;">
-				<a href="${aboutLink}" id="about_link_id" style="color:black">about ${model}</a>
+			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
+			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
+			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] ||				 
+			<a href="hako.shtml" style="color:deeppink">HAKO</a> || 
+			<div style="display: inline;">
+				<a href="${aboutLink}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
 				<span onclick="javascript: var element = document.getElementById('about_link_box'); element.style.display = 'inline'; element.focus()" style="font-size: 50%">[edit]
 				</span>
 				<input style="display: none;" type="text" id="about_link_box" value="${aboutLink}" 
 					onBlur="javascript: setAboutLink(this);"
 					onKeyPress="javascript: if (event.keyCode==13) { setAboutLink(this) }"/>
-				<a style="color:black; margin-left:20px" href="manage.shtml">manage project</a>
-			</div>
-			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
-			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
-			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] || 
-			<a href="export.shtml?l=ttl" style="color:deeppink">rdf</a> || 
-			<a href="hako.shtml" style="color:deeppink">HAKO</a>
+				<a style="color:black;" href="manage.shtml"><img title="Manage project" alt="Manage project" src="../app/images/saha3/saha3_manage_project.png" /></a>
+			</div>	
+			<a href="export.shtml?l=ttl" style="color:deeppink"><img title="Export data+schema" alt="Export data+schema" src="../app/images/saha3/saha3_export_all.png" /></a>
+			<a href="export.shtml?l=ttl&schema" style="color:deeppink"><img title="Export schema" alt="Export schema" src="../app/images/saha3/saha3_export_schema.png" /></a>
+			<a href="export.shtml?l=ttl&config" style="color:deeppink"><img title="Export configuration" alt="Export configuration" src="../app/images/saha3/saha3_export_config.png" /></a> 
 			<span 
 				onMouseOver="javascript: dijit.showTooltip('${helpText}',this);"
 				onMouseOut="javascript: dijit.hideTooltip(this);"
-			 	style="color:deeppink; margin-left: 20px; text-decoration: underline;">HELP</span>
+			 	style="color:deeppink; margin-left: 20px; text-decoration: underline;"><img src="../app/images/saha3/saha3_help.png" /></span>
+			 
 		</div>
-		<div style="position:absolute;right:5px;top:38px;width:180px;font-size:8pt;">
+		<div style="position:absolute;right:5px;top:48px;width:180px;font-size:8pt;">
 			<div style="margin-bottom:6px">
 				<div style="color:grey">name</div><input id="name" style="width:110px;border:thin solid #ccc;" />
 				<div style="color:grey">message</div>

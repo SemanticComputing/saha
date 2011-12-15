@@ -5,6 +5,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
+/**
+ * A single internal node for a category (facet) tree in HAKO.
+ *
+ */
 public class CategoryNode {
 	
 	private String uri;

@@ -3,6 +3,11 @@ package fi.seco.saha3.util;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.spi.LoggingEvent;
 
+/**
+ * A custom log message layout utilized in the admin interface of SAHA to
+ * directly show system log messages.
+ * 
+ */
 public class HTMLPatternLayout extends PatternLayout {
 
 	@Override

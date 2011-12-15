@@ -16,7 +16,11 @@ import fi.seco.saha3.model.SahaProject;
 import fi.seco.semweb.util.BinaryHeap;
 import freemarker.ext.beans.BeansWrapper;
 
-
+/**
+ * Controller for the resource viewing screen in SAHA. Similar to the editor
+ * screen, but without actual editing possibilities.
+ * 
+ */
 public class ResourceController extends ASahaController {
 
 	private ResourceLockManager lockManager;

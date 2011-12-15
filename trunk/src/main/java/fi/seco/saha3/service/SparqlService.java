@@ -20,6 +20,10 @@ import com.hp.hpl.jena.vocabulary.RDFS;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.util.IOUtils;
 
+/**
+ * Service class exposing data from SAHA projects as separate SPARQL endpoints. 
+ * 
+ */
 public class SparqlService extends NamedModelAssembler implements InitializingBean {
 	
 	private static final Resource jenaServiceModel = ResourceFactory

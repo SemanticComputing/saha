@@ -14,6 +14,13 @@ import fi.seco.saha3.infrastructure.SahaHelpManager;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * General controller superclass for various SAHA controllers. Loads up the
+ * proper template (according to the request URL) and adds general, SAHA-wide
+ * properties (project name, language, etc.) to it so there's no need to add 
+ * them in every separate controller.
+ * 
+ */
 public abstract class ASahaController extends AbstractController {
 
 	private static final String SAHA_TEMPLATE_BASE = "saha3";

@@ -26,6 +26,12 @@ import org.springframework.beans.factory.annotation.Required;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
+/**
+ * The main backup manager for SAHA. By default, stores three backups for each
+ * project: a month old, a week old (taken every saturday) and a day old.
+ * Expired backups are deleted.
+ * 
+ */
 public class SahaBackupManager implements DisposableBean {    
 
 	private Logger log = Logger.getLogger(getClass());

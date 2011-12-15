@@ -18,6 +18,10 @@ import org.springframework.web.servlet.mvc.Controller;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 
+/**
+ * Controller for showing uploaded images in SAHA.
+ * 
+ */
 public class ImageController implements Controller
 {
     private static final String LEGACY_PREFIX = "http://demo.seco.tkk.fi/";

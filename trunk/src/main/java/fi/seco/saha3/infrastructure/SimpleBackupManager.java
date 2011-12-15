@@ -17,6 +17,11 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Required;
 
+/**
+ * An alternate backup manager that simply takes a nightly backup of each
+ * project, deleting previous backups.
+ * 
+ */
 public class SimpleBackupManager implements DisposableBean, InitializingBean {    
 	
 	private class BackupTask extends TimerTask {

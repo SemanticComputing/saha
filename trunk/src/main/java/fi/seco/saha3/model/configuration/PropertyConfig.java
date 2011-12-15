@@ -3,6 +3,10 @@ package fi.seco.saha3.model.configuration;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * Configuration for a single property in a SAHA project
+ * 
+ */
 public class PropertyConfig {
 	
 	private boolean hidden;

@@ -11,6 +11,11 @@ import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.ModelEditor;
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * Controller for adding and editing map information (points, routes and areas)
+ * in SAHA.
+ * 
+ */
 public class MapEditController extends ASahaController 
 {
     @Override

@@ -38,6 +38,12 @@ import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.PropertyConfig;
 
+/**
+ * Mediator class between ONKI and SAHA ontology searches. Encodes and decodes
+ * the requests between SAHA data models and the SOAP interface used for the
+ * remote queries.
+ * 
+ */
 public class OnkiWebService {
 
 	public class OnkiProperty implements ISahaProperty {

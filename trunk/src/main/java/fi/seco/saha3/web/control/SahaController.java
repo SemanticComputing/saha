@@ -9,6 +9,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import fi.seco.saha3.model.SahaProject;
 
+/**
+ * Controller for the main view of SAHA, where the project class hierarchy
+ * is shown and the instances can be listed for each.
+ * 
+ */
 public class SahaController extends ASahaController {
 	
 	@Override

@@ -11,6 +11,11 @@ import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.AppenderBase;
 
+/**
+ * A circular <code>logback</code> log appender to only store the latest 
+ * log messages in a fixed-size buffer.
+ * 
+ */
 public class CircularFifoAppender extends AppenderBase<ILoggingEvent> {
 	
 	private static Map<String,Collection<String>> messageBuffers = 

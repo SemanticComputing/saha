@@ -20,8 +20,10 @@ import freemarker.ext.beans.BeansWrapper;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
 
-// published through DWR
-
+/**
+ * DWR-published class for modifying SAHA and HAKO data.
+ * 
+ */
 public class ResourceEditService {
 
 	private static final String OBJECT_PROPERTY_TEMPLATE = "saha3/standalone/objectProperty.ftl";

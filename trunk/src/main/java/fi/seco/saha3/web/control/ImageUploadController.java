@@ -17,6 +17,10 @@ import org.springframework.web.servlet.mvc.AbstractCommandController;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 
+/**
+ * Controller for uploading images in SAHA.
+ * 
+ */
 public class ImageUploadController extends AbstractCommandController
 {
     private Log log = LogFactory.getLog(getClass());

@@ -4,6 +4,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.ws.transport.http.WsdlDefinitionHandlerAdapter;
 
+/**
+ * Adapter for enabling SAHA project-specific WSDL descriptions to create
+ * an ONKI web service interface out of each SAHA project.
+ * 
+ */
 public class SahaWsdlDefinitionHandlerAdapter extends WsdlDefinitionHandlerAdapter {
 
 	private String baseURL;

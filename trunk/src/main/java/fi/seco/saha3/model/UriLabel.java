@@ -6,6 +6,11 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 
+/**
+ * A class used to combine the URI and label of a resource
+ * to a single object.
+ * 
+ */
 public class UriLabel implements Comparable<UriLabel> {
 
 	private String uri;

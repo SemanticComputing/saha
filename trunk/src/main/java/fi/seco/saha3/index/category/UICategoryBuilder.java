@@ -24,6 +24,14 @@ import fi.seco.saha3.index.QueryParser;
 import fi.seco.saha3.index.ResourceIndex;
 import fi.seco.saha3.index.ResourceIndexSearcher;
 
+/**
+ * A builder that gives all needed user interface information about
+ * HAKO categories (facets). This information is combined from the two
+ * underlying data sources - the raw RDF graph model (through 
+ * <code>CategoryBuilder</code>) and the lucene index (for efficient text 
+ * and amount queries)
+ * 
+ */
 public class UICategoryBuilder {
 	
 	private CategoryBuilder categoryBuilder;
@@ -39,6 +47,18 @@ public class UICategoryBuilder {
 		this.searcher = searcher;
 	}
 	
+	/**
+	 * Returns a representation of the categories that has all necessary
+	 * data for rendering the categories in the UI.
+	 * 
+	 * @param types Types of the searched target instances
+	 * @param properties The category (facet) properties
+	 * @param queryMap A map of constraints, mapping property URIs to their
+	 * required values. If the key is <code>UBER_FIELD_NAME</code>, the values
+	 * are text searches and must match to the label of the searched instances. 
+	 * @param locale Preferred locale for the labels of the results
+	 * @return Renderable representation of the search results
+	 */
 	public UICategories getUICategories(
 			List<String> types, List<String> properties, Map<String,List<String>> queryMap, Locale locale) 
 	{

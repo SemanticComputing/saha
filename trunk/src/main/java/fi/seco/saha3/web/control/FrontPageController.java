@@ -9,6 +9,11 @@ import org.springframework.web.servlet.mvc.Controller;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 
+/**
+ * Controller for showing the front page (project list and new project prompt)
+ * of SAHA.
+ * 
+ */
 public class FrontPageController implements Controller
 {    
     private SahaProjectRegistry sahaProjectRegistry;

@@ -10,6 +10,11 @@ import java.io.FileOutputStream;
 
 import org.apache.log4j.Logger;
 
+/**
+ * The persistence wrapper for SAHA configuration objects. Serializes the
+ * objects as XML to the SAHA project directory each time a change is made.
+ * 
+ */
 public class XMLConfigStore {
 	
 	private Logger log = Logger.getLogger(getClass());

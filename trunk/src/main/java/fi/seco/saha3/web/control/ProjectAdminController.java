@@ -12,7 +12,11 @@ import org.springframework.web.servlet.ModelAndView;
 
 import fi.seco.saha3.model.SahaProject;
 
-
+/**
+ * Controller for the project-specific admin screen in SAHA, accessed through
+ * the "manage project" button in the project UI.
+ * 
+ */
 public class ProjectAdminController extends ASahaController 
 {   
     private final static String DEFAULT_PASS = "rhema04";

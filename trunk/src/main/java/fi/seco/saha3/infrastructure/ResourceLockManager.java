@@ -13,6 +13,13 @@ import org.springframework.beans.factory.DisposableBean;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.TreeMultimap;
 
+/**
+ * A manager for the soft locks that prevent multiple users from navigating
+ * to the editor page of the same resource concurrently. NOT meant to be a 
+ * hard lock: only "locks" on the UI level, does not interfere with data 
+ * access, and can be circumvented.
+ * 
+ */
 public class ResourceLockManager implements DisposableBean {
 	
 	private class Lock {

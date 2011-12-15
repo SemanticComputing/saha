@@ -31,6 +31,11 @@ import fi.seco.saha3.model.configuration.RepositoryConfig;
 import fi.seco.saha3.util.SAHA3;
 import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
 
+/**
+ * Class used for write operations performed in SAHA. Keeps both the RDF
+ * data model and the Lucene index consistent with each other.
+ * 
+ */
 public class ModelEditor implements IModelEditor {
 	
 	private Logger log = Logger.getLogger(getClass());
@@ -169,7 +174,7 @@ public class ModelEditor implements IModelEditor {
     	if (allowEditing) {    		
     		model.read(in,"",lang);
     		
-    		// Readd internal configuration from model and remove the handled triples
+    		// Re-add internal configuration from model and remove the handled triples
     		config.addConfigFromModel(model);
     		
     		clearSubClassOfCache();
@@ -233,7 +238,7 @@ public class ModelEditor implements IModelEditor {
     }
     
     public String createResource(String type, String label) {
-        return createResource(generateRandomUri(),type,label);
+        return createResource(generateRandomUri(config.getNamespace()),type,label);
     }
     
     public synchronized String createResource(String uri, String type, String label) {
@@ -249,8 +254,8 @@ public class ModelEditor implements IModelEditor {
         return uri;
     }
     
-    public String generateRandomUri() {
-        return config.getNamespace() + "u" + UUID.randomUUID().toString();
+    public static String generateRandomUri(String namespace) {
+        return namespace + "u" + UUID.randomUUID().toString();
     }
     
     public synchronized boolean removeResource(String uri) {
