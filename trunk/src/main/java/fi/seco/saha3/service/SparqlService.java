@@ -25,12 +25,11 @@ import fi.seco.saha3.util.IOUtils;
  * 
  */
 public class SparqlService extends NamedModelAssembler implements InitializingBean {
-	
-	private static final Resource jenaServiceModel = ResourceFactory
-			.createResource("http://www.seco.tkk.fi/onto/assembler/JenaServiceModel");
-	
+
+	private static final Resource jenaServiceModel = ResourceFactory.createResource("http://www.seco.tkk.fi/onto/assembler/JenaServiceModel");
+
 	private SahaProjectRegistry projectRegistry;
-	
+
 	@Required
 	public void setSahaProjectRegistry(SahaProjectRegistry projectRegistry) {
 		this.projectRegistry = projectRegistry;
@@ -45,50 +44,50 @@ public class SparqlService extends NamedModelAssembler implements InitializingBe
 		return projectRegistry.getModel(modelName);
 	}
 
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		Assembler.general.implementWith(jenaServiceModel, this);
 
 		Model josekiConfig = ModelFactory.createDefaultModel();
-		josekiConfig.read(this.getClass().getResourceAsStream(
-				"/joseki-config-skeleton.ttl"), null, "TTL");
+		josekiConfig.read(this.getClass().getResourceAsStream("/joseki-config-skeleton.ttl"), null, "TTL");
 
 		String NS = JosekiSchemaBase.NS;
 
 		Resource josekiService = josekiConfig.createResource(NS + "Service");
-		Resource josekiProcessor = josekiConfig.createResource(NS
-				+ "ProcessorSPARQL_FixedDS");
-		Resource jaDataset = josekiConfig
-				.createResource("http://jena.hpl.hp.com/2005/11/Assembler#RDFDataset");
-		Property jaDefGraph = josekiConfig
-				.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#defaultGraph");
-		Property jaModelName = josekiConfig
-				.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#modelName");
+		Resource josekiSPARQLProcessor = josekiConfig.createResource(NS + "ProcessorSPARQL_FixedDS");
+		Resource josekiSPARULProcessor = josekiConfig.createResource(NS + "ProcessorSPARQLUpdate");
+		Resource jaDataset = josekiConfig.createResource("http://jena.hpl.hp.com/2005/11/Assembler#RDFDataset");
+		Property jaDefGraph = josekiConfig.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#defaultGraph");
+		Property jaModelName = josekiConfig.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#modelName");
 
 		int serviceNumber = 0;
 		for (String modelName : projectRegistry.getAllProjects()) {
-			Resource service = josekiConfig.createResource("#service"
-					+ ++serviceNumber);
-			Resource data = josekiConfig
-					.createResource("http://demo.seco.tkk.fi/saha/joseki_service/" + serviceNumber);
+			Resource sparqlService = josekiConfig.createResource("#sparqlService" + ++serviceNumber);
+			Resource sparulService = josekiConfig.createResource("#sparulService" + serviceNumber);
+			Resource data = josekiConfig.createResource("http://demo.seco.tkk.fi/saha/joseki_service/" + serviceNumber);
 
-			josekiConfig.add(service, RDF.type, josekiService);
-			josekiConfig.add(service, RDFS.label, "SPARQL");
-			josekiConfig.add(service, JosekiSchemaBase.serviceRef,
-					"service/data/" + modelName + "/sparql");
-			josekiConfig.add(service, JosekiSchemaBase.dataset, data);
-			josekiConfig.add(service, JosekiSchemaBase.processor,
-					josekiProcessor);
+			josekiConfig.add(sparqlService, RDF.type, josekiService);
+			josekiConfig.add(sparqlService, RDFS.label, "SPARQL");
+			josekiConfig.add(sparqlService, JosekiSchemaBase.serviceRef, "service/data/" + modelName + "/sparql");
+			josekiConfig.add(sparqlService, JosekiSchemaBase.dataset, data);
+			josekiConfig.add(sparqlService, JosekiSchemaBase.processor, josekiSPARQLProcessor);
+
+			josekiConfig.add(sparulService, RDF.type, josekiService);
+			josekiConfig.add(sparulService, RDFS.label, "SPARUL");
+			josekiConfig.add(sparulService, JosekiSchemaBase.serviceRef, "service/data/" + modelName + "/sparul");
+			josekiConfig.add(sparulService, JosekiSchemaBase.dataset, data);
+			josekiConfig.add(sparulService, JosekiSchemaBase.processor, josekiSPARULProcessor);
 
 			Resource defaultGraph = josekiConfig.createResource();
 			josekiConfig.add(defaultGraph, RDF.type, jenaServiceModel);
 			josekiConfig.add(defaultGraph, jaModelName, modelName);
 			josekiConfig.add(defaultGraph, RDFS.label, modelName);
-			
+
 			josekiConfig.add(data, RDF.type, jaDataset);
 			josekiConfig.add(data, RDFS.label, "Smetana: " + modelName);
 			josekiConfig.add(data, jaDefGraph, defaultGraph);
 		}
-		
+
 		URL target = this.getClass().getResource("/");
 		IOUtils.writeRDFFile(josekiConfig, target.getPath() + "joseki-config.ttl", "TTL");
 	}
