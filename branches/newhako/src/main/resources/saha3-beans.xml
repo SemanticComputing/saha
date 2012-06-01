@@ -49,6 +49,7 @@
 				/service/pics/**=Saha3ImageController
            		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
            		/service/ws/**=MessageDispatcher
+           		/*/ahako.shtml=HakoJSONController
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController
@@ -86,7 +87,7 @@
 	
 	<bean id="Saha3OnkiService" class="fi.seco.saha3.service.OnkiService"
 		p:model-ref="ScopedModel" p:sahaProject-ref="ScopedProject"/>
-	
+
 	<bean id="ResourceEditService" class="fi.seco.saha3.service.ResourceEditService"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
 	p:onkiWebService-ref="OnkiWebService"
@@ -104,6 +105,7 @@
 			<dwr:include method="setMapProperty" />
 			<dwr:include method="getEditorPropertyTable" />
 			<dwr:include method="getHakoPropertyTable" />
+			<dwr:include method="getHakoTimemapEvent" />			
 			<dwr:include method="getPropertyTable" />
 			<dwr:include method="getExternalPropertyTable" />
 	    </dwr:remote>
@@ -146,7 +148,11 @@
 	<bean id="HakoController" class="fi.seco.saha3.web.control.HakoController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
 	p:cacheSeconds="0" />
-
+	
+	<bean id="HakoJSONController" class="fi.seco.saha3.web.control.HakoJSONController" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
 	<bean id="ImportProjectController" class="fi.seco.saha3.web.control.ImportProjectController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 

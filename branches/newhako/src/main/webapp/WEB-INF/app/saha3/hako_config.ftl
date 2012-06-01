@@ -6,6 +6,7 @@
 	<title>HAKO - ${model}</title>
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/engine.js'></script> 
+    <script type="text/javascript" src="../app/scripts/jquery-1.6.2.min.js"></script>
 	
 	<style>
 		body {
@@ -74,14 +75,29 @@
 			margin-bottom: 10px;
 		}
 	</style>
+    <script>
+        jQuery(document).ready(function() {
+            $('#reset').click(function() {
+                ResourceConfigService.destroyHako('${model}', function() {location.href='hako.shtml';});
+            });
+            $('#selectAll').click(function() {
+                $("input[type='checkbox']").click();
+            });
+            $('#start').click(function() {
+                location.href='hako.shtml';
+            });
+        });
+    </script>
 </head>
 <body>
 	<div id="header"><a href="hako.shtml">HAKO</a></div>
 	
 	<div id="main_container" style="margin-left:13px;">
 		<h1>Configure project</h1>
-		<a href="javascript:ResourceConfigService.destroyHako('${model}');location.href='hako.shtml'" style="color:grey">reset hako</a> | 
-		<a href="javascript:location.href='hako.shtml'" style="color:black">start hako</a>
+        <a id="selectAll" style="color:grey; cursor: pointer;">select all</a> |
+		<a id="reset" style="color:grey;cursor: pointer;">reset hako</a> | 
+		<a id="start" style="color:black;cursor: pointer;">start hako</a>
+
 		<div style="float:left;padding:10px;border:thin solid #ccc;">
 			<h2>Instances</h2>
 			[#list types.iterator() as type]

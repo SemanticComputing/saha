@@ -39,6 +39,8 @@ public class HakoController extends ASahaController {
 			return mav;
 		}
 		
+		mav.setViewName("saha3/hako_ajax");
+		
 		Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
 		
 		parameterMap.remove("lang");
