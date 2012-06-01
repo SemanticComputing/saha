@@ -1,0 +1,78 @@
+@prefix sdb:     <http://jena.hpl.hp.com/2007/sdb#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix module:  <http://joseki.org/2003/06/module#> .
+@prefix js:      <http://www.seco.tkk.fi/onto/assembler/> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix joseki:  <http://joseki.org/2005/06/configuration#> .
+@prefix tdb:     <http://jena.hpl.hp.com/2008/tdb#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix ja:      <http://jena.hpl.hp.com/2005/11/Assembler#> .
+
+<#service2>
+      a       joseki:Service ;
+      rdfs:label "SPARQL" ;
+      joseki:dataset <http://demo.seco.tkk.fi/saha3sandbox/yrdydr> ;
+      joseki:processor joseki:ProcessorSPARQL_FixedDS ;
+      joseki:serviceRef "service/data/yrdydr/sparql" .
+
+joseki:ProcessorSPARQLUpdate
+      a       joseki:Processor ;
+      rdfs:label "SPARQL Udpate processor" ;
+      module:implementation
+              joseki:ImplSPARQLUpdate ;
+      joseki:lockingPolicy
+              joseki:lockingPolicyMRSW .
+
+<#service1>
+      a       joseki:Service ;
+      rdfs:label "SPARQL" ;
+      joseki:dataset <http://demo.seco.tkk.fi/saha3sandbox/asdfasfd> ;
+      joseki:processor joseki:ProcessorSPARQL_FixedDS ;
+      joseki:serviceRef "service/data/asdfasfd/sparql" .
+
+<http://demo.seco.tkk.fi/saha3sandbox/asdfasfd>
+      a       ja:RDFDataset ;
+      rdfs:label "Smetana: asdfasfd" ;
+      ja:defaultGraph
+              [ a       js:JenaServiceModel ;
+                rdfs:label "asdfasfd" ;
+                ja:modelName "asdfasfd"
+              ] .
+
+[]    a       joseki:Server .
+
+<http://demo.seco.tkk.fi/saha3sandbox/yrdydr>
+      a       ja:RDFDataset ;
+      rdfs:label "Smetana: yrdydr" ;
+      ja:defaultGraph
+              [ a       js:JenaServiceModel ;
+                rdfs:label "yrdydr" ;
+                ja:modelName "yrdydr"
+              ] .
+
+joseki:ImplSPARQL
+      a       joseki:ServiceImpl ;
+      module:className <java:org.joseki.processors.SPARQL> .
+
+js:JenaServiceModel
+      rdfs:subClassOf ja:NamedModel .
+
+joseki:ProcessorSPARQL_FixedDS
+      a       joseki:Processor ;
+      rdfs:label "SPARQL processor for fixed datasets" ;
+      module:implementation
+              joseki:ImplSPARQL ;
+      joseki:allowExplicitDataset
+              "false"^^xsd:boolean ;
+      joseki:allowWebLoading
+              "true"^^xsd:boolean ;
+      joseki:lockingPolicy
+              joseki:lockingPolicyMRSW .
+
+<file:///common/home/joonas/>
+      rdfs:comment "Exposes the Smetana models to a SPARQL query protocol interface" ;
+      rdfs:label "Smetana Joseki configuration" .
+
+joseki:ImplSPARQLUpdate
+      a       joseki:ServiceImpl ;
+      module:className <java:org.joseki.processors.SPARQLUpdate> .
