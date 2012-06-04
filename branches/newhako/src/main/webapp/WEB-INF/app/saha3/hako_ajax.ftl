@@ -239,10 +239,9 @@
         function addSelection(cond) {
             condition = cond;;
             unloadData();
-            console.log(tm);
+            tm.datasets.markers.items = new Array();
             tm.map.removeAllMarkers();
             markers.eventSource.clear();
-          //  markers.clearItems();
             loadData();
         }
         
