@@ -367,8 +367,7 @@ public class ResourceEditService {
 		
 		Map<String, Object> modelMap = new HashMap<String, Object>();
 		modelMap.put("model", model);
-		//modelMap.put("propertyMapEntrySet", project.getResource(resourceUri, locale).getPropertyMapEntrySet());
-		log.warn("resource uri is "+resourceUri);
+
 		Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project.getResource(resourceUri, locale).getPropertyMapEntrySet();
 		Set<String> geo_polygons = new HashSet<String>();
 		Set<String> geo_points = new HashSet<String>();
@@ -379,18 +378,19 @@ public class ResourceEditService {
 		eventMap.put("geo_polygons", "[]");
 		eventMap.put("geo_points", "[]");
 		eventMap.put("uri", resourceUri);
-		log.warn("going through entry");
+		
 		for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
-			log.warn("going through entry");
+
 			if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
-				log.warn("it has key");
 				for(ISahaProperty entry: key.getValue()) {
-					log.warn("label: " + entry.getValueLabel() );
+					eventMap.put("label", entry.getValueLabel() );
+				}
+			} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
+				for(ISahaProperty entry: key.getValue()) {
 					eventMap.put("label", entry.getValueLabel() );
 				}
 			} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
 				for(ISahaProperty entry: key.getValue()) {
-					log.trace("startDate: " + entry.getValueLabel() + "timeUri:" + entry.getValueUri() );
 					eventMap.put("time", entry.getValueLabel() );					
 					eventMap.put("earliestStart", entry.getValueLabel() + " 00:00" );
 					eventMap.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
@@ -398,24 +398,20 @@ public class ResourceEditService {
 			} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
 				for(ISahaProperty entry: key.getValue()) {
 					eventMap.put("latitude", entry.getValueLabel() );
-					log.trace("LAT" + entry.getValueLabel());
 				}
 				
 			} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
 				for(ISahaProperty entry: key.getValue()) {
 					eventMap.put("longitude", entry.getValueLabel() );
-					log.trace("LON" + entry.getValueLabel());
 				}
 			} 
 			else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
 				for(ISahaProperty entry: key.getValue()) {
 					geo_polygons.add(parseCoordinates(entry.getValueLabel()));					
-					log.trace("GEO" + entry.getValueLabel());
 				}
 			} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
 				for(ISahaProperty entry: key.getValue()) {
 					geo_points.add(parsePointCoordinates(entry.getValueLabel()));			
-					log.trace("GEO" + entry.getValueLabel());
 				}
 			}
 		}
@@ -451,8 +447,6 @@ public class ResourceEditService {
 	
 	public String getExternalPropertyTable(String ontology, String resourceUri,
 			HttpServletRequest request) {
-		log.debug("getExternalPropertyTable(" + ontology + ", " + resourceUri
-				+ ", " + request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 
