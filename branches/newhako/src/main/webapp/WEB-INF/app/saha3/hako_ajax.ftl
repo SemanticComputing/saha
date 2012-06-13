@@ -2,7 +2,7 @@
 [#setting url_escaping_charset='UTF-8']
 <!DOCTYPE html>
 <head>
-	<title>New HAKO - ${model}</title>
+	<title>HAKO - ${model}</title>
     <script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
     <script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
     <script type='text/javascript' src='../dwr/engine.js'></script>
@@ -103,12 +103,12 @@
     <script id="selectionTemplate" type="text/x-jsrender">
         <div>
             <a onclick="javascript:addSelection('{{:backQuery}}')" style="cursor: pointer; color:grey">[remove]</a>
-            <strong><a onclick="javascript:addSelection('{{:propertyUri}}={{:uri}}')" style="cursor: pointer; color:orangered">
+            <strong><a onclick="javascript:addSingleSelection('{{:propertyUri}}', '{{:uri}}')" style="cursor: pointer; color:orangered">
             <em>{{:label}}</em></a></strong>
         </div>
     </script>
     <script id="toggleCategoryTemplate" type="text/x-jsrender">
-        <span id="span{{:uri}}" class="toggle" style="cursor: pointer" onclick="javascript:toggle('list{{:uri}}', this)">[+]</span>
+        <span id="span{{:uri}}" class="toggle" style="cursor: pointer" onclick="javascript:toggle('list_{{:rootCategory}}_{{:uri}}', this)">[+]</span>
     </script>
 	<script>
 		var tm, markers, condition = null;
@@ -174,7 +174,7 @@
 	            eventSource:    markers.eventSource,
 	            width:          "100%",
 	            intervalPixels: 50,
-	            intervalUnit:   Timeline.DateTime.MONTH, 
+	            intervalUnit:   Timeline.DateTime.YEAR, 
 
 				layout:         'original',
 		    	theme: theme,
@@ -202,21 +202,24 @@
  
 
     		// you usually need to call this to get items to display on the timeline
-   			tm.timeline.layout();
+   			//tm.timeline.layout();
     		// you might also want to scroll the timeline somewhere
     		//tm.timeline.getBand(0).setCenterVisibleDate(new Date("2007-01-01"));
 			//tm.timeline.layout();
         
             loadData(); 	        
-			tm.timeline.layout();
+			
+			//tm.timeline.getBand(0).setCenterVisibleDate(new Date("0000-01-01"));
+			//tm.timeline.getBand(0).setCenterVisibleDate(new Date("1007-01-01"));
 		} // End of onLoad
 
-        function renderCategory(obj, depth, selectedCategoryURIs) {
+        function renderCategory(obj, depth, selectedCategoryURIs, rootCategory) {
             // Move rendering conditions to jsrender template
             // i.e. this function is basicly:
             // renderCategory(obj,depth,selectedCategoryURIs) { return $('#template').render(obj, ...) }
-            var res = "<li id=\"item"+obj.uri+"\">";
+            var res = "<li id=\"item_"+rootCategory+"_"+obj.uri+"\">";
             if (obj['children'].length > 0) {
+            	obj.rootCategory = rootCategory;
                 res += $("#toggleCategoryTemplate").render(obj);
             }
             var query = null;
@@ -228,21 +231,25 @@
                 query = obj["backQuery"]
                 label = '<strong style="color:orangered"><em>'+obj.label+'</em></strong>'
             }
-            res += '<a style=\"cursor: pointer\" onclick="javascript:addSelection(\''+query+'\')">'+label+'</a><span>'+obj["itemCount"]+"</span></li><ul class=\"category\" id=\"list"+obj['uri']+"\" style=\"display: none;\">" ;
+            res += '<a style=\"cursor: pointer\" onclick="javascript:addSelection(\''+query+'\')">'+label+'</a><span>'+obj["itemCount"]+"</span></li><ul class=\"category\" id=\"list_"+rootCategory+"_"+obj['uri']+"\" style=\"display: none;\">" ;
             for (var i in obj['children']) {
-                res += renderCategory(obj['children'][i], depth +1, selectedCategoryURIs);
+                res += renderCategory(obj['children'][i], depth +1, selectedCategoryURIs, rootCategory);
             }
             res += "</ul>";
             return res;    
         }		
 
         function addSelection(cond) {
-            condition = cond;;
+            condition = cond;
             unloadData();
             tm.datasets.markers.items = new Array();
             tm.map.removeAllMarkers();
+            tm.map.removeAllPolylines();
             markers.eventSource.clear();
             loadData();
+        }
+        function addSingleSelection(property, uri) {
+        	addSelection(escape(property)+"="+escape(uri));
         }
         
         function getSearchCondition() {
@@ -278,27 +285,36 @@
                     $('#categoryContainer').append("<div class=\"list_title\"><span class=\"toggle\" onclick=\"javascript:toggle('hako_category_"+i+"', this)\">[-]</span> "+facetObj["label"]+"</div>");
                     $('#categoryContainer').append("<div id=\"hako_category_"+i+"\">");
                     for (var cls in facetObj['facetClasses']) {
-                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs) + "</ul>");
+                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs, i) + "</ul>");
                     }
                 }
                 $('#result_list').append('<div style="position:absolute;padding:3px;right:0;top:0;color:#999;font-size:small;">Results '+data["results"].length+'</div>');
                 $('#result_list').append($("#selectionTemplate").render( data["selectedCategories"] ));
                 $('#result_list').append($("#resultTemplate").render( data["results"] ));
+                
+                
+                var uris = [];
                 for (var i in data["results"]) {
                     var obj = data["results"][i];
-                    addMapInstance(obj.uri[0],'c_'+i);
+                    uris.push(obj.uri[0]);
+                    if (uris.length > 9) {
+		                jQuery.getJSON("./ahako_uri.shtml", {uris: uris.join(",")}, function(timeMapData) {
+		                	 markers.loadItems( timeMapData );
+		                	 tm.timeline.layout();
+		                });
+		                uris = []
+                   	}
+                }
+                if (uris.length > 0) {
+                	jQuery.getJSON("./ahako_uri.shtml", {uris: uris.join(",")}, function(timeMapData) {
+		                	 markers.loadItems( timeMapData );
+		                	 tm.timeline.layout();
+		            });
                 }
             });
         }
 
-		function addMapInstance(uri, id) {
-			ResourceEditService.getHakoTimemapEvent('${model}',uri, {
-				callback:function(dataFromServer) {
-						var item = jQuery.parseJSON(dataFromServer);
-						markers.loadItem( item );
-				}
-			});
-		}
+		
 	
 		function show_instance(uri, id) {
 			var element = document.getElementById(id);

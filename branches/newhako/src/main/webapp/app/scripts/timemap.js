@@ -533,6 +533,7 @@ TimeMap.prototype = {
             eventSource = this.eventSource,
             parser = TimeMap.dateParsers.hybrid,
             // make sure there are events to scroll to
+          
             hasEvents = eventSource.getCount() > 0 ? true : false;
         switch (s) {
             case "now":
@@ -1435,6 +1436,7 @@ TimeMapDataset.prototype = {
 		if (data) {
 			var ds = this;
 			data.forEach(function(item) {
+				
 				ds.loadItem(item, transform);
 			});
 			$(ds).trigger(E_ITEMS_LOADED);
@@ -1443,7 +1445,6 @@ TimeMapDataset.prototype = {
     
     clearItems: function() {
     	var ds = this;
-    	console.log(ds.items);
     	ds.items = new Array();
     	$(ds).trigger(E_ITEMS_LOADED);
     },
@@ -1934,8 +1935,6 @@ TimeMapItem = function(data, dataset) {
         };
     }
     
-    // Create placemark or placemarks
-    
     // Create array of placemark data
     if ("placemarks" in data) {
         pdataArr = data.placemarks;
@@ -1950,6 +1949,7 @@ TimeMapItem = function(data, dataset) {
             }
         });
     }
+
     // Create placemark objects
     pdataArr.forEach(function(pdata) {
         // put in title if necessary
@@ -2320,8 +2320,12 @@ TimeMapItem.openInfoWindowBasic = function() {
             // kill self
             placemarks.closeInfoBubble.removeHandler(item.closeHandler);
         });
-    } else {
-        item.map.openBubble(item.getInfoPoint(), html);
+    } else if (item.placemark){
+    	if (item.placemark.length > 1) {
+    		item.map.openBubble(item.placemark[1].location, html);
+    	} else {
+    		item.map.openBubble(item.getInfoPoint(), html);
+    	}
         item.map.tmBubbleItem = item;
     }
 };

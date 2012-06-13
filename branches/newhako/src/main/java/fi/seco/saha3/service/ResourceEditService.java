@@ -12,6 +12,12 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONTokener;
+import org.openjena.atlas.json.io.parser.JSONParser;
+import org.openjena.atlas.json.io.parserjavacc.javacc.JSON_Parser;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
@@ -329,120 +335,97 @@ public class ResourceEditService {
 		return FreeMarkerUtil.process(configuration,
 				HAKO_PROPERTY_TABLE_TEMPLATE, modelMap);
 	}
-	private String parseCoordinates(String rawString) {
-		StringBuffer sb = new StringBuffer();
-		sb.append("[");
+	
+	private JSONArray parseCoordinates(String rawString) throws JSONException {
+		JSONArray coordArr = new JSONArray();
+		for (String pair : rawString.split(" ")) {
+			JSONObject tmp = new JSONObject();
+			String latlong[] = pair.split(",");
+			tmp.put("lat", latlong[0]);
+			tmp.put("lon", latlong[1]);
+			coordArr.put(tmp);
+		}
+		return coordArr;
+	}
+	
+	private JSONObject parsePointCoordinates(String rawString) throws JSONException {
+		JSONObject tmp = new JSONObject();
 		for (String pair : rawString.split(" ")) {
 			String latlong[] = pair.split(",");
-			sb.append("{");
-			sb.append("\"lat\": \"");
-			sb.append(latlong[0]);
-			sb.append("\", \"lon\": \"");
-			sb.append(latlong[1]);
-			sb.append("\"}");
-			sb.append(",");
+			tmp.put("lat", latlong[0]);
+			tmp.put("lon", latlong[1]);
 		}
-		if (sb.charAt(sb.length() - 1)  == ',') {		
-			sb.deleteCharAt(sb.length() - 1);
-		}
-		sb.append("]");
-		return sb.toString();
+		return tmp;
 	}
-	private String parsePointCoordinates(String rawString) {
-		StringBuffer sb = new StringBuffer();
-		for (String pair : rawString.split(" ")) {
-			String latlong[] = pair.split(",");
-			sb.append("{");
-			sb.append("\"lat\": \"");
-			sb.append(latlong[0]);
-			sb.append("\", \"lon\": \"");
-			sb.append(latlong[1]);
-			sb.append("\"}");
-		}
-		return sb.toString();
-	}
-	public String getHakoTimemapEvent(String model, String resourceUri, HttpServletRequest request) {
+	
+	public String getHakoTimemapEvents(String model, String pRequestUris, HttpServletRequest request) {
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
+		String jsonError ="{\"error\": \"error in JSON conversion\"}";
+		JSONArray requestUris;
+		try {
+			requestUris = new JSONArray(pRequestUris);
+		} catch(JSONException err) {
+			return jsonError;
+		}
 		
-		Map<String, Object> modelMap = new HashMap<String, Object>();
-		modelMap.put("model", model);
-
-		Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project.getResource(resourceUri, locale).getPropertyMapEntrySet();
-		Set<String> geo_polygons = new HashSet<String>();
-		Set<String> geo_points = new HashSet<String>();
-		Map<String, String> eventMap = new HashMap<String, String>();
-		eventMap.put("label", "empty"); 
-		eventMap.put("earliestStart", "1000-01-01"); 
-		eventMap.put("earliestEnd", "1000-01-01");
-		eventMap.put("geo_polygons", "[]");
-		eventMap.put("geo_points", "[]");
-		eventMap.put("uri", resourceUri);
-		
-		for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
-
-			if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
-				for(ISahaProperty entry: key.getValue()) {
-					eventMap.put("label", entry.getValueLabel() );
+		JSONObject result = new JSONObject();
+		try {
+			for (int i=0; i < requestUris.length(); ++i) {
+				JSONObject obj = new JSONObject();
+				JSONObject tmpX = new JSONObject();
+				String resourceUri = requestUris.getString(i);
+				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project.getResource(resourceUri, locale).getPropertyMapEntrySet();
+								
+				for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
+	
+					if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							obj.put("label", entry.getValueLabel() );
+						}
+					} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							obj.put("label", entry.getValueLabel() );
+						}
+					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							obj.put("time", entry.getValueLabel() );					
+							obj.put("earliestStart", entry.getValueLabel() + " 00:00" );
+							obj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
+						}
+					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
+						for(ISahaProperty entry: key.getValue()) {
+							tmpX.put("latitude", entry.getValueLabel() );
+						}
+						
+					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
+						for(ISahaProperty entry: key.getValue()) {
+							tmpX.put("longitude", entry.getValueLabel() );
+						}
+					} 
+					else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
+						for(ISahaProperty entry: key.getValue()) {
+							obj.append("geo_polygons", parseCoordinates(entry.getValueLabel()));					
+						}
+					} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
+						for(ISahaProperty entry: key.getValue()) {
+							obj.append("geo_points", parsePointCoordinates(entry.getValueLabel()));			
+						}
+					}
 				}
-			} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
-				for(ISahaProperty entry: key.getValue()) {
-					eventMap.put("label", entry.getValueLabel() );
+				if (tmpX.has("latitude") && tmpX.has("longitude")) {
+					JSONObject tmpY = new JSONObject();
+					tmpY.put("latitude", tmpX.get("latitude"));
+					tmpY.put("longitude", tmpX.get("longitude"));
+					obj.append("geo_points", tmpY);
 				}
-			} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
-				for(ISahaProperty entry: key.getValue()) {
-					eventMap.put("time", entry.getValueLabel() );					
-					eventMap.put("earliestStart", entry.getValueLabel() + " 00:00" );
-					eventMap.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
-				}
-			} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
-				for(ISahaProperty entry: key.getValue()) {
-					eventMap.put("latitude", entry.getValueLabel() );
-				}
-				
-			} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
-				for(ISahaProperty entry: key.getValue()) {
-					eventMap.put("longitude", entry.getValueLabel() );
-				}
-			} 
-			else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
-				for(ISahaProperty entry: key.getValue()) {
-					geo_polygons.add(parseCoordinates(entry.getValueLabel()));					
-				}
-			} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
-				for(ISahaProperty entry: key.getValue()) {
-					geo_points.add(parsePointCoordinates(entry.getValueLabel()));			
-				}
+				result.append("results", obj);
 			}
+		} catch(JSONException exception) {
+			return jsonError;
 		}
-		if (eventMap.containsKey("latitude") && eventMap.containsKey("longitude")) {
-			geo_points.add("{\"lat\": \"" + eventMap.get("latitude") +"\", \"lon\": \""+ eventMap.get("longitude") + "\"}");
-		}
-		StringBuffer sb = new StringBuffer(); 
-		sb.append("[");
-		for (String gstr : geo_polygons) {
-			sb.append(gstr);
-			sb.append(",");
-		}
-		if (sb.charAt(sb.length() - 1)  == ',') {		
-			sb.deleteCharAt(sb.length() - 1);
-		}
-		sb.append("]");
-		eventMap.put("geo_polygons", sb.toString());
-		sb = new StringBuffer();
-		sb.append("[");
-		for (String gstr : geo_points) {
-			sb.append(gstr);
-			sb.append(",");
-		}
-		if (sb.charAt(sb.length() - 1)  == ',') {		
-			sb.deleteCharAt(sb.length() - 1);
-		}
-		sb.append("]");
-		eventMap.put("geo_points", sb.toString());
-		modelMap.put("eventMap", eventMap);
 
-		return FreeMarkerUtil.process(configuration, HAKO_TIMEMAP_EVENT_TEMPLATE, modelMap);
+		return result.toString();
 	}
 	
 	public String getExternalPropertyTable(String ontology, String resourceUri,

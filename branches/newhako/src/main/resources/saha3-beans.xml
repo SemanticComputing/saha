@@ -50,6 +50,7 @@
            		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
            		/service/ws/**=MessageDispatcher
            		/*/ahako.shtml=HakoJSONController
+           		/*/ahako_uri.shtml=HakoJSONController           		
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController
