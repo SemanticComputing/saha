@@ -162,7 +162,7 @@ public class HakoJSONController extends ASahaController {
 						}
 					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
 						for(ISahaProperty entry: key.getValue()) {
-							obj.put("time", entry.getValueLabel() );					
+							obj.put("start", entry.getValueLabel() );					
 							obj.put("earliestStart", entry.getValueLabel() + " 00:00" );
 							obj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
 						}
@@ -190,7 +190,7 @@ public class HakoJSONController extends ASahaController {
 					JSONObject tmpY = new JSONObject();
 					tmpY.put("latitude", tmpX.get("latitude"));
 					tmpY.put("longitude", tmpX.get("longitude"));
-					options.append("geometry_points", tmpY);
+					obj.append("geometry_points", tmpY);
 				}
 				if (!obj.has("start")) {
 					obj.put("start", "1000-01-01");					
