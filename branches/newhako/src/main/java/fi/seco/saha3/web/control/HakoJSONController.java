@@ -111,7 +111,7 @@ public class HakoJSONController extends ASahaController {
 				result.put("terms", Collections.emptyList());
 			}
 			
-			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,300,sort)) {
+			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,500,sort)) {
 				JSONObject tmp = new JSONObject();
 				tmp.append("uri", ir.getUri());
 				tmp.append("label", ir.getLabel());
@@ -188,8 +188,8 @@ public class HakoJSONController extends ASahaController {
 				}
 				if (tmpX.has("latitude") && tmpX.has("longitude")) {
 					JSONObject tmpY = new JSONObject();
-					tmpY.put("latitude", tmpX.get("latitude"));
-					tmpY.put("longitude", tmpX.get("longitude"));
+					tmpY.put("lat", tmpX.get("latitude"));
+					tmpY.put("lon", tmpX.get("longitude"));
 					obj.append("geometry_points", tmpY);
 				}
 				if (!obj.has("start")) {
