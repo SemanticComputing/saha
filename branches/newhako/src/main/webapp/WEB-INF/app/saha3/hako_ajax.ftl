@@ -292,25 +292,11 @@
                 $('#result_list').append($("#selectionTemplate").render( data["selectedCategories"] ));
                 $('#result_list').append($("#resultTemplate").render( data["results"] ));
                 
-                
-                var uris = [];
                 for (var i in data["results"]) {
                     var obj = data["results"][i];
-                    uris.push(obj.uri[0]);
-                    if (uris.length > 9) {
-		                jQuery.getJSON("./ahako_uri.shtml", {uris: uris.join(",")}, function(timeMapData) {
-		                	 markers.loadItems( timeMapData );
-		                	 tm.timeline.layout();
-		                });
-		                uris = []
-                   	}
+		            markers.loadItem( obj.tmdata );
                 }
-                if (uris.length > 0) {
-                	jQuery.getJSON("./ahako_uri.shtml", {uris: uris.join(",")}, function(timeMapData) {
-		                	 markers.loadItems( timeMapData );
-		                	 tm.timeline.layout();
-		            });
-                }
+                tm.timeline.layout();
             });
         }
 

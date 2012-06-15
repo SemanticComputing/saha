@@ -127,7 +127,9 @@
 			<dwr:include method="setAboutLink" />
 			<dwr:include method="destroyHako" />
 			<dwr:include method="addTypeToHakoConfig" />
-			<dwr:include method="addPropertyToHakoConfig" />			
+			<dwr:include method="addPropertyToHakoConfig" />
+			<dwr:include method="removeTypeFromHakoConfig" />
+			<dwr:include method="removePropertyFromHakoConfig" />				
 	    </dwr:remote>
 	</bean>
 	

@@ -87,6 +87,21 @@
                 location.href='hako.shtml';
             });
         });
+        function toggleHakoTypeSelection(id, uri) {
+        	console.log(id, uri, $("#"+id+":checked"));
+        	if ($("#"+id+":checked").length > 0) {
+        		ResourceConfigService.removeTypeFromHakoConfig('${model}', uri);
+        	} else {
+        		ResourceConfigService.addTypeToHakoConfig('${model}', uri);	
+        	}
+        }
+        function toggleHakoPropertySelection(id, uri) {
+        	if ($("#"+id+":checked").length > 0) {
+        		ResourceConfigService.removePropertyFromHakoConfig('${model}', uri);
+        	} else {
+        		ResourceConfigService.addPropertyToHakoConfig('${model}', uri);
+        	}
+        }
     </script>
 </head>
 <body>
@@ -105,13 +120,13 @@
 				[#if label?length > 70]
 				<div>
 					<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_type_${type_index}" 
-					onClick="javascript:ResourceConfigService.addTypeToHakoConfig('${model}','${type.uri}')">
-					${label?substring(0,67)}...
+					onClick="javascript:toggleHakoTypeSelection('checkbox_type_${type_index}','${type.uri}')">
+					${label?substring(0,67)}
 				</div>
 				[#else]
 				<div>
 					<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_type_${type_index}" 
-					onClick="javascript:ResourceConfigService.addTypeToHakoConfig('${model}','${type.uri}')">
+					onClick="javascript:toggleHakoTypeSelection('checkbox_type_${type_index}','${type.uri}')">
 					${label}
 				</div>
 				[/#if]
@@ -124,13 +139,13 @@
 				[#if label?length > 70]
 				<div>
 					<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_property_${property_index}" 
-					onClick="javascript:ResourceConfigService.addPropertyToHakoConfig('${model}','${property.uri}')">
+					onClick="javascript:toggleHakoPropertySelection('checkbox_property_${property_index}','${property.uri}')">
 					${label?substring(0,67)}...
 				</div>
 				[#else]
 				<div>
 					<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_property_${property_index}" 
-					onClick="javascript:ResourceConfigService.addPropertyToHakoConfig('${model}','${property.uri}')">
+					onClick="javascript:toggleHakoPropertySelection('checkbox_property_${property_index}','${property.uri}')">
 					${label}
 				</div>
 				[/#if]

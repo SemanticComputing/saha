@@ -140,4 +140,12 @@ public class ResourceConfigService {
 		sahaProjectRegistry.getSahaProject(model).getHakoConfig().getProperties().add(propertyUri);
 	}
 	
+	public void removeTypeFromHakoConfig(String model, String typeUri) {
+		sahaProjectRegistry.getSahaProject(model).getHakoConfig().getTypes().remove(typeUri);
+	}
+	
+	public void removePropertyFromHakoConfig(String model, String propertyUri) {
+		sahaProjectRegistry.getSahaProject(model).getHakoConfig().getProperties().remove(propertyUri);
+	}
+	
 }

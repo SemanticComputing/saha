@@ -111,10 +111,68 @@ public class HakoJSONController extends ASahaController {
 				result.put("terms", Collections.emptyList());
 			}
 			
-			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,500,sort)) {
+			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,2000,sort)) {
 				JSONObject tmp = new JSONObject();
+				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap;
+				
+				try {
+					propertyMap = project.getResource(ir.getUri(), locale).getPropertyMapEntrySet();
+				} catch (java.util.NoSuchElementException nsee) {
+					continue;
+				}
 				tmp.append("uri", ir.getUri());
 				tmp.append("label", ir.getLabel());
+				
+				JSONObject tmObj = new JSONObject();
+				JSONObject options = new JSONObject();
+				options.put("uri", ir.getUri());
+				tmObj.put("options", options);
+				JSONObject tmpX = new JSONObject();
+				for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
+					if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							tmObj.put("title", entry.getValueLabel() );
+						}
+					} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							tmObj.put("title", entry.getValueLabel() );
+						}
+					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
+						for(ISahaProperty entry: key.getValue()) {
+							tmObj.put("start", entry.getValueLabel() );					
+							tmObj.put("earliestStart", entry.getValueLabel() + " 00:00" );
+							tmObj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
+						}
+					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
+						for(ISahaProperty entry: key.getValue()) {
+							tmpX.put("latitude", entry.getValueLabel() );
+						}
+						
+					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
+						for(ISahaProperty entry: key.getValue()) {
+							tmpX.put("longitude", entry.getValueLabel() );
+						}
+					} 
+					else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
+						for(ISahaProperty entry: key.getValue()) {
+							tmObj.append("geometry_polygons", parseCoordinates(entry.getValueLabel()));					
+						}
+					} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
+						for(ISahaProperty entry: key.getValue()) {
+							tmObj.append("geometry_points", parsePointCoordinates(entry.getValueLabel()));			
+						}
+					}
+				}
+				if (tmpX.has("latitude") && tmpX.has("longitude")) {
+					JSONObject tmpY = new JSONObject();
+					tmpY.put("lat", tmpX.get("latitude"));
+					tmpY.put("lon", tmpX.get("longitude"));
+					tmObj.append("geometry_points", tmpY);
+				}
+				if (!tmObj.has("start")) {
+					tmObj.put("start", "1000-01-01");					
+				}
+				tmp.put("tmdata",tmObj);
 				result.append("results", tmp);
 			}
 			if (!result.has("results")) {
