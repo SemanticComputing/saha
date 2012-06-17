@@ -111,7 +111,7 @@
         <span id="span{{:uri}}" class="toggle" style="cursor: pointer" onclick="javascript:toggle('list_{{:rootCategory}}_{{:uri}}', this)">[+]</span>
     </script>
 	<script>
-		var tm, markers, condition = null;
+		var tm, markers, condition = null, numberOfResults = 0;
 
 		function onLoad() {
 
@@ -124,6 +124,14 @@
                 $('#tab_target').children().hide();
                 $('#map_view').show();
             });
+            
+			// Set up onscroll event
+            $(window).scroll(function(){
+            	if ( $('#result_list').is(":visible") && 
+                     $(window).scrollTop() == $(document).height() - $(window).height() )
+                	loadData();                                 
+            });
+            
 
 
 		    // Make a new TimeMap object, passing the ids of the map and timeline DOM elements.
@@ -265,6 +273,7 @@
             $('#categoryContainer').children().fadeOut('fast').empty();
             $('#result_list').append("Searching...");
             $('#categoryContainer').append("Searching...");
+            numberOfResults = 0;
         }
 
         function filterSelectedCategoryURIs(l) {
@@ -276,22 +285,31 @@
         }
 
         function loadData() {
-            jQuery.getJSON("./ahako.shtml?"+getSearchCondition(), function(data) {
-                $('#result_list').empty();
-                $('#categoryContainer').empty();
-                var selectedCategoryURIs = filterSelectedCategoryURIs(data["selectedCategories"]);
-                for (var i in data["facets"]) {
-                    var facetObj = data["facets"][i];
-                    $('#categoryContainer').append("<div class=\"list_title\"><span class=\"toggle\" onclick=\"javascript:toggle('hako_category_"+i+"', this)\">[-]</span> "+facetObj["label"]+"</div>");
-                    $('#categoryContainer').append("<div id=\"hako_category_"+i+"\">");
-                    for (var cls in facetObj['facetClasses']) {
-                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs, i) + "</ul>");
-                    }
+        	var firstRun = true;
+            if ( numberOfResults > 0 ) 
+            	firstRun = false;
+            	 
+            console.log("./ahako.shtml?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition());                    
+            jQuery.getJSON("./ahako.shtml?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
+				if (firstRun) {
+	                $('#result_list').empty();
+	                $('#categoryContainer').empty();
+	                var selectedCategoryURIs = filterSelectedCategoryURIs(data["selectedCategories"]);
+	                for (var i in data["facets"]) {
+	                    var facetObj = data["facets"][i];
+	                    $('#categoryContainer').append("<div class=\"list_title\"><span class=\"toggle\" onclick=\"javascript:toggle('hako_category_"+i+"', this)\">[-]</span> "+facetObj["label"]+"</div>");
+	                    $('#categoryContainer').append("<div id=\"hako_category_"+i+"\">");
+	                    for (var cls in facetObj['facetClasses']) {
+	                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs, i) + "</ul>");
+	                    }
+	                }
                 }
-                $('#result_list').append('<div style="position:absolute;padding:3px;right:0;top:0;color:#999;font-size:small;">Results '+data["results"].length+'</div>');
                 $('#result_list').append($("#selectionTemplate").render( data["selectedCategories"] ));
                 $('#result_list').append($("#resultTemplate").render( data["results"] ));
-                
+
+				numberOfResults = numberOfResults + data["results"].length;		
+                $('#result_list').append('<div style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');                
+            
                 for (var i in data["results"]) {
                     var obj = data["results"][i];
 		            markers.loadItem( obj.tmdata );

@@ -59,6 +59,15 @@ public class HakoJSONController extends ASahaController {
 			parameterMap.remove("lang");
 			parameterMap.remove("model");
 			
+            int from = 0, to = 100;
+            if (parameterMap.containsKey("from") ) 
+                    from = Integer.parseInt(parameterMap.get("from").get(0));
+            if (parameterMap.containsKey("to") ) 
+                    to = Integer.parseInt(parameterMap.get("to").get(0));
+            
+            parameterMap.remove("from");
+            parameterMap.remove("to");
+			
 			boolean sort = true;
 			List<String> searchStrings = parameterMap.get(ResourceIndex.UBER_FIELD_NAME);
 			if (searchStrings != null) for (String searchString : searchStrings)
@@ -111,7 +120,7 @@ public class HakoJSONController extends ASahaController {
 				result.put("terms", Collections.emptyList());
 			}
 			
-			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,2000,sort)) {
+			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,from,to,sort)) {
 				JSONObject tmp = new JSONObject();
 				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap;
 				
