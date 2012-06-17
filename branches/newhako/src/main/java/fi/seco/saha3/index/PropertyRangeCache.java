@@ -48,12 +48,15 @@ public class PropertyRangeCache {
     
     private String[] enumeratePropertyValues(String propertyUri) {
         Set<String> values = new HashSet<String>();
-        for (Statement s : new IteratorToIIterableIterator<Statement>(
-            model.listStatements(null,model.createProperty(propertyUri),(RDFNode)null))) 
-        {
-            if (s.getObject().isURIResource())
-                values.add(s.getResource().getURI());
-        }
+        try {
+	        for (Statement s : new IteratorToIIterableIterator<Statement>(
+	            model.listStatements(null,model.createProperty(propertyUri),(RDFNode)null))) 
+	        {
+	            if (s.getObject().isURIResource())
+	                values.add(s.getResource().getURI());
+	        }
+        } catch(java.util.NoSuchElementException e) {} // XXX: Error should at least be logged
+        
         return values.toArray(new String[values.size()]);
     }
     
