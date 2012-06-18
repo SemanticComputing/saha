@@ -89,14 +89,15 @@
         });
         function toggleHakoTypeSelection(id, uri) {
         	console.log(id, uri, $("#"+id+":checked"));
-        	if ($("#"+id+":checked").length > 0) {
+        	if ($("#"+id+":checked").length == 0) {
         		ResourceConfigService.removeTypeFromHakoConfig('${model}', uri);
         	} else {
         		ResourceConfigService.addTypeToHakoConfig('${model}', uri);	
         	}
         }
         function toggleHakoPropertySelection(id, uri) {
-        	if ($("#"+id+":checked").length > 0) {
+        	console.log(id, uri, $("#"+id+":checked"));
+        	if ($("#"+id+":checked").length == 0) {
         		ResourceConfigService.removePropertyFromHakoConfig('${model}', uri);
         	} else {
         		ResourceConfigService.addPropertyToHakoConfig('${model}', uri);
@@ -109,7 +110,7 @@
 	
 	<div id="main_container" style="margin-left:13px;">
 		<h1>Configure project</h1>
-        <a id="selectAll" style="color:grey; cursor: pointer;">select all</a> |
+        <!--<a id="selectAll" style="color:grey; cursor: pointer;">select all</a> |-->
 		<a id="reset" style="color:grey;cursor: pointer;">reset hako</a> | 
 		<a id="start" style="color:black;cursor: pointer;">start hako</a>
 
@@ -144,7 +145,7 @@
 				</div>
 				[#else]
 				<div>
-					<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_property_${property_index}" 
+					<input type="checkbox" uri="${property.uri}" dojoType="dijit.form.CheckBox" id="checkbox_property_${property_index}" 
 					onClick="javascript:toggleHakoPropertySelection('checkbox_property_${property_index}','${property.uri}')">
 					${label}
 				</div>
