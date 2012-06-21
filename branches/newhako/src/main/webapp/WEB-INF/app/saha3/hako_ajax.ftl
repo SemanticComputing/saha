@@ -11,6 +11,7 @@
 
     <script type="text/javascript" src="../app/scripts/jquery-1.6.2.min.js"></script>
     <script type="text/javascript" src="../app/scripts/jsrender.js"></script>
+    <script type="text/javascript" src="../app/scripts/waypoints.min.js"></script>
     <script type="text/javascript" src="../app/scripts/mxn/mxn.js?(googlev3)"></script>
     <script type="text/javascript" src="../app/scripts/timeline-2.3.0.js"></script>
     <script src="../app/scripts/timemap.js" type="text/javascript"></script>
@@ -118,20 +119,12 @@
             // Set up tab controls
             $('#tab1').click(function() {
                 $('#tab_target').children().hide();
-                $('#result_list').show();
+                $('#result_list').show();  
             });
             $('#tab2').click(function() {
                 $('#tab_target').children().hide();
                 $('#map_view').show();
             });
-            
-			// Set up onscroll event
-            $(window).scroll(function(){
-            	if ( $('#result_list').is(":visible") && 
-                     $(window).scrollTop() == $(document).height() - $(window).height() )
-                	loadData();                                 
-            });
-            
 
 
 		    // Make a new TimeMap object, passing the ids of the map and timeline DOM elements.
@@ -221,6 +214,7 @@
 			//tm.timeline.getBand(0).setCenterVisibleDate(new Date("1007-01-01"));
 		} // End of onLoad
 
+
         function renderCategory(obj, depth, selectedCategoryURIs, rootCategory) {
             // Move rendering conditions to jsrender template
             // i.e. this function is basicly:
@@ -289,7 +283,6 @@
             if ( numberOfResults > 0 ) 
             	firstRun = false;
             	 
-            console.log("./ahako.shtml?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition());                    
             jQuery.getJSON("./ahako.shtml?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
 				if (firstRun) {
 	                $('#result_list').empty();
@@ -307,9 +300,14 @@
                 $('#result_list').append($("#selectionTemplate").render( data["selectedCategories"] ));
                 $('#result_list').append($("#resultTemplate").render( data["results"] ));
 
-				numberOfResults = numberOfResults + data["results"].length;		
-                $('#result_list').append('<div style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');                
-            
+				numberOfResults = numberOfResults + data["results"].length;
+				
+				if ( data["results"].length > 0 ) {
+					var $resultsCount = $('<div class="resultsCount" style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');				
+	                $('#result_list').append($resultsCount);                
+					$('#result_list').waypoint( function() { loadData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } )
+				}
+				
                 for (var i in data["results"]) {
                     var obj = data["results"][i];
 		            markers.loadItem( obj.tmdata );
@@ -318,8 +316,6 @@
             });
         }
 
-		
-	
 		function show_instance(uri, id) {
 			var element = document.getElementById(id);
 			var hasChild = false;
