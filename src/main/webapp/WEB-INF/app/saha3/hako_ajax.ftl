@@ -420,13 +420,7 @@
 			<div id="categoryContainer" style="margin:10px;font-size:10pt;">Searching</div>
 			</td>
 			<td style="vertical-align:top;padding:0;">
-			
-			
-			
-			<!--<div id="tab_bar" style="margin-top: 10px;border-bottom: 1px solid #DDD;">
-				<button id="tab1" class="tab">Listaus</button>
-				<button id="tab2" class="tab">Kartta</button>
-			</div>-->
+		
 			<div id="tab_target" style="margin-top: 5px;">
 				<ul>
 					<li><a href="#result_list">Listaus</a></li>
