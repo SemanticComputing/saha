@@ -6,16 +6,15 @@
     <script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
     <script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
     <script type='text/javascript' src='../dwr/engine.js'></script>
-
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
-
     <script type="text/javascript" src="../app/scripts/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="../app/scripts/jquery-ui-1.8.21.custom.min.js"></script>
     <script type="text/javascript" src="../app/scripts/jsrender.js"></script>
     <script type="text/javascript" src="../app/scripts/waypoints.min.js"></script>
     <script type="text/javascript" src="../app/scripts/mxn/mxn.js?(googlev3)"></script>
     <script type="text/javascript" src="../app/scripts/timeline-2.3.0.js"></script>
-    <script src="../app/scripts/timemap.js" type="text/javascript"></script>
+    <script type="text/javascript" src="../app/scripts/timemap.js" ></script>
+    
 	<link rel="stylesheet" type="text/css" href="../app/css/hako/jquery-ui-1.8.21.custom.css" />
 	
 	
@@ -408,10 +407,11 @@
 			<div style="font-size:x-large;margin-bottom:4px;">
 				<a href="hako.shtml" style="text-decoration:none;">${model?cap_first}</a>
 			</div>
-			<form id="searchParameters" method="get" style="margin:0;padding:0">
+			<!-- Text search is not implemented <form id="searchParameters" method="get" style="margin:0;padding:0">
 				<input type="text" name="term" style="width:320px;" value="[#list terms as term]${term}[/#list]"/>
 				<input type="submit" value="Search"/>
-			</form>
+				
+			</form>-->
 		</div>
 		
 		<table style="width:100%;border-collapse:collapse;border:thin solid #ccc;margin-top:1em;">
