@@ -6,16 +6,19 @@
     <script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
     <script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
     <script type='text/javascript' src='../dwr/engine.js'></script>
-	<script type='text/javascript' src='../app/scripts/google_maps.js'></script> 
+
     <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
-    <script type="text/javascript" src="../app/scripts/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../app/scripts/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="../app/scripts/jquery-ui-1.8.21.custom.min.js"></script>
     <script type="text/javascript" src="../app/scripts/jsrender.js"></script>
     <script type="text/javascript" src="../app/scripts/waypoints.min.js"></script>
     <script type="text/javascript" src="../app/scripts/mxn/mxn.js?(googlev3)"></script>
     <script type="text/javascript" src="../app/scripts/timeline-2.3.0.js"></script>
     <script src="../app/scripts/timemap.js" type="text/javascript"></script>
-
+	<link rel="stylesheet" type="text/css" href="../app/css/hako/jquery-ui-1.8.21.custom.css" />
+	
+	
 	<style>
 		body {
 			margin: 0px;
@@ -158,8 +161,16 @@
 	        	theme:  "green"
 	    	});
 
-			
-	
+		$(function() {
+			$( "#tab_target" ).tabs();
+		});	
+		$('#tab_target').bind('tabsshow', function(event, ui) {
+    		if (ui.panel.id == "map_view") {
+    			google.maps.event.trigger(map, "resize");
+    			tm.map.setCenter(new mxn.LatLonPoint(64.15436, 38.40440100));
+    			tm.timeline.layout();
+   			}
+		});
 	     var theme = Timeline.ClassicTheme.create(); // create the themes
 	     //theme.ether.marker = "Right";
 	     theme.mouseWheel = 'zoom';
@@ -263,9 +274,10 @@
         }
 
         function unloadData() {
-            $('#result_list').children().fadeOut('fast').empty();
+            $('#resultSelectedCategoriesList').children().fadeOut('fast').empty();
+            $('#resultList').children().fadeOut('fast').empty();
             $('#categoryContainer').children().fadeOut('fast').empty();
-            $('#result_list').append("Searching...");
+            $('#resultList').append("Searching...");
             $('#categoryContainer').append("Searching...");
             numberOfResults = 0;
         }
@@ -280,14 +292,14 @@
 		
 		function moreData () {
 			jQuery.getJSON("./hako/instances?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
-				$('#result_list').append($("#resultTemplate").render( data["results"] ));
+				$('#resultList').append($("#resultTemplate").render( data["results"] ));
 
 				numberOfResults = numberOfResults + data["results"].length;
 				
 				if ( data["results"].length > 0 ) {
 					var $resultsCount = $('<div class="resultsCount" style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');				
-	                $('#result_list').append($resultsCount);                
-					$('#result_list').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } );
+	                $('#resultList').append($resultsCount);                
+					$('#resultList').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } );
 				}
 				
                 for (var i in data["results"]) {
@@ -299,35 +311,30 @@
 		}
 		
         function loadData() {
-        	var firstRun = true;
-            if ( numberOfResults > 0 ) 
-            	firstRun = false;
-            	 
-            jQuery.getJSON("./hako/hako_deprecated?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
-				if (firstRun) {
-	                $('#result_list').empty();
-	                $('#categoryContainer').empty();
-	                var selectedCategoryURIs = filterSelectedCategoryURIs(data["selectedCategories"]);
-	                for (var i in data["facets"]) {
-	                    var facetObj = data["facets"][i];
-	                    $('#categoryContainer').append("<div class=\"list_title\"><span class=\"toggle\" onclick=\"javascript:toggle('hako_category_"+i+"', this)\">[-]</span> "+facetObj["label"]+"</div>");
-	                    $('#categoryContainer').append("<div id=\"hako_category_"+i+"\">");
-	                    for (var cls in facetObj['facetClasses']) {
-	                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs, i) + "</ul>");
-	                    }
-	                }
+        	jQuery.getJSON("./hako/ui_categories?"+getSearchCondition(), function(data) {
+        		$('#categoryContainer').empty();
+        		$('#resultSelectedCategoriesList').append($("#selectionTemplate").render( data["selectedCategories"] ));
+        		var selectedCategoryURIs = filterSelectedCategoryURIs(data["selectedCategories"]);
+        		for (var i in data["facets"]) {
+                    var facetObj = data["facets"][i];
+                    $('#categoryContainer').append("<div class=\"list_title\"><span class=\"toggle\" onclick=\"javascript:toggle('hako_category_"+i+"', this)\">[-]</span> "+facetObj["label"]+"</div>");
+                    $('#categoryContainer').append("<div id=\"hako_category_"+i+"\">");
+                    for (var cls in facetObj['facetClasses']) {
+                        $('#hako_category_'+i).append("<ul class=\"category\" style=\"margin:0;padding:0\">" + renderCategory(facetObj['facetClasses'][cls], 0, selectedCategoryURIs, i) + "</ul>");
+                    }
                 }
-                $('#result_list').append($("#selectionTemplate").render( data["selectedCategories"] ));
-                $('#result_list').append($("#resultTemplate").render( data["results"] ));
-
+        	});
+            jQuery.getJSON("./hako/instances?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
+               	$('#resultList').empty();
+                $('#resultList').append($("#resultTemplate").render( data["results"] ));
 				numberOfResults = numberOfResults + data["results"].length;
 				
 				if ( data["results"].length > 0 ) {
 					var $resultsCount = $('<div class="resultsCount" style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');				
-	                $('#result_list').append($resultsCount);                
-					$('#result_list').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } )
+	                $('#resultList').append($resultsCount);                
+					$('#resultList').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } )
 				}
-				
+
                 for (var i in data["results"]) {
                     var obj = data["results"][i];
 		            markers.loadItem( obj.tmdata );
@@ -414,18 +421,26 @@
 			</td>
 			<td style="vertical-align:top;padding:0;">
 			
-			<div id="tab_bar" style="margin-top: 10px;border-bottom: 1px solid #DDD;">
-				<span id="tab1" class="tab">Listaus</span>
-				<span id="tab2" class="tab">Kartta</span>
-			</div>
+			
+			
+			<!--<div id="tab_bar" style="margin-top: 10px;border-bottom: 1px solid #DDD;">
+				<button id="tab1" class="tab">Listaus</button>
+				<button id="tab2" class="tab">Kartta</button>
+			</div>-->
 			<div id="tab_target" style="margin-top: 5px;">
-
+				<ul>
+					<li><a href="#result_list">Listaus</a></li>
+					<li><a href="#map_view">Kartta</a></li>
+				</ul>
 				<div id="map_view">
 					 <div id="mapContainer" class="mapContainer" style="width: 100%; height: 900px"><div id="map" class="mapDiv" style="width: 100%; height: 900px"></div></div>				
 					 <div id="tl" class="timeline" style="width: 100%; height: 200px"></div>
 				</div>
 
-			<div class="result_list" id="result_list" style="position:relative;padding-top:5px; display: none" />
+				<div class="result_list" id="result_list">
+					<div id="resultSelectedCategoriesList"> </div>
+					<div id="resultList"></div>
+				</div>
 			</div>
 			</td>
 		</tr>
