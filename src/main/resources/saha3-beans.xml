@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
+  xmlns:context="http://www.springframework.org/schema/context"
+  xmlns:sws="http://www.springframework.org/schema/web-services"
+  xsi:schemaLocation="
+  	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+  	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd
+	http://www.springframework.org/schema/web-services http://www.springframework.org/schema/web-services/web-services-2.0.xsd"
+  default-lazy-init="true" 
+  default-autowire="no" >
+
+	<description>SAHA3 web tier specific beans</description>
+	
+	<mvc:resources mapping="/app/**" location="/app/" />
+	<mvc:resources mapping="/app/scripts/dwr/**" location="/scripts/" />
+	
+	<bean class="org.springframework.ws.transport.http.WebServiceMessageReceiverHandlerAdapter"
+	p:messageFactory-ref="messageFactory"/>
+	<bean id="messageFactory" class="org.springframework.ws.soap.saaj.SaajSoapMessageFactory"/>
+	<bean class="fi.seco.saha3.infrastructure.SahaWsdlDefinitionHandlerAdapter"
+		p:transformLocations="true"/>
+	<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>
+	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+
+    <bean id="MessageDispatcher" class="org.springframework.ws.soap.server.SoapMessageDispatcher"/>
+    <bean class="fi.seco.saha3.infrastructure.StacktraceContainingSimpleSoapExceptionResolver"/>
+
+	<sws:static-wsdl id="onkiWSDL" location="classpath:OnkiAutocompletion.WSDL"/>
+	
+	<bean
+		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
+		p:lazy-init-handlers="true" p:always-use-full-path="true">
+		<property name="interceptors">
+			<list>
+				<ref bean="localeChangeInterceptor" />
+				<bean class="fi.seco.saha3.web.control.ProjectRedirectInterceptor"/>
+			</list>
+		</property>
+		<property name="mappings">
+		<!-- /project/**=NullController
+				/saha3/irma.shtml=NullController -->
+			<value>
+				/service/import_project/**=ImportProjectController
+				/service/instance_search/**=ResourceSearchService
+				/service/pics/**=Saha3ImageController
+           		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
+           		/service/ws/**=MessageDispatcher
+           		/*/hako/schema=HakoJSONController
+           		/*/hako/instances=HakoJSONController
+           		/*/hako/hako_deprecated=HakoJSONController         		
+				/*/index.shtml=Saha3Controller
+				/*/resource.shtml=ResourceController
+				/*/editor.shtml=EditorController
+				/*/config.shtml=EditorController
+				/*/export.shtml=ExportController
+				/*/upload.shtml=Saha3ImageUploadController
+				/*/hako.shtml=HakoController
+				/*/map.shtml=MapEditController		
+				/*/manage.shtml=ProjectAdminController		
+				/saha3/admin.shtml=AdminController
+				/=FrontPageController
+				/saha3/=FrontPageController
+				/saha3/main.shtml=FrontPageController
+			</value>
+		</property>
+	</bean>
+	
+	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+        <property name="scopes">
+            <map>
+                <entry key="project">
+					<bean class="fi.seco.saha3.infrastructure.SahaProjectScope"
+						p:sahaProjectRegistry-ref="SahaProjectRegistry"/>
+                </entry>
+            </map>
+        </property>
+    </bean>
+    
+	<bean id="ScopedProject" scope="project" class="fi.seco.saha3.model.SahaProject">
+		<aop:scoped-proxy/>
+	</bean>
+
+	<bean id="ScopedModel" scope="project" class="com.hp.hpl.jena.rdf.model.Model">
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean id="Saha3OnkiService" class="fi.seco.saha3.service.OnkiService"
+		p:model-ref="ScopedModel" p:sahaProject-ref="ScopedProject"/>
+
+	<bean id="ResourceEditService" class="fi.seco.saha3.service.ResourceEditService"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:onkiWebService-ref="OnkiWebService"
+	p:freeMarkerConfiguration-ref="fmConfig">
+    	<dwr:remote javascript="ResourceEditService">
+			<dwr:include method="setObjectProperty" />
+			<dwr:include method="setLiteralProperty" />
+			<dwr:include method="removeLiteralProperty" />
+			<dwr:include method="getLiteralPropertyEditor" />
+			<dwr:include method="updateLiteralProperty" />
+			<dwr:include method="removeObjectProperty" />
+			<dwr:include method="createInstance" />
+			<dwr:include method="removeResource"/>
+			<dwr:include method="removeProperty"/>
+			<dwr:include method="setMapProperty" />
+			<dwr:include method="getEditorPropertyTable" />
+			<dwr:include method="getHakoPropertyTable" />
+			<dwr:include method="getHakoTimemapEvent" />			
+			<dwr:include method="getPropertyTable" />
+			<dwr:include method="getExternalPropertyTable" />
+	    </dwr:remote>
+	</bean>
+	
+	<bean id="ResourceConfigService" class="fi.seco.saha3.service.ResourceConfigService"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:freeMarkerConfiguration-ref="fmConfig">
+    	<dwr:remote javascript="ResourceConfigService">
+			<dwr:include method="setPropertyOrder" />
+			<dwr:include method="addRepositoryConfig" />
+			<dwr:include method="removeRepositoryConfig" />
+			<dwr:include method="toggleDenyInstantiation" />
+			<dwr:include method="toggleDenyLocalReferences" />
+			<dwr:include method="toggleHidden" />
+			<dwr:include method="toggleLocalized" />
+			<dwr:include method="togglePictureProperty" />
+			<dwr:include method="setAboutLink" />
+			<dwr:include method="destroyHako" />
+			<dwr:include method="addTypeToHakoConfig" />
+			<dwr:include method="addPropertyToHakoConfig" />
+			<dwr:include method="removeTypeFromHakoConfig" />
+			<dwr:include method="removePropertyFromHakoConfig" />				
+	    </dwr:remote>
+	</bean>
+	
+	<bean id="SahaChat" class="fi.seco.saha3.chat.SahaChat"	
+	p:projectBaseDirectory-ref="ProjectBaseDirectory">
+	<!-- p:projectBaseDirectory="/dump/">  -->
+	
+		<dwr:remote javascript="SahaChat">
+			<dwr:include method="getMessages" />
+			<dwr:include method="addMessage" />
+			<dwr:include method="broadcast" />
+		</dwr:remote>
+	</bean>
+	
+	<bean id="SparqlService" class="fi.seco.saha3.service.SparqlService" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	lazy-init="false" />
+
+	<bean id="HakoController" class="fi.seco.saha3.web.control.HakoController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
+	<bean id="HakoJSONController" class="fi.seco.saha3.web.control.HakoJSONController" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
+	<bean id="ImportProjectController" class="fi.seco.saha3.web.control.ImportProjectController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+
+	<bean id="AdminController" class="fi.seco.saha3.web.control.AdminController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:lockManager-ref="Saha3LockManager" 
+	p:cacheSeconds="0"
+	lazy-init="false" />
+	
+	<bean id="FrontPageController" class="fi.seco.saha3.web.control.FrontPageController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+
+	<bean id="ResourceSearchService" class="fi.seco.saha3.service.ResourceSearchService"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:onkiWebService-ref="OnkiWebService" />
+	
+	<bean id="OnkiWebService" class="fi.seco.saha3.infrastructure.OnkiWebService"
+	p:accessKey="51d3cdaa81331c9117d77f443a2c5404" />
+	
+	<bean id="Saha3LockManager" class="fi.seco.saha3.infrastructure.ResourceLockManager" />
+	
+	<bean id="ResourceController" class="fi.seco.saha3.web.control.ResourceController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" 
+	p:lockManager-ref="Saha3LockManager" 
+	p:cacheSeconds="0" />
+	
+	<bean id="ExportController" class="fi.seco.saha3.web.control.ExportController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<bean id="EditorController" class="fi.seco.saha3.web.control.EditorController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:lockManager-ref="Saha3LockManager"
+	p:cacheSeconds="0" />
+	
+	<bean id="MapEditController" class="fi.seco.saha3.web.control.MapEditController" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<bean id="ProjectAdminController" class="fi.seco.saha3.web.control.ProjectAdminController" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<bean id="Saha3Controller" class="fi.seco.saha3.web.control.SahaController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
+	<bean id="Saha3ImageController" class="fi.seco.saha3.web.control.ImageController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<bean id="Saha3ImageUploadController" class="fi.seco.saha3.web.control.ImageUploadController"
+	p:command-class="fi.seco.saha3.web.control.ImageBean"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
+	p:projectBaseDirectory-ref="ProjectBaseDirectory">
+		<dwr:remote javascript="SahaProjectRegistry">
+			<dwr:include method="closeSahaProject" />
+			<dwr:include method="gc" />
+	    </dwr:remote>
+	</bean>
+	
+	<bean id="SahaBackupManager" class="fi.seco.saha3.infrastructure.SahaBackupManager"
+	lazy-init="false"
+	p:backupDirectory-ref="BackupDirectory"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	
+	<!--
+	<bean id="SimpleBackupManager" class="fi.seco.saha3.infrastructure.SimpleBackupManager"
+	lazy-init="false"
+	p:backupDirectory="/l/demo/saha_backups/daily/"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	-->
+	
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver"
+		p:defaultLocale="fi"/>
+	
+	<bean id="localeChangeInterceptor" class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"
+		p:paramName="lang"/>
+	
+</beans>
