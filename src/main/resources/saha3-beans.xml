@@ -56,7 +56,8 @@
            		/service/ws/**=MessageDispatcher
            		/*/hako/schema=HakoJSONController
            		/*/hako/instances=HakoJSONController
-           		/*/hako/hako_deprecated=HakoJSONController         		
+           		/*/hako/ui_categories=HakoJSONController
+           		/*/hako/hako_deprecated=HakoJSONController
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController

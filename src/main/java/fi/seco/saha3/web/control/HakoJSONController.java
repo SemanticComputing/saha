@@ -117,6 +117,58 @@ public class HakoJSONController extends WebContentGenerator {
 		}
 	}
 	
+	@RequestMapping("/{model}/hako/ui_categories")
+	public void handleUICategories(HttpServletRequest request, HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
+		response.setContentType("application/json;charset=UTF-8");
+		SahaProject project = getProject(model);
+		JSONObject result = new JSONObject();
+		Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
+		parameterMap.remove("lang");
+		parameterMap.remove("model");
+		parameterMap.remove("from");
+        parameterMap.remove("to");
+        UICategories categories = project.getUICategories(parameterMap,locale);
+		
+		Map<String,UICategoryNode> selected = new HashMap<String,UICategoryNode>();
+		Map<String,UICategoryNode> allNodes = categories.getAllNodes();
+		result.put("selectedCategories", Collections.emptyList());
+		for (List<String> values : parameterMap.values()) {
+			for (String value : values) {
+				if (allNodes.containsKey(value)) {
+					JSONObject tmp = new JSONObject();
+					UICategoryNode uinode = allNodes.get(value);					
+					selected.put(value,uinode);
+					tmp.put("uri", uinode.getUri());
+					tmp.put("label", uinode.getLabel());
+					tmp.put("backQuery", uinode.getBackQuery());
+					tmp.put("propertyUri", uinode.getPropertyUri());
+					result.append("selectedCategories", tmp);
+				}
+			}
+		}
+		
+		
+		Iterator<Entry<String, SortedSet<UICategoryNode>>> it = categories.getRootNodes().entrySet().iterator();
+		while (it.hasNext()) {
+			JSONObject facetCategory = new JSONObject();
+			Entry<String, SortedSet<UICategoryNode>> category = it.next();
+			facetCategory.put("label", category.getKey());
+			for (UICategoryNode node : category.getValue()) {
+				JSONObject tmp = new JSONObject(); // XXX: Fix recursion so that the this object is created in the first call for buildRecursiveHierarchys
+				tmp.put("uri", node.getUri());
+				tmp.put("itemCount", node.getItemCount());
+				tmp.put("children", buildRecursiveHierarchy(node.getChildren())); // Builds instance subclass hierarchy recursively 
+				tmp.put("label", node.getLabel());
+				tmp.put("backQuery", node.getBackQuery());
+				tmp.put("selectQuery", node.getSelectQuery());
+				facetCategory.append("facetClasses", tmp);
+			}
+			result.append("facets", facetCategory);
+		}
+		response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(result.toString());
+	}
+	
 	/*
 	 * XXX: Deprecated method - split contents to API implementations retrieving schema and results independently.
 	 */
@@ -146,6 +198,8 @@ public class HakoJSONController extends WebContentGenerator {
             parameterMap.remove("to");
 			
 			boolean sort = true;
+			
+			// XXX: text search is not implemented in this version
 			List<String> searchStrings = parameterMap.get(ResourceIndex.UBER_FIELD_NAME);
 			if (searchStrings != null) for (String searchString : searchStrings)
 				if (!searchString.isEmpty())
@@ -273,84 +327,7 @@ public class HakoJSONController extends WebContentGenerator {
 		}
 		return result;
 	}
-	
-	private String getTimeMapEvents(HttpServletRequest request, SahaProject project, Locale locale) {
-		String jsonError ="{\"error\": \"error in JSON conversion\"}";
-		JSONArray requestUris;
-		
-		try {
-			requestUris = new JSONArray(request.getParameter("uris").split(","));
-		} catch(JSONException err) {
-			return jsonError;
-		} catch(NullPointerException err) {
-			return "null";
-		}
-		
-		JSONArray result = new JSONArray();
-		try {
-			
-			for (int i = 0; i < requestUris.length(); i++) {
-				JSONObject obj = new JSONObject();
-				JSONObject tmpX = new JSONObject();
-				JSONObject options = new JSONObject();
-				String resourceUri = (String) requestUris.get(i);
-				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project.getResource(resourceUri, locale).getPropertyMapEntrySet();
-				options.put("uri", resourceUri);
-				obj.put("durationEvent", "false"); //XXX Allow duration events
-				for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
-	
-					if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("title", entry.getValueLabel() );
-						}
-					} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("title", entry.getValueLabel() );
-						}
-					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("start", entry.getValueLabel() );					
-							obj.put("earliestStart", entry.getValueLabel() + " 00:00" );
-							obj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
-						}
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("latitude", entry.getValueLabel() );
-						}
-						
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("longitude", entry.getValueLabel() );
-						}
-					} 
-					else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.append("geometry_polygons", parseCoordinates(entry.getValueLabel()));					
-						}
-					} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.append("geometry_points", parsePointCoordinates(entry.getValueLabel()));			
-						}
-					}
-				}
-				if (tmpX.has("latitude") && tmpX.has("longitude")) {
-					JSONObject tmpY = new JSONObject();
-					tmpY.put("lat", tmpX.get("latitude"));
-					tmpY.put("lon", tmpX.get("longitude"));
-					obj.append("geometry_points", tmpY);
-				}
-				if (!obj.has("start")) {
-					obj.put("start", "1000-01-01");					
-				}
-				obj.put("options", options);
-				result.put(obj);
-			}
-		} catch(JSONException exception) {
-			return jsonError;
-		}
-	
-		return result.toString();
-	}
+
 	private JSONArray parseCoordinates(String rawString) throws JSONException {
 		JSONArray coordArr = new JSONArray();
 		for (String pair : rawString.split(" ")) {
