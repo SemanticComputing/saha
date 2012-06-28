@@ -26,7 +26,6 @@ import org.json.JSONObject;
 
 import com.hp.hpl.jena.vocabulary.OWL;
 
-import fi.seco.saha3.index.ResourceIndex;
 import fi.seco.saha3.index.category.UICategories;
 import fi.seco.saha3.index.category.UICategoryNode;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
@@ -85,7 +84,6 @@ public class HakoJSONController extends WebContentGenerator {
 
 	/*
 	 * Retrieve result instances. Called when HAKO result listing is scrolled down.
-	 * XXX: Remove hako_deprecated and use this to retrieve also initial result instances
 	 */
 	@RequestMapping("/{model}/hako/instances")
 	public void handleRequestMore(HttpServletRequest request, HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
@@ -167,96 +165,6 @@ public class HakoJSONController extends WebContentGenerator {
 		}
 		response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(result.toString());
-	}
-	
-	/*
-	 * XXX: Deprecated method - split contents to API implementations retrieving schema and results independently.
-	 */
-	@RequestMapping("/{model}/hako/hako_deprecated")
-	public void handleRequestDeprecated(HttpServletRequest request,
-			HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
-		response.setContentType("application/json;charset=UTF-8");
-		
-		SahaProject project = getProject(model);
-		if (!project.isHakoConfig()) {
-	        response.getWriter().write(getJSONResponseError("Error: the hako instance is not configured"));
-	        return;
-		} else {
-			JSONObject result = new JSONObject();
-			Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
-
-			parameterMap.remove("lang");
-			parameterMap.remove("model");
-			
-            int from = 0, to = 100;
-            if (parameterMap.containsKey("from") ) 
-                    from = Integer.parseInt(parameterMap.get("from").get(0));
-            if (parameterMap.containsKey("to") ) 
-                    to = Integer.parseInt(parameterMap.get("to").get(0));
-            
-            parameterMap.remove("from");
-            parameterMap.remove("to");
-			
-			boolean sort = true;
-			
-			// XXX: text search is not implemented in this version
-			List<String> searchStrings = parameterMap.get(ResourceIndex.UBER_FIELD_NAME);
-			if (searchStrings != null) for (String searchString : searchStrings)
-				if (!searchString.isEmpty())
-					sort = false; // list items by relevance
-			
-			UICategories categories = project.getUICategories(parameterMap,locale);
-				
-			Map<String,UICategoryNode> selected = new HashMap<String,UICategoryNode>();
-			Map<String,UICategoryNode> allNodes = categories.getAllNodes();
-			result.put("selectedCategories", Collections.emptyList());
-			for (List<String> values : parameterMap.values()) {
-				for (String value : values) {
-					if (allNodes.containsKey(value)) {
-						JSONObject tmp = new JSONObject();
-						UICategoryNode uinode = allNodes.get(value);					
-						selected.put(value,uinode);
-						tmp.put("uri", uinode.getUri());
-						tmp.put("label", uinode.getLabel());
-						tmp.put("backQuery", uinode.getBackQuery());
-						tmp.put("propertyUri", uinode.getPropertyUri());
-						result.append("selectedCategories", tmp);
-					}
-				}
-			}
-			
-			Iterator<Entry<String, SortedSet<UICategoryNode>>> it = categories.getRootNodes().entrySet().iterator();
-			while (it.hasNext()) {
-				JSONObject facetCategory = new JSONObject();
-				Entry<String, SortedSet<UICategoryNode>> category = it.next();
-				facetCategory.put("label", category.getKey());
-				for (UICategoryNode node : category.getValue()) {
-					JSONObject tmp = new JSONObject(); // XXX: Fix recursion so that the this object is created in the first call for buildRecursiveHierarchys
-					tmp.put("uri", node.getUri());
-					tmp.put("itemCount", node.getItemCount());
-					tmp.put("children", buildRecursiveHierarchy(node.getChildren())); // Builds instance subclass hierarchy recursively 
-					tmp.put("label", node.getLabel());
-					tmp.put("backQuery", node.getBackQuery());
-					tmp.put("selectQuery", node.getSelectQuery());
-					facetCategory.append("facetClasses", tmp);
-				}
-				result.append("facets", facetCategory);
-			}			
-			
-			
-			List<String> terms = parameterMap.remove(ResourceIndex.UBER_FIELD_NAME);
-			if (terms != null) {
-				result.put("terms", terms);
-			}
-			else {
-				result.put("terms", Collections.emptyList());
-			}
-			
-			result.put("results", getResultInstances(project, parameterMap, locale, from, to, sort));
-			
-			response.setContentType("application/json;charset=UTF-8");
-	        response.getWriter().write(result.toString());
-		}
 	}
 	
 	private JSONArray getResultInstances(SahaProject project, Map<String,List<String>> parameterMap, Locale locale, int from, int to, boolean sort) throws JSONException{
