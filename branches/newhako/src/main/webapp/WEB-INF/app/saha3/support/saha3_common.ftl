@@ -23,7 +23,7 @@
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
 	<script type='text/javascript' src='../dwr/engine.js'></script> 
-	<script type='text/javascript' src='../scripts/dwr_resources/util.js'></script> 
+	<script type='text/javascript' src='../app/scripts/dwr_resources/util.js'></script> 
 
 
 	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dojo/resources/dojo.css" />

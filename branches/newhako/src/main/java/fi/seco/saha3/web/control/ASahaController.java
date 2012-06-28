@@ -38,14 +38,15 @@ public abstract class ASahaController extends AbstractController {
 
 	@Override
 	public ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		String servletPath = request.getServletPath();
-		String model = parseModelName(servletPath);
+		
+		String pathInfo = request.getPathInfo();
+		String model = parseModelName(pathInfo);
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
 		if (project != null) {
-			String view = parseViewName(servletPath);
+			String view = parseViewName(pathInfo);
 			ModelAndView mav = new ModelAndView(view);
 			mav.addObject("model", model);
 			mav.addObject("lang", locale.getLanguage());

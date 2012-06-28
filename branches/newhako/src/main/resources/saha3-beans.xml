@@ -5,9 +5,11 @@
   xmlns:util="http://www.springframework.org/schema/util"
   xmlns:p="http://www.springframework.org/schema/p"
   xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+  xmlns:mvc="http://www.springframework.org/schema/mvc"
   xmlns:context="http://www.springframework.org/schema/context"
   xmlns:sws="http://www.springframework.org/schema/web-services"
   xsi:schemaLocation="
+  	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
   	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
 	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
 	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
@@ -17,7 +19,10 @@
   default-autowire="no" >
 
 	<description>SAHA3 web tier specific beans</description>
-
+	
+	<mvc:resources mapping="/app/**" location="/app/" />
+	<mvc:resources mapping="/app/scripts/dwr/**" location="/scripts/" />
+	
 	<bean class="org.springframework.ws.transport.http.WebServiceMessageReceiverHandlerAdapter"
 	p:messageFactory-ref="messageFactory"/>
 	<bean id="messageFactory" class="org.springframework.ws.soap.saaj.SaajSoapMessageFactory"/>
@@ -49,8 +54,9 @@
 				/service/pics/**=Saha3ImageController
            		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
            		/service/ws/**=MessageDispatcher
-           		/*/ahako.shtml=HakoJSONController
-           		/*/ahako_uri.shtml=HakoJSONController           		
+           		/*/hako/schema=HakoJSONController
+           		/*/hako/instances=HakoJSONController
+           		/*/hako/hako_deprecated=HakoJSONController         		
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController
@@ -61,6 +67,7 @@
 				/*/map.shtml=MapEditController		
 				/*/manage.shtml=ProjectAdminController		
 				/saha3/admin.shtml=AdminController
+				/=FrontPageController
 				/saha3/=FrontPageController
 				/saha3/main.shtml=FrontPageController
 			</value>

@@ -88,7 +88,6 @@
             });
         });
         function toggleHakoTypeSelection(id, uri) {
-        	console.log(id, uri, $("#"+id+":checked"));
         	if ($("#"+id+":checked").length == 0) {
         		ResourceConfigService.removeTypeFromHakoConfig('${model}', uri);
         	} else {
@@ -96,7 +95,6 @@
         	}
         }
         function toggleHakoPropertySelection(id, uri) {
-        	console.log(id, uri, $("#"+id+":checked"));
         	if ($("#"+id+":checked").length == 0) {
         		ResourceConfigService.removePropertyFromHakoConfig('${model}', uri);
         	} else {

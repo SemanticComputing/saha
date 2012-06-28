@@ -14,17 +14,22 @@ import java.util.SortedSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.stereotype.Controller;
+
+import org.springframework.beans.factory.annotation.Required;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.support.WebContentGenerator;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.openjena.atlas.logging.Log;
-import org.springframework.web.servlet.ModelAndView;
+
+import com.hp.hpl.jena.vocabulary.OWL;
 
 import fi.seco.saha3.index.ResourceIndex;
 import fi.seco.saha3.index.category.UICategories;
 import fi.seco.saha3.index.category.UICategoryNode;
+import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.model.IResults.IResult;
 import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.SahaProject;
@@ -34,28 +39,100 @@ import fi.seco.saha3.model.UriLabel;
  * Controller for the HAKO config screen and HAKO itself.
  * 
  */
-public class HakoJSONController extends ASahaController {
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public ModelAndView handleRequest(HttpServletRequest request,
-			HttpServletResponse response, SahaProject project, Locale locale,
-			ModelAndView mav) throws Exception {
+public class HakoJSONController extends WebContentGenerator {
+
+	private SahaProjectRegistry sahaProjectRegistry;
+
+	@Required
+	public void setSahaProjectRegistry(SahaProjectRegistry sahaProjectRegistry) {
+		this.sahaProjectRegistry = sahaProjectRegistry;
+	}
+
+	private SahaProject getProject(String model) {
+		return sahaProjectRegistry.getSahaProject(model);
+	}
+
+	/*
+	 * Returns the schema of current HAKO project (i.e. returns object including all available properties and classes)   
+	 */
+	@RequestMapping("/{model}/hako/schema")
+	public void handleRequestSchema(HttpServletRequest request,
+			HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
 		response.setContentType("application/json;charset=UTF-8");
+		
+		SahaProject project = getProject(model);
 		if (!project.isHakoConfig()) {
 	        response.getWriter().write(getJSONResponseError("Error: the hako instance is not configured"));
-			return null;
-		} else if (request.getServletPath().contains("ahako_uri.shtml")) { //XXX: Tight coupling		
-			response.getWriter().write(getTimeMapEvents(request, project, locale));
-			return null;
+	        return;
+		}
+        JSONObject result = new JSONObject();
+        for (IResult ir : project.getSortedInstances(null,OWL.Class.getURI(),locale,0,3000)) {
+        	JSONObject tmp = new JSONObject();
+        	tmp.put("uri", ir.getUri());
+        	tmp.put("label", ir.getLabel());
+        	result.append("types", tmp);
+        }
+		for (IResult ir : project.getSortedInstances(null,OWL.ObjectProperty.getURI(),locale,0,3000)) {
+			JSONObject tmp = new JSONObject();
+        	tmp.put("uri", ir.getUri());
+        	tmp.put("label", ir.getLabel());
+			result.put("properties",tmp);
+		}
+		response.getWriter().write(result.toString());
+	}
+	
+
+	/*
+	 * Retrieve result instances. Called when HAKO result listing is scrolled down.
+	 * XXX: Remove hako_deprecated and use this to retrieve also initial result instances
+	 */
+	@RequestMapping("/{model}/hako/instances")
+	public void handleRequestMore(HttpServletRequest request, HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
+		response.setContentType("application/json;charset=UTF-8");
+		SahaProject project = getProject(model);
+		if (!project.isHakoConfig()) {
+	        response.getWriter().write(getJSONResponseError("Error: the hako instance is not configured"));
+	        return;
 		} else {
-			logger.warn("servlet path: "+request.getServletPath());
-			logger.warn("requested uri: " +request.getRequestURI());
-			String pathInfo = request.getPathInfo();
-			logger.warn("path info: "+pathInfo);
 			JSONObject result = new JSONObject();
 			Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
+
+			parameterMap.remove("lang");
+			parameterMap.remove("model");
 			
+            int from = 0, to = 100;
+            if (parameterMap.containsKey("from") ) 
+                    from = Integer.parseInt(parameterMap.get("from").get(0));
+            if (parameterMap.containsKey("to") ) 
+                    to = Integer.parseInt(parameterMap.get("to").get(0));
+            
+            parameterMap.remove("from");
+            parameterMap.remove("to");
+			
+			result.put("results", getResultInstances(project, parameterMap, locale, from, to, true));
+			
+			response.setContentType("application/json;charset=UTF-8");
+	        response.getWriter().write(result.toString());
+		}
+	}
+	
+	/*
+	 * XXX: Deprecated method - split contents to API implementations retrieving schema and results independently.
+	 */
+	@RequestMapping("/{model}/hako/hako_deprecated")
+	public void handleRequestDeprecated(HttpServletRequest request,
+			HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
+		response.setContentType("application/json;charset=UTF-8");
+		
+		SahaProject project = getProject(model);
+		if (!project.isHakoConfig()) {
+	        response.getWriter().write(getJSONResponseError("Error: the hako instance is not configured"));
+	        return;
+		} else {
+			JSONObject result = new JSONObject();
+			Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
+
 			parameterMap.remove("lang");
 			parameterMap.remove("model");
 			
@@ -112,6 +189,7 @@ public class HakoJSONController extends ASahaController {
 				result.append("facets", facetCategory);
 			}			
 			
+			
 			List<String> terms = parameterMap.remove(ResourceIndex.UBER_FIELD_NAME);
 			if (terms != null) {
 				result.put("terms", terms);
@@ -120,80 +198,82 @@ public class HakoJSONController extends ASahaController {
 				result.put("terms", Collections.emptyList());
 			}
 			
-			for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,from,to,sort)) {
-				JSONObject tmp = new JSONObject();
-				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap;
-				
-				try {
-					propertyMap = project.getResource(ir.getUri(), locale).getPropertyMapEntrySet();
-				} catch (java.util.NoSuchElementException nsee) {
-					continue;
-				}
-				tmp.append("uri", ir.getUri());
-				tmp.append("label", ir.getLabel());
-				
-				JSONObject tmObj = new JSONObject();
-				JSONObject options = new JSONObject();
-				options.put("uri", ir.getUri());
-				tmObj.put("options", options);
-				JSONObject tmpX = new JSONObject();
-				for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
-					if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							tmObj.put("title", entry.getValueLabel() );
-						}
-					} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							tmObj.put("title", entry.getValueLabel() );
-						}
-					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							tmObj.put("start", entry.getValueLabel() );					
-							tmObj.put("earliestStart", entry.getValueLabel() + " 00:00" );
-							tmObj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
-						}
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("latitude", entry.getValueLabel() );
-						}
-						
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("longitude", entry.getValueLabel() );
-						}
-					} 
-					else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
-						for(ISahaProperty entry: key.getValue()) {
-							tmObj.append("geometry_polygons", parseCoordinates(entry.getValueLabel()));					
-						}
-					} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
-						for(ISahaProperty entry: key.getValue()) {
-							tmObj.append("geometry_points", parsePointCoordinates(entry.getValueLabel()));			
-						}
-					}
-				}
-				if (tmpX.has("latitude") && tmpX.has("longitude")) {
-					JSONObject tmpY = new JSONObject();
-					tmpY.put("lat", tmpX.get("latitude"));
-					tmpY.put("lon", tmpX.get("longitude"));
-					tmObj.append("geometry_points", tmpY);
-				}
-				if (!tmObj.has("start")) {
-					tmObj.put("start", "1000-01-01");					
-				}
-				tmp.put("tmdata",tmObj);
-				result.append("results", tmp);
-			}
-			if (!result.has("results")) {
-				result.put("results", Collections.emptyList());
-			}
+			result.put("results", getResultInstances(project, parameterMap, locale, from, to, sort));
 			
 			response.setContentType("application/json;charset=UTF-8");
 	        response.getWriter().write(result.toString());
-
-			return null;
 		}
 	}
+	
+	private JSONArray getResultInstances(SahaProject project, Map<String,List<String>> parameterMap, Locale locale, int from, int to, boolean sort) throws JSONException{
+		JSONArray result = new JSONArray();
+		for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,from,to,sort)) {
+			JSONObject tmp = new JSONObject();
+			Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap;
+			
+			try {
+				propertyMap = project.getResource(ir.getUri(), locale).getPropertyMapEntrySet();
+			} catch (java.util.NoSuchElementException nsee) {
+				continue;
+			}
+			tmp.append("uri", ir.getUri());
+			tmp.append("label", ir.getLabel());
+			
+			JSONObject tmObj = new JSONObject();
+			JSONObject options = new JSONObject();
+			options.put("uri", ir.getUri());
+			tmObj.put("options", options);
+			JSONObject tmpX = new JSONObject();
+			for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
+				if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
+					for(ISahaProperty entry: key.getValue()) {
+						tmObj.put("title", entry.getValueLabel() );
+					}
+				} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
+					for(ISahaProperty entry: key.getValue()) {
+						tmObj.put("title", entry.getValueLabel() );
+					}
+				} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
+					for(ISahaProperty entry: key.getValue()) {
+						tmObj.put("start", entry.getValueLabel() );					
+						tmObj.put("earliestStart", entry.getValueLabel() + " 00:00" );
+						tmObj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
+					}
+				} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
+					for(ISahaProperty entry: key.getValue()) {
+						tmpX.put("latitude", entry.getValueLabel() );
+					}
+					
+				} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
+					for(ISahaProperty entry: key.getValue()) {
+						tmpX.put("longitude", entry.getValueLabel() );
+					}
+				} 
+				else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
+					for(ISahaProperty entry: key.getValue()) {
+						tmObj.append("geometry_polygons", parseCoordinates(entry.getValueLabel()));					
+					}
+				} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
+					for(ISahaProperty entry: key.getValue()) {
+						tmObj.append("geometry_points", parsePointCoordinates(entry.getValueLabel()));			
+					}
+				}
+			}
+			if (tmpX.has("latitude") && tmpX.has("longitude")) {
+				JSONObject tmpY = new JSONObject();
+				tmpY.put("lat", tmpX.get("latitude"));
+				tmpY.put("lon", tmpX.get("longitude"));
+				tmObj.append("geometry_points", tmpY);
+			}
+			if (!tmObj.has("start")) {
+				tmObj.put("start", "1000-01-01");					
+			}
+			tmp.put("tmdata",tmObj);
+			result.put(tmp);
+		}
+		return result;
+	}
+	
 	private String getTimeMapEvents(HttpServletRequest request, SahaProject project, Locale locale) {
 		String jsonError ="{\"error\": \"error in JSON conversion\"}";
 		JSONArray requestUris;

@@ -92,8 +92,6 @@
 		}		
 	</style>
 
-
-
     <script id="resultTemplate" type="text/x-jsrender">
         <div id="c_{{:#index+1}}" class="cell" style="border-bottom:thin solid #e0e0e0;">
             <a href="javascript:show_instance('{{:uri}}','c_{{:#index+1}}');">
@@ -101,6 +99,7 @@
             </a>
         </div>
     </script>
+    
     <script id="selectionTemplate" type="text/x-jsrender">
         <div>
             <a onclick="javascript:addSelection('{{:backQuery}}')" style="cursor: pointer; color:grey">[remove]</a>
@@ -108,9 +107,11 @@
             <em>{{:label}}</em></a></strong>
         </div>
     </script>
+    
     <script id="toggleCategoryTemplate" type="text/x-jsrender">
         <span id="span{{:uri}}" class="toggle" style="cursor: pointer" onclick="javascript:toggle('list_{{:rootCategory}}_{{:uri}}', this)">[+]</span>
     </script>
+    
 	<script>
 		var tm, markers, condition = null, numberOfResults = 0;
 
@@ -125,7 +126,6 @@
                 $('#tab_target').children().hide();
                 $('#map_view').show();
             });
-
 
 		    // Make a new TimeMap object, passing the ids of the map and timeline DOM elements.
 		    // This will initialize the map.
@@ -277,13 +277,33 @@
             }
             return array;
         }
+		
+		function moreData () {
+			jQuery.getJSON("./hako/instances?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
+				$('#result_list').append($("#resultTemplate").render( data["results"] ));
 
+				numberOfResults = numberOfResults + data["results"].length;
+				
+				if ( data["results"].length > 0 ) {
+					var $resultsCount = $('<div class="resultsCount" style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');				
+	                $('#result_list').append($resultsCount);                
+					$('#result_list').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } );
+				}
+				
+                for (var i in data["results"]) {
+                    var obj = data["results"][i];
+		            markers.loadItem( obj.tmdata );
+                }
+                tm.timeline.layout();
+			});
+		}
+		
         function loadData() {
         	var firstRun = true;
             if ( numberOfResults > 0 ) 
             	firstRun = false;
             	 
-            jQuery.getJSON("./ahako.shtml?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
+            jQuery.getJSON("./hako/hako_deprecated?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +getSearchCondition(), function(data) {
 				if (firstRun) {
 	                $('#result_list').empty();
 	                $('#categoryContainer').empty();
@@ -305,7 +325,7 @@
 				if ( data["results"].length > 0 ) {
 					var $resultsCount = $('<div class="resultsCount" style="position:absolute;padding:3px;right:0;color:#999;font-size:small;">'+numberOfResults+' results</div>');				
 	                $('#result_list').append($resultsCount);                
-					$('#result_list').waypoint( function() { loadData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } )
+					$('#result_list').waypoint( function() { moreData(); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } )
 				}
 				
                 for (var i in data["results"]) {
@@ -401,7 +421,7 @@
 			<div id="tab_target" style="margin-top: 5px;">
 
 				<div id="map_view">
-					 <div id="mapContainer" class="mapContainer" style="width: 100%; height: 400px"><div id="map" class="mapDiv" style="width: 100%; height: 400px"></div></div>				
+					 <div id="mapContainer" class="mapContainer" style="width: 100%; height: 900px"><div id="map" class="mapDiv" style="width: 100%; height: 900px"></div></div>				
 					 <div id="tl" class="timeline" style="width: 100%; height: 200px"></div>
 				</div>
 
