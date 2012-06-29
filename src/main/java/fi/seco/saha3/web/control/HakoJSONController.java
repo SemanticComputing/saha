@@ -76,7 +76,7 @@ public class HakoJSONController extends WebContentGenerator {
 			JSONObject tmp = new JSONObject();
         	tmp.put("uri", ir.getUri());
         	tmp.put("label", ir.getLabel());
-			result.put("properties",tmp);
+			result.append("properties",tmp);
 		}
 		response.getWriter().write(result.toString());
 	}
