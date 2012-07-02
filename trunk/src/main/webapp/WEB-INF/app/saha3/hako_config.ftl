@@ -6,7 +6,7 @@
 	<title>HAKO - ${model}</title>
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/engine.js'></script> 
-    <script type="text/javascript" src="../app/scripts/jquery-1.6.2.min.js"></script>
+    <script type="text/javascript" src="../app/scripts/jquery-1.7.2.min.js"></script>
 	
 	<style>
 		body {
