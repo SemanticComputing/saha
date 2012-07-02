@@ -159,6 +159,9 @@ public class HakoJSONController extends WebContentGenerator {
 				tmp.put("label", node.getLabel());
 				tmp.put("backQuery", node.getBackQuery());
 				tmp.put("selectQuery", node.getSelectQuery());
+
+				if (selected.containsValue(node))
+					tmp.put("selected", "true");
 				facetCategory.append("facetClasses", tmp);
 			}
 			result.append("facets", facetCategory);
