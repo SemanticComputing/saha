@@ -1,6 +1,7 @@
 package fi.seco.saha3.web.control;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -155,7 +156,7 @@ public class HakoJSONController extends WebContentGenerator {
 				JSONObject tmp = new JSONObject(); // XXX: Fix recursion so that the this object is created in the first call for buildRecursiveHierarchys
 				tmp.put("uri", node.getUri());
 				tmp.put("itemCount", node.getItemCount());
-				tmp.put("children", buildRecursiveHierarchy(node.getChildren())); // Builds instance subclass hierarchy recursively 
+				tmp.put("children", buildRecursiveHierarchy(node.getChildren(), selected)); // Builds instance subclass hierarchy recursively 
 				tmp.put("label", node.getLabel());
 				tmp.put("backQuery", node.getBackQuery());
 				tmp.put("selectQuery", node.getSelectQuery());
@@ -169,7 +170,7 @@ public class HakoJSONController extends WebContentGenerator {
 		response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(result.toString());
 	}
-	
+
 	private JSONArray getResultInstances(SahaProject project, Map<String,List<String>> parameterMap, Locale locale, int from, int to, boolean sort) throws JSONException{
 		JSONArray result = new JSONArray();
 		for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,from,to,sort)) {
@@ -260,7 +261,7 @@ public class HakoJSONController extends WebContentGenerator {
 		}
 		return tmp;
 	}
-	private JSONArray buildRecursiveHierarchy(SortedSet<UICategoryNode> nodes) throws Exception {
+	private JSONArray buildRecursiveHierarchy(SortedSet<UICategoryNode> nodes, Map<String, UICategoryNode> selected) throws Exception {
 		if (nodes.size() == 0) {
 			return new JSONArray();
 		}
@@ -269,7 +270,9 @@ public class HakoJSONController extends WebContentGenerator {
 			JSONObject tmp = new JSONObject();
 			tmp.put("uri", n.getUri());
 			tmp.put("itemCount", n.getItemCount());
-			tmp.put("children", buildRecursiveHierarchy(n.getChildren()));
+			if (selected.containsValue(n))
+				tmp.put("selected", "true");
+			tmp.put("children", buildRecursiveHierarchy(n.getChildren(), selected));
 			tmp.put("label", n.getLabel());
 			tmp.put("backQuery", n.getBackQuery());
 			tmp.put("selectQuery", n.getSelectQuery());
