@@ -32,47 +32,14 @@ public class HakoController extends ASahaController {
 			HttpServletResponse response, SahaProject project, Locale locale,
 			ModelAndView mav) throws Exception {
 	    
-		if (!project.isHakoConfig()) {
+		if (!project.isHakoConfig() || request.getParameterMap().containsKey("reset") ) {
 			mav.addObject("types",project.getSortedInstances(null,OWL.Class.getURI(),locale,0,1000));
 			mav.addObject("properties",project.getSortedInstances(null,OWL.ObjectProperty.getURI(),locale,0,1000));
 			mav.setViewName("saha3/hako_config");
 			return mav;
 		}
 		
-		mav.setViewName("saha3/hako_ajax");
-		
-		Map<String,List<String>> parameterMap = toModifiableMap(request.getParameterMap());
-		
-		parameterMap.remove("lang");
-		parameterMap.remove("model");
-		
-		boolean sort = true;
-		List<String> searchStrings = parameterMap.get(ResourceIndex.UBER_FIELD_NAME);
-		if (searchStrings != null) for (String searchString : searchStrings)
-			if (!searchString.isEmpty())
-				sort = false; // list items by relevance
-		
-		UICategories categories = project.getUICategories(parameterMap,locale);
-		
-		mav.addObject("result",project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,0,300,sort));
-		mav.addObject("categories",categories.getRootNodes());
-		
-		Map<String,UICategoryNode> selected = new HashMap<String,UICategoryNode>();
-		Map<String,UICategoryNode> allNodes = categories.getAllNodes();
-		for (List<String> values : parameterMap.values()) {
-			for (String value : values) {
-				if (allNodes.containsKey(value))
-					selected.put(value,allNodes.get(value));
-			}
-		}
-		mav.addObject("selected",selected);
-		
-		List<String> terms = parameterMap.remove(ResourceIndex.UBER_FIELD_NAME);
-		if (terms != null) mav.addObject("terms",terms);
-		else mav.addObject("terms",Collections.emptyList());
-		
-		mav.addObject("parameterMap",parameterMap);  // add all parameters (except previously removed labels)
-		
+		mav.setViewName( "forward:/app/hako.html" );
 		return mav;
 	}
 	
