@@ -44,9 +44,10 @@ public class ExportController extends AbstractController {
 		String uri = request.getParameter("uri");
 		String config = request.getParameter("config");
 		String schema = request.getParameter("schema");
-		String lang = parseLang(request.getParameter("l"));		
-		String projectName = ASahaController.parseModelName(request.getServletPath());
+		String lang = parseLang(request.getParameter("l"));	
 
+		String projectName = ASahaController.parseModelName(request.getPathInfo());
+		
 		try
 		{
 			this.sahaProjectRegistry.getLockForProject(projectName).readLock().lock();
