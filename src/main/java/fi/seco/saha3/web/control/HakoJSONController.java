@@ -54,7 +54,7 @@ public class HakoJSONController extends WebContentGenerator {
 	}
 
 	/*
-	 * Returns the schema of current HAKO project (i.e. returns object including all available properties and classes)   
+	 * Returns the schema of current HAKO project (i.e. returns object including all available properties, classes, selected HAKO types)   
 	 */
 	@RequestMapping("/{model}/hako/schema")
 	public void handleRequestSchema(HttpServletRequest request,
@@ -67,17 +67,37 @@ public class HakoJSONController extends WebContentGenerator {
 	        return;
 		}
         JSONObject result = new JSONObject();
+        result.put("project", model);
         for (IResult ir : project.getSortedInstances(null,OWL.Class.getURI(),locale,0,3000)) {
         	JSONObject tmp = new JSONObject();
         	tmp.put("uri", ir.getUri());
         	tmp.put("label", ir.getLabel());
-        	result.append("types", tmp);
+        	result.append("classes", tmp);
         }
 		for (IResult ir : project.getSortedInstances(null,OWL.ObjectProperty.getURI(),locale,0,3000)) {
 			JSONObject tmp = new JSONObject();
         	tmp.put("uri", ir.getUri());
         	tmp.put("label", ir.getLabel());
 			result.append("properties",tmp);
+		}
+		for (IResult ir : project.getSortedInstances(null,OWL.DatatypeProperty.getURI(),locale,0,3000)) {
+			JSONObject tmp = new JSONObject();
+        	tmp.put("uri", ir.getUri());
+        	tmp.put("label", ir.getLabel());
+			result.append("properties",tmp);
+		}
+		for (String type : project.getHakoTypes()) {
+			JSONObject tmp = new JSONObject();
+			tmp.put("uri", type);
+			tmp.put("label", project.getResource(type, locale).getLabel());
+	
+			for (ISahaProperty ip : project.getResource(type, locale).getEditorProperties()) {
+				JSONObject tmpp = new JSONObject();
+				tmpp.put("label", ip.getLabel());
+				tmpp.put("uri", ip.getUri());
+				tmp.append("properties", tmpp);
+			}
+			result.append("types",tmp);
 		}
 		response.getWriter().write(result.toString());
 	}
@@ -146,7 +166,6 @@ public class HakoJSONController extends WebContentGenerator {
 			}
 		}
 		
-		
 		Iterator<Entry<String, SortedSet<UICategoryNode>>> it = categories.getRootNodes().entrySet().iterator();
 		while (it.hasNext()) {
 			JSONObject facetCategory = new JSONObject();
@@ -160,7 +179,7 @@ public class HakoJSONController extends WebContentGenerator {
 				tmp.put("label", node.getLabel());
 				tmp.put("backQuery", node.getBackQuery());
 				tmp.put("selectQuery", node.getSelectQuery());
-
+				
 				if (selected.containsValue(node))
 					tmp.put("selected", "true");
 				facetCategory.append("facetClasses", tmp);
@@ -176,7 +195,6 @@ public class HakoJSONController extends WebContentGenerator {
 		for (IResult ir : project.getSortedInstances(parameterMap,project.getHakoTypes(),locale,from,to,sort)) {
 			JSONObject tmp = new JSONObject();
 			Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap;
-			
 			try {
 				propertyMap = project.getResource(ir.getUri(), locale).getPropertyMapEntrySet();
 			} catch (java.util.NoSuchElementException nsee) {

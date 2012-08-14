@@ -14,6 +14,7 @@ public class PropertyConfig {
 	private boolean denyLocalReferences;
 	private boolean denyInstantiation;
 	private boolean pictureProperty;
+	private boolean wordIndices;
 	private Collection<RepositoryConfig> repositoryConfigs = new ArrayList<RepositoryConfig>();
 	
 	public boolean isHidden() {
@@ -27,6 +28,12 @@ public class PropertyConfig {
 	}
 	public void setLocalized(boolean localized) {
 		this.localized = localized;
+	}
+	public boolean isWordIndices() {
+		return wordIndices;
+	}
+	public void setWordIndices(boolean wordIndices) {
+		this.wordIndices = wordIndices;
 	}
 	public boolean isDenyLocalReferences() {
 		return denyLocalReferences;
