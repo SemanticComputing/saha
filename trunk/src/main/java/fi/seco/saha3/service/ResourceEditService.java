@@ -71,8 +71,6 @@ public class ResourceEditService {
 		try {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
-			log.debug("setObjectProperty(" + model + ", " + id + ", " + s
-					+ ", " + p + ", " + o + ", " + request + ")");
 
 			Locale locale = RequestContextUtils.getLocale(request);
 
@@ -95,8 +93,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("createInstance(" + model + ", " + type + ", " + label
-					+ ")");
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			return project.createResource(type, label);
 		} finally {
@@ -110,9 +106,6 @@ public class ResourceEditService {
 		try {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
-
-			log.debug("setLiteralProperty(" + model + ", " + id + ", " + s
-					+ ", " + p + ", " + l + ", " + lang + ")");
 
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			UriLabel object = (lang == null) ? project.addLiteralProperty(s, p,
@@ -133,10 +126,6 @@ public class ResourceEditService {
 		try {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
-
-			log.debug("updateLiteralProperty(" + model + ", " + id + ", " + s
-					+ ", " + p + ", " + l + ", " + lang + ", " + oldValueShaHex
-					+ ")");
 
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 
@@ -161,9 +150,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("setMapProperty(" + model + ", " + s + ", " + fc + ", "
-					+ value + ")");
-
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			project.setMapProperty(s, fc, value);
 
@@ -176,8 +162,6 @@ public class ResourceEditService {
 
 	public String getLiteralPropertyEditor(String model, String id, String s,
 			String p, String valueShaHex, HttpServletRequest request) {
-		log.debug("getLiteralPropertyEditor(" + model + ", " + id + ", " + s
-				+ ", " + p + ", " + valueShaHex + ", " + request + ")");
 
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
 		Locale locale = RequestContextUtils.getLocale(request);
@@ -208,8 +192,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("removeLiteralProperty(" + model + ", " + s + ", " + p
-					+ ", " + valueShaHex + ")");
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			return project.removeLiteralProperty(s, p, valueShaHex);
 		} finally {
@@ -223,7 +205,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("removeResource(" + model + ", " + uri + ")");
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			return project.removeResource(uri);
 		} finally {
@@ -238,8 +219,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("removeObjectProperty(" + model + ", " + s + ", " + p
-					+ ", " + o + ")");
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			return project.removeObjectProperty(s, p, o);
 		} finally {
@@ -253,7 +232,6 @@ public class ResourceEditService {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock()
 					.lock();
 
-			log.debug("removeProperty(" + model + ", " + s + ", " + p + ")");
 			SahaProject project = sahaProjectRegistry.getSahaProject(model);
 			return project.removeProperty(s, p);
 		} finally {
@@ -278,8 +256,6 @@ public class ResourceEditService {
 
 	public String getEditorPropertyTable(String model, String resourceUri,
 			String id, HttpServletRequest request) {
-		log.debug("getEditorPropertyTable(" + model + ", " + resourceUri + ", "
-				+ id + ", " + request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
@@ -295,8 +271,6 @@ public class ResourceEditService {
 
 	public String getPropertyTable(String model, String resourceUri,
 			HttpServletRequest request) {
-		log.debug("getPropertyTable(" + model + ", " + resourceUri + ", "
-				+ request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
@@ -320,8 +294,6 @@ public class ResourceEditService {
 
 	public String getHakoPropertyTable(String model, String resourceUri,
 			HttpServletRequest request) {
-		log.debug("getHakoPropertyTable(" + model + ", " + resourceUri + ", "
-				+ request + ")");
 
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
@@ -335,7 +307,7 @@ public class ResourceEditService {
 		return FreeMarkerUtil.process(configuration,
 				HAKO_PROPERTY_TABLE_TEMPLATE, modelMap);
 	}
-	
+
 	private JSONArray parseCoordinates(String rawString) throws JSONException {
 		JSONArray coordArr = new JSONArray();
 		for (String pair : rawString.split(" ")) {
@@ -347,8 +319,9 @@ public class ResourceEditService {
 		}
 		return coordArr;
 	}
-	
-	private JSONObject parsePointCoordinates(String rawString) throws JSONException {
+
+	private JSONObject parsePointCoordinates(String rawString)
+			throws JSONException {
 		JSONObject tmp = new JSONObject();
 		for (String pair : rawString.split(" ")) {
 			String latlong[] = pair.split(",");
@@ -357,59 +330,82 @@ public class ResourceEditService {
 		}
 		return tmp;
 	}
-	
-	public String getHakoTimemapEvents(String model, String pRequestUris, HttpServletRequest request) {
+
+	public String getHakoTimemapEvents(String model, String pRequestUris,
+			HttpServletRequest request) {
 		Locale locale = RequestContextUtils.getLocale(request);
 		SahaProject project = sahaProjectRegistry.getSahaProject(model);
-		String jsonError ="{\"error\": \"error in JSON conversion\"}";
+		String jsonError = "{\"error\": \"error in JSON conversion\"}";
 		JSONArray requestUris;
 		try {
 			requestUris = new JSONArray(pRequestUris);
-		} catch(JSONException err) {
+		} catch (JSONException err) {
 			return jsonError;
 		}
-		
+
 		JSONObject result = new JSONObject();
 		try {
-			for (int i=0; i < requestUris.length(); ++i) {
+			for (int i = 0; i < requestUris.length(); ++i) {
 				JSONObject obj = new JSONObject();
 				JSONObject tmpX = new JSONObject();
 				String resourceUri = requestUris.getString(i);
-				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project.getResource(resourceUri, locale).getPropertyMapEntrySet();
-								
-				for(Entry<UriLabel, Set<ISahaProperty>> key: propertyMap) {
-	
-					if( key.getKey().getUri().equals("http://www.w3.org/2000/01/rdf-schema#label") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("label", entry.getValueLabel() );
+				Set<Entry<UriLabel, Set<ISahaProperty>>> propertyMap = project
+						.getResource(resourceUri, locale)
+						.getPropertyMapEntrySet();
+
+				for (Entry<UriLabel, Set<ISahaProperty>> key : propertyMap) {
+
+					if (key.getKey()
+							.getUri()
+							.equals("http://www.w3.org/2000/01/rdf-schema#label")) {
+						for (ISahaProperty entry : key.getValue()) {
+							obj.put("label", entry.getValueLabel());
 						}
-					} else if( key.getKey().getUri().equals("http://www.w3.org/2004/02/skos/core#prefLabel") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("label", entry.getValueLabel() );
+					} else if (key
+							.getKey()
+							.getUri()
+							.equals("http://www.w3.org/2004/02/skos/core#prefLabel")) {
+						for (ISahaProperty entry : key.getValue()) {
+							obj.put("label", entry.getValueLabel());
 						}
-					} else if ( key.getKey().getUri().equals("http://www.hatikka.fi/havainnot/date_collected") )  {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.put("time", entry.getValueLabel() );					
-							obj.put("earliestStart", entry.getValueLabel() + " 00:00" );
-							obj.put("earliestEnd", entry.getValueLabel()  + " 23:59" );					
+					} else if (key
+							.getKey()
+							.getUri()
+							.equals("http://www.hatikka.fi/havainnot/date_collected")) {
+						for (ISahaProperty entry : key.getValue()) {
+							obj.put("time", entry.getValueLabel());
+							obj.put("earliestStart", entry.getValueLabel()
+									+ " 00:00");
+							obj.put("earliestEnd", entry.getValueLabel()
+									+ " 23:59");
 						}
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("latitude", entry.getValueLabel() );
+					} else if (key
+							.getKey()
+							.getUri()
+							.equals("http://www.w3.org/2003/01/geo/wgs84_pos#lat")) {
+						for (ISahaProperty entry : key.getValue()) {
+							tmpX.put("latitude", entry.getValueLabel());
 						}
-						
-					} else if ( key.getKey().getUri().equals("http://www.w3.org/2003/01/geo/wgs84_pos#long") )  { 
-						for(ISahaProperty entry: key.getValue()) {
-							tmpX.put("longitude", entry.getValueLabel() );
+
+					} else if (key
+							.getKey()
+							.getUri()
+							.equals("http://www.w3.org/2003/01/geo/wgs84_pos#long")) {
+						for (ISahaProperty entry : key.getValue()) {
+							tmpX.put("longitude", entry.getValueLabel());
 						}
-					} 
-					else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPolygon")) {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.append("geo_polygons", parseCoordinates(entry.getValueLabel()));					
+					} else if (key.getKey().getUri()
+							.equals("http://schema.onki.fi/poi#hasPolygon")) {
+						for (ISahaProperty entry : key.getValue()) {
+							obj.append("geo_polygons",
+									parseCoordinates(entry.getValueLabel()));
 						}
-					} else if ( key.getKey().getUri().equals("http://schema.onki.fi/poi#hasPoint")) {
-						for(ISahaProperty entry: key.getValue()) {
-							obj.append("geo_points", parsePointCoordinates(entry.getValueLabel()));			
+					} else if (key.getKey().getUri()
+							.equals("http://schema.onki.fi/poi#hasPoint")) {
+						for (ISahaProperty entry : key.getValue()) {
+							obj.append(
+									"geo_points",
+									parsePointCoordinates(entry.getValueLabel()));
 						}
 					}
 				}
@@ -421,13 +417,13 @@ public class ResourceEditService {
 				}
 				result.append("results", obj);
 			}
-		} catch(JSONException exception) {
+		} catch (JSONException exception) {
 			return jsonError;
 		}
 
 		return result.toString();
 	}
-	
+
 	public String getExternalPropertyTable(String ontology, String resourceUri,
 			HttpServletRequest request) {
 

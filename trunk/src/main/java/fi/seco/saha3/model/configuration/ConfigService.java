@@ -53,6 +53,7 @@ public class ConfigService {
 	Property denyLocalReferences = ResourceFactory.createProperty(DEFAULT_NAMESPACE+"denyLocalReferences");
 	Property denyNewInstances= ResourceFactory.createProperty(DEFAULT_NAMESPACE+"denyNewInstances");
 	Property isHidden = ResourceFactory.createProperty(DEFAULT_NAMESPACE+"isHidden");
+	Property hasWordIndices = ResourceFactory.createProperty(DEFAULT_NAMESPACE+"hasWordIndices");
 	Property isLocalized = ResourceFactory.createProperty(DEFAULT_NAMESPACE+"isLocalized");
 	Property isPictureProperty = ResourceFactory.createProperty(DEFAULT_NAMESPACE+"isPictureProperty");
 
@@ -186,7 +187,12 @@ public class ConfigService {
 		store.save();
 		return propertyConfig.isLocalized();
 	}
-
+	public boolean toggleWordIndices(String propertyUri) {
+		PropertyConfig propertyConfig = getPropertyConfig(propertyUri);
+		propertyConfig.setWordIndices(!propertyConfig.isWordIndices());
+		store.save();
+		return propertyConfig.isWordIndices();
+	}
 	public boolean togglePictureProperty(String propertyUri) {
 		PropertyConfig propertyConfig = getPropertyConfig(propertyUri);
 		propertyConfig.setPictureProperty(!propertyConfig.isPictureProperty());

@@ -235,11 +235,16 @@
 					<div id="results_${editorId}_${entry_index}" style="margin-top:6px;margin-bottom:4px;">
 					[#list entry.value as property]
 						[#if property.literal]
+							[#if property.config.wordIndices]
+								[#assign propertyValueLabel = literalFormatter.wordIndices(property.valueLabel?html)]
+							[#else]
+								[#assign propertyValueLabel = property.valueLabel]
+							[/#if]
 							[@literalPropertyValue id=editorId+"_"+entry_index+"_"+property_index model=model 
 								resourceUri=instance.uri 
 								propertyUri=property.uri 
 								propertyValueLang=property.valueLang
-								propertyValueLabel=property.valueLabel 
+								propertyValueLabel=propertyValueLabel 
 								propertyValueShaHex=property.valueShaHex/]
 						[#else]
 							[@objectPropertyValue id=editorId+"_"+entry_index+"_"+property_index model=model 
@@ -430,10 +435,10 @@
 			[/#if]
 			<a href="javascript:remove_literal_property('value_${id}','${model}','${resourceUri?url}',
 			'${propertyUri}','${propertyValueShaHex}');" style="color:crimson">
-			[remove]</a>
+			[remove]</a> 
 			[#if propertyValueLang?length > 0]<span style="color:grey">(${propertyValueLang})</span>[/#if]
 			<span style="white-space:pre-wrap;"><a href="javascript:get_literal_editor('value_${id}','${model}','${resourceUri?url}',
-			'${propertyUri}','${propertyValueShaHex}');" style="color:black;text-decoration:none;">${propertyValueLabel?html}</a></span>
+			'${propertyUri}','${propertyValueShaHex}');" style="color:black;text-decoration:none;">${propertyValueLabel}</a></span>
 		</div>
 	[/#if]
 [/#macro]

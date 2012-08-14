@@ -115,6 +115,12 @@ public class ResourceConfigService {
 		config.toggleLocalized(propertyUri);
 	}
 	
+	public void toggleWordIndices(String model, String propertyUri) {
+		log.debug("toggleWordIndices(" + model + ", " + propertyUri + ")");
+		ConfigService config = sahaProjectRegistry.getSahaProject(model).getConfig();
+		config.toggleWordIndices(propertyUri);
+	}
+	
 	public void togglePictureProperty(String model, String propertyUri) {
         log.debug("togglePictureProperty(" + model + ", " + propertyUri + ")");
         ConfigService config = sahaProjectRegistry.getSahaProject(model).getConfig();

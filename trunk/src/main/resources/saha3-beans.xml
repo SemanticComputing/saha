@@ -130,6 +130,7 @@
 			<dwr:include method="toggleDenyLocalReferences" />
 			<dwr:include method="toggleHidden" />
 			<dwr:include method="toggleLocalized" />
+			<dwr:include method="toggleWordIndices" />
 			<dwr:include method="togglePictureProperty" />
 			<dwr:include method="setAboutLink" />
 			<dwr:include method="destroyHako" />

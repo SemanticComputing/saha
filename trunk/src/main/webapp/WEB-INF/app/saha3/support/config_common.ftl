@@ -69,6 +69,10 @@
 		onClick="javascript:ResourceConfigService.togglePictureProperty('${model}','${propertyUri}')" 
 			[#if propertyConfig.pictureProperty]checked[/#if]>
 		<label for="checkbox_pic_${id}">picture property</label>
+		<input type="checkbox" dojoType="dijit.form.CheckBox" id="checkbox_word_indices_${id}"
+		onClick="javascript:ResourceConfigService.toggleWordIndices('${model}','${propertyUri}')"
+			 [#if propertyConfig.wordIndices]checked[/#if]>
+		<label for="checkbox_word_indices_${id}">word indices</label>
 	</div>
 [/#macro]
 

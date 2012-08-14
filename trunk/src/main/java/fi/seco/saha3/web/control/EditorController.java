@@ -49,8 +49,22 @@ public class EditorController extends ASahaController {
 		mav.addObject("uri", uri);
 		mav.addObject("instance", project.getResource(uri, locale));
 		mav.addObject("locked", !lockManager.acquireLock(uri, sessionId));
-
+		mav.addObject("literalFormatter", new LiteralFormatter());
 		return mav;
+	}
+	
+	public static class LiteralFormatter {
+		public static String wordIndices(String in) {
+			String[] words = in.split("\\s+");
+			StringBuffer out = new StringBuffer();
+			for (int i=0; i < words.length; i++) {
+				out.append(words[i]);
+				out.append("<sub>");
+				out.append(i);
+				out.append("</sub> ");
+			}
+			return out.toString();
+		}
 	}
 
 }
