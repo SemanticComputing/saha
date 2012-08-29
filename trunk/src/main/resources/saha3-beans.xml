@@ -57,6 +57,8 @@
            		/*/hako/schema=HakoJSONController
            		/*/hako/instances=HakoJSONController
            		/*/hako/ui_categories=HakoJSONController
+           		/*/hako/ui_categories=HakoJSONController
+           		/*/hako/resource_properties=HakoJSONController
 				/*/index.shtml=Saha3Controller
 				/*/resource.shtml=ResourceController
 				/*/editor.shtml=EditorController

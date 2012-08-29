@@ -58,7 +58,9 @@ public class ProjectAdminController extends ASahaController
                 && confirm != null && confirm.equals("true"))
             {                
                 // Delete project
-                String model = parseModelName(request.getServletPath());
+            	
+                String model = parseModelName(request.getPathInfo());
+                
                 log.info("Deleting project: " + model);
                 this.getSahaProjectRegistry().deleteProject(model);
                                 
@@ -72,7 +74,7 @@ public class ProjectAdminController extends ASahaController
             if (newPass1 != null && !newPass1.isEmpty() && newPass1.equals(newPass2))
             {
                 // Change password
-                log.info("Changing password for project:" + parseModelName(request.getServletPath()));
+                log.info("Changing password for project:" + parseModelName(request.getPathInfo()));
                 project.getConfig().setPassHash(DigestUtils.shaHex(newPass1));
                 mav.addObject("message", "Password changed");
             }

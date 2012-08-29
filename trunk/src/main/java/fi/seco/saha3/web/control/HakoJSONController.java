@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.support.RequestContextUtils;
 import org.springframework.web.servlet.support.WebContentGenerator;
 
 import org.json.JSONArray;
@@ -27,6 +28,7 @@ import org.json.JSONObject;
 
 import com.hp.hpl.jena.vocabulary.OWL;
 
+import fi.seco.saha3.factory.PropertyFactory.SahaProperty;
 import fi.seco.saha3.index.category.UICategories;
 import fi.seco.saha3.index.category.UICategoryNode;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
@@ -34,6 +36,7 @@ import fi.seco.saha3.model.IResults.IResult;
 import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.SahaProject;
 import fi.seco.saha3.model.UriLabel;
+import fi.seco.semweb.util.FreeMarkerUtil;
 
 /**
  * Controller for the HAKO config screen and HAKO itself.
@@ -134,6 +137,19 @@ public class HakoJSONController extends WebContentGenerator {
 			response.setContentType("application/json;charset=UTF-8");
 	        response.getWriter().write(result.toString());
 		}
+	}
+	@RequestMapping("/{model}/hako/resource_properties")
+	public void getResourceProperties(HttpServletRequest request, HttpServletResponse response, Locale locale, @PathVariable("model") String model) throws Exception {
+		SahaProject project = sahaProjectRegistry.getSahaProject(model);
+		JSONObject result = new JSONObject();
+		for (Entry<UriLabel, Set<ISahaProperty>> entry : project.getResource(request.getParameter("URI"), locale).getPropertyMapEntrySet() ) {
+			
+			for (ISahaProperty property : entry.getValue()) {
+				result.append(entry.getKey().getLabel(), property.getValueLabel());
+			}
+		}
+		response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(result.toString());
 	}
 	
 	@RequestMapping("/{model}/hako/ui_categories")
