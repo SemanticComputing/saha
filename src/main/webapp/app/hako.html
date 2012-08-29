@@ -167,13 +167,13 @@
         <tbody>
             {{for results}}
                 <tr>
-                    <td>{{:label}}</td>
+                    <td id="r_{{>~start}}_{{:#index}}"><span onclick="javascript:open_properties('r_{{>~start}}_{{:#index}}', '{{:uri}}')">{{:label}}</span></td>
                 </tr>
             {{/for}}
 				<tr id="resultListWaypoint"></tr>
         </tbody>   
     </script>
-    
+
     <script>
     (function(window,undefined){
     
@@ -280,7 +280,7 @@
 				$('#bgraph_yaxis_property_selector').append('<option uri="'+element.uri+'">'+element.label+'</option>');
 			});
 		});
-       
+       loadResults();
       });
 
       function loadFacets(query) {
@@ -307,6 +307,24 @@
         });
       }
       
+      function open_properties( id, uri ) {
+		if ($('#'+id).children('tr').length > 0) {
+			$('#'+id).children('tr').remove()
+		} else {
+	    	jQuery.getJSON("./hako/resource_properties", {URI: uri}, function(data) {
+	    		var propertyTable = "";
+	    		for (var i in data) {
+	    			propertyTable += "<tr><td>"+i+"</td><td>"; 
+	    			for (var j in data[i]) {
+	    				propertyTable += "<div>"+data[i][j]+"</div>";
+	    			}
+	    			propertyTable += "</td></tr>"
+	    		}
+	    		$("#"+id).append(propertyTable);
+	    	});
+		}
+      }
+      
       var numberOfResults = 0;
       function loadResults(query) {
           if (!query) {
@@ -321,9 +339,9 @@
                 tm.map.removeAllPolylines();
                 markers.eventSource.clear();              
         	  }
-        	  
-        	  $('#resultListWaypoint').remove();        	  
-              $("#resultsTable").append( $("#listItemTemplate").render(data) );
+
+        	  $('#resultListWaypoint').remove();
+              $("#resultsTable").append( $("#listItemTemplate").render(data, {start: numberOfResults}) );
               $('#resultListWaypoint').waypoint( function() { numberOfResults = numberOfResults + 100; loadResults(query); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } );
               
               // Repopulate map/markers
@@ -331,7 +349,7 @@
                   var obj = data["results"][i];
 		            markers.loadItem( obj.tmdata );
               }
-              
+
               // Repaint map            
         	  google.maps.event.trigger(map, "resize");
         	  tm.timeline.layout();
