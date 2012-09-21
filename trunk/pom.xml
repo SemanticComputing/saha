@@ -5,7 +5,6 @@
 	<artifactId>smetana</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>war</packaging>
-
 	<build>
 		<finalName>smetana</finalName>
 		<plugins>
@@ -20,33 +19,28 @@
 		</plugins>
 		<outputDirectory>src/main/webapp/WEB-INF/classes/</outputDirectory>
 	</build>
-
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
 			<type>jar</type>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>com.springsource.org.antlr.runtime</artifactId>
-			<version>3.1.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
-			<version>2.2</version>
 			<type>jar</type>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>3.0.5.RELEASE</version>
 			<type>jar</type>
 			<scope>compile</scope>
 			<exclusions>
@@ -59,7 +53,6 @@
 		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>jena</artifactId>
-			<version>2.6.4</version>
 			<type>jar</type>
 			<scope>compile</scope>
 			<exclusions>
@@ -72,12 +65,10 @@
 					<artifactId>log4j</artifactId>
 				</exclusion>
 			</exclusions>
-
 		</dependency>
 		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>tdb</artifactId>
-			<version>0.8.10</version>
 			<type>jar</type>
 			<scope>compile</scope>
 			<exclusions>
@@ -94,181 +85,295 @@
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<version>1.1.1</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.joseki</groupId>
-			<artifactId>joseki</artifactId>
-			<version>3.4.4</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>junit</groupId>
-					<artifactId>junit</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.mortbay.jetty</groupId>
-					<artifactId>servlet-api-2.5</artifactId>
-				</exclusion>
-				<exclusion>
-					<artifactId>jetty</artifactId>
-					<groupId>org.mortbay.jetty</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
-			<version>1.8.0.10</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr-core</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.collections</groupId>
 			<artifactId>collections-generic</artifactId>
-			<version>4.01</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr-spring</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr-protocol-dwrp</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20090211</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.6.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>1.4</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.freemarker</groupId>
 			<artifactId>freemarker</artifactId>
-			<version>2.3.16</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.4</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.google.collections</groupId>
 			<artifactId>google-collections</artifactId>
-			<version>1.0</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
-			<version>1.2.15</version>
 			<type>jar</type>
 			<scope>compile</scope>
+			  <exclusions>
+			    <exclusion>
+			      <groupId>javax.mail</groupId>
+			      <artifactId>mail</artifactId>
+			    </exclusion>
+			    <exclusion>
+			      <groupId>javax.jms</groupId>
+			      <artifactId>jms</artifactId>
+			    </exclusion>
+			    <exclusion>
+      <groupId>com.sun.jdmk</groupId>
+      <artifactId>jmxtools</artifactId>
+    </exclusion>
+    <exclusion>
+      <groupId>com.sun.jmx</groupId>
+      <artifactId>jmxri</artifactId>
+    </exclusion>
+  </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
-			<version>2.5</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
-			<version>0.9.26</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>com.springsource.org.apache.commons.collections</artifactId>
-			<version>3.2.1</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-highlighter</artifactId>
-			<version>3.0.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
-			<version>3.0.3</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
-			<version>2.7.1</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>trove</groupId>
 			<artifactId>trove</artifactId>
-			<version>1.0.2</version>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
-			<artifactId>spring-ws</artifactId>
-			<version>2.0.1.RELEASE</version>
-			<type>jar</type>
-			<classifier>all</classifier>
-			<scope>compile</scope>
+			<artifactId>spring-ws-core</artifactId>
 		</dependency>
+		<dependency>
+                        <groupId>org.joseki</groupId>
+                        <artifactId>joseki</artifactId>
+                        <version>3.4.4</version>
+                </dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>org.antlr</groupId>
+			<artifactId>com.springsource.org.antlr.runtime</artifactId>
+			<version>3.1.3</version>
+		</dependency>
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib</artifactId>
+			<version>2.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>3.0.5.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>com.hp.hpl.jena</groupId>
+			<artifactId>jena</artifactId>
+			<version>2.6.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.hp.hpl.jena</groupId>
+			<artifactId>tdb</artifactId>
+			<version>0.8.10</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>1.8.0.10</version>
+		</dependency>
+		<dependency>
+			<groupId>org.directwebremoting</groupId>
+			<artifactId>dwr-core</artifactId>
+			<version>3.0.0-rc2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.collections</groupId>
+			<artifactId>collections-generic</artifactId>
+			<version>4.01</version>
+		</dependency>
+		<dependency>
+			<groupId>org.directwebremoting</groupId>
+			<artifactId>dwr-spring</artifactId>
+			<version>3.0.0-rc2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.directwebremoting</groupId>
+			<artifactId>dwr-protocol-dwrp</artifactId>
+			<version>3.0.0-rc2-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.16</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.collections</groupId>
+			<artifactId>google-collections</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.15</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.5</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>0.9.26</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>
+				com.springsource.org.apache.commons.collections
+			</artifactId>
+			<version>3.2.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-highlighter</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+			<version>2.7.1</version>
+		</dependency>
+		<dependency>
+			<groupId>trove</groupId>
+			<artifactId>trove</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ws</groupId>
+			<artifactId>spring-ws</artifactId>
+			<version>2.0.1.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ws</groupId>
+			<artifactId>spring-ws-core</artifactId>
+			<version>2.0.2.RELEASE</version>
+		</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -282,7 +387,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-
 		<repository>
 			<id>oracleReleases</id>
 			<name>Oracle Released Java Packages</name>
@@ -318,7 +422,15 @@
 <!-- 			<url>http://slurm.dojotoolkit.org/nexus/content/repositories/dwr-snapshots/</url> -->
 <!-- 			<layout>default</layout> -->
 <!-- 		</repository> -->
-
+		<repository>
+			<id>DWRReleases</id>
+			<name>DWR Maven Releases Repository</name>
+			<url>http://slurm.dojotoolkit.org/nexus/content/repositories/dwr-releases/</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
 		<repository>
 			<id>codehaus</id>
 			<name>Codehaus</name>
