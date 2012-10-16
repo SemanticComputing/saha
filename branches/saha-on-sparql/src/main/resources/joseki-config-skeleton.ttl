@@ -1,0 +1,48 @@
+@prefix rdfs:   <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd:    <http://www.w3.org/2001/XMLSchema#> .
+
+@prefix module: <http://joseki.org/2003/06/module#> .
+@prefix joseki: <http://joseki.org/2005/06/configuration#> .
+@prefix ja:     <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix sdb:      <http://jena.hpl.hp.com/2007/sdb#> .
+@prefix tdb:     <http://jena.hpl.hp.com/2008/tdb#> .
+@prefix js: <http://www.seco.tkk.fi/onto/assembler/> .
+
+<> rdfs:label "Smetana Joseki configuration" .
+<> rdfs:comment "Exposes the Smetana models to a SPARQL query protocol interface" .
+
+[]  rdf:type joseki:Server .
+
+js:JenaServiceModel rdfs:subClassOf ja:NamedModel .
+
+## --------------------------------------------------------------
+## Processors
+
+joseki:ProcessorSPARQL_FixedDS
+    rdfs:label "SPARQL processor for fixed datasets" ;
+    rdf:type joseki:Processor ;
+    module:implementation joseki:ImplSPARQL ;
+
+    # This processor does not accept queries with FROM/FROM NAMED
+    joseki:allowExplicitDataset       "false"^^xsd:boolean ;
+    joseki:allowWebLoading            "true"^^xsd:boolean ;
+    joseki:lockingPolicy              joseki:lockingPolicyMRSW ;
+    .
+
+joseki:ProcessorSPARQLUpdate
+    rdfs:label "SPARQL Udpate processor" ;
+    rdf:type joseki:Processor ;
+    module:implementation joseki:ImplSPARQLUpdate ;
+    joseki:lockingPolicy              joseki:lockingPolicyMRSW ;
+    .
+
+joseki:ImplSPARQL
+    rdf:type   joseki:ServiceImpl ;
+    module:className
+        <java:org.joseki.processors.SPARQL> .
+
+joseki:ImplSPARQLUpdate
+    rdf:type   joseki:ServiceImpl ;
+    module:className
+        <java:org.joseki.processors.SPARQLUpdate> .

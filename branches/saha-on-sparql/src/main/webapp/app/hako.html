@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>HAKO – Faceted semantic search</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le styles -->
+    <link href="../app/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 0px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="../app/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+
+    
+    <!-- jQuery and Simile timemap -->
+    <script src="../app/scripts/jquery-1.7.2.min.js"></script>
+
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript" src="../app/scripts/mxn/mxn.js?(googlev3)"></script>
+    
+    <script type="text/javascript" src="../app/scripts/timeline-2.3.0.js"></script>
+    <script type="text/javascript" src="../app/scripts/timemap.js" ></script>
+    <script type="text/javascript" src="../app/scripts/bgraph.js"></script>
+    <script src="../app/scripts/jsrender.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+  </head>
+
+  <body>
+
+    <div class="navbar">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="?reset">HAKO</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid" id="content">
+      <div class="row-fluid">
+        <div class="span3">
+          <div class="well sidebar-nav">
+            <ul class="nav nav-list" id="facetList">
+            </ul>
+          </div><!--/.well -->
+        </div><!--/span-->
+        <div class="span9">
+        
+          <div class="tabbable"> <!-- Only required for left/right tabs -->
+            <ul class="nav nav-tabs">
+              <li class="active"><a href="#tab1" data-toggle="tab">Listaus</a></li>
+              <li><a id="mapLink" href="#tab2" data-toggle="tab">Kartta</a></li>
+              <li><a id="chartLink" href="#tab3" data-toggle="tab">Visualisointi</a></li>
+            </ul>
+            <div class="tab-content">
+              <div class="tab-pane active" id="tab1">
+                <table class="table table-condensed" id="resultsTable">
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+              <div class="tab-pane" id="tab2">
+                <div id="map" style="width: 100%; height: 450px"></div>
+                <div id="timeline" style="width: 100%; height: 200px"></div>
+              </div>
+              <div class="tab-pane" id="tab3">
+              	<label for="bgraph_visualizations">Visualisaatio</label>
+             	<select id="bgraph_visualizations">
+             		<option type="bar2" id="bgraph_viz_bar2">Pylväsdiagrammi (Objekti numeerinen)</option>
+					<option type="bar" id="bgraph_viz_bar">Pylväsdiagrammi (Objektiviittaukset, käänteinen)</option>
+					<option type="scatter" id="bgraph_viz_scatter">Pistediagrammi (Objekti numeerinen)</option>
+				</select>
+				
+				<div class="row-fluid" id="bgraph_types">
+					<label for="bgraph_type_select">Tyyppi</label>
+					<select multiple="multiple" id="bgraph_type_select"></select>
+					<div id="bgraph_selected_types"></div>
+				</div>
+
+				<div id="bgraph_xaxis">
+					<label for="bgraph_xaxis_property_selector">X-akseli</label>
+					<select id="bgraph_xaxis_property_selector">
+					</select>
+				</div>
+				<div id="bgraph_yaxis">
+					<label for="bgraph_yaxis_property_selector">Y-akseli</label>
+					<select id="bgraph_yaxis_property_selector">
+					</select>
+				</div>
+				<div id="bgraph_limit">
+					<label for="bgraph_result_limit">Rajaus (max. tuloksia / tyyppi)</label>
+					<select id="bgraph_result_limit">
+						<option>5</option><option>10</option><option>20</option><option>50</option><option>100</option><option>200</option><option>500</option>
+					</select>
+				</div>
+				<button id="bgraph_submit_query">Visualisoi</button>				
+				<div id="bgraph_visualization_holder"></div>
+                <div id="map" style="width: 100%; height: 450px"></div>
+                <div id="timeline" style="width: 100%; height: 200px"></div>
+              </div>
+            </div>
+          </div>          
+        </div><!--/span-->
+      </div><!--/row-->
+
+
+    </div><!--/.fluid-container-->
+    
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster --> 
+    
+    <script src="../app/scripts/jquery.history.js"></script>
+    <script src="../app/bootstrap/js/bootstrap.js"></script>
+    <script src="../app/scripts/waypoints.min.js"></script>
+    <script src="../app/scripts/spin.min.js"></script>
+
+    
+     
+    <script id="facetsTemplate" type="text/x-jsrender">
+        {{for facets}}
+            <li class="nav-header" id="categoryHeader">{{:label}}</li>
+                {{if facetClasses}}
+                    {{for facetClasses}}
+                        {{if selected}}
+                            <li class="facetListItem active">
+								<a href="#query={{:backQuery}}" class="facetLink">{{:label}}<span style="display: none; float: right" class="badge">{{:itemCount}}</span></a>
+							</li>
+                        {{else}}
+                            <li class="facetListItem">
+                            	<a href="#query={{:selectQuery||backQuery}}" class="facetLink">{{:label}}<span style="display: none; float: right" class="badge">{{:itemCount}}</span></a>
+							</li>
+                        {{/if}}
+                    {{for children tmpl="#recursiveFacetsTemplate"/}}
+                {{/for}}
+            {{/if}}
+        {{/for}}        
+    </script>
+    
+    <script id="recursiveFacetsTemplate" type="text/x-jsrender">
+        {{if selected}}
+            <li class="facetListItem active" style="text-indent: {{:(#index+1)*10}}px">
+				<a class="facetLink" href="#query={{:backQuery}}">{{:label}}<span style="text-indent: 0px; display: none; float: right" class="badge">{{:itemCount}}</span></a>
+			</li> 
+        {{else}}
+            <li class="facetListItem" style="text-indent: {{:(#index+1)*20}}px">
+				<a class="facetLink" href="#query={{:selectQuery||backQuery}}">{{:label}}<span style="text-indent: 0px; display: none; float: right" class="badge">{{:itemCount}}</span></a>
+			</li>     
+        {{/if}}
+             {{for children tmpl="#recursiveFacetsTemplate"/}}
+        </li>
+    </script>
+
+    <script id="listItemTemplate" type="text/x-jsrender">
+        <tbody>
+            {{for results}}
+                <tr>
+                    <td id="r_{{>~start}}_{{:#index}}"><span onclick="javascript:open_properties('r_{{>~start}}_{{:#index}}', '{{:uri}}')">{{:label}}</span></td>
+                </tr>
+            {{/for}}
+				<tr id="resultListWaypoint"></tr>
+        </tbody>   
+    </script>
+
+    <script>
+    (function(window,undefined){
+    
+        // Prepare
+        var History = window.History; // Note: We are using a capital H instead of a lower h
+        if ( !History.enabled ) {
+             // History.js is disabled for this browser.
+             // This is because we can optionally choose to support HTML4 browsers or not.
+            return false;
+        }
+    
+        // Bind to StateChange Event
+        History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+            var State = History.getState(); // Note: We are using History.getState() instead of event.state
+
+            numberOfResults = 0;
+            loadFacets(State.data.query);
+            loadResults(State.data.query);
+        });
+    
+    
+    })(window);
+     
+      var tm, markers, bgraph = new BGraph();
+      google.load("visualization", "1", {packages:["corechart"]});
+      bgraph.init();
+      jQuery(document).ready(function($) {
+          tm = new TimeMap(
+      	      document.getElementById("timeline"), 
+      	      document.getElementById("map"),
+      				{
+      		  			centerOnItems: true,
+      		  			showMapCtrl: true,
+      		  			eventIconPath: '/smetana/app/images/saha3/timeline/',
+      		  			mapCenter: new mxn.LatLonPoint(64.15436, 38.40440100),
+      		  			mapZoom: 4	  			
+      				}
+      	        );
+      			// Make a new dataset with the id "markers" and green markers.
+      	   	 	// You can load multiple datasets with different visual themes.
+      	    	markers = tm.createDataset("markers", {
+      	        	title:  "Marker",
+      	        	theme:  "green"
+      	    	});
+      			
+      	    	var theme = Timeline.ClassicTheme.create();
+      	    	var bands = [Timeline.createBandInfo({
+      	    		eventSource:    markers.eventSource,
+      	    		width:          "100%",
+      	    		intervalPixels: 50,
+      	    		intervalUnit:   Timeline.DateTime.YEAR, 
+      	    		layout:         'original',
+      	    		theme: theme,
+      	    		eventPainter:   Timeline.OriginalEventPainter,
+      	    		zoomIndex:      10,
+      	    		zoomSteps:      new Array(
+      	    				{pixelsPerInterval: 280,  unit: Timeline.DateTime.HOUR},
+      	    				{pixelsPerInterval: 140,  unit: Timeline.DateTime.HOUR},
+      	    				{pixelsPerInterval:  70,  unit: Timeline.DateTime.HOUR},
+      	    				{pixelsPerInterval:  35,  unit: Timeline.DateTime.HOUR},
+      	    	            {pixelsPerInterval: 400,  unit: Timeline.DateTime.DAY},
+      	    	            {pixelsPerInterval: 200,  unit: Timeline.DateTime.DAY},
+      	    	            {pixelsPerInterval: 100,  unit: Timeline.DateTime.DAY},
+      	    	            {pixelsPerInterval:  50,  unit: Timeline.DateTime.DAY},
+      	    	            {pixelsPerInterval: 400,  unit: Timeline.DateTime.MONTH},
+      	    	            {pixelsPerInterval: 200,  unit: Timeline.DateTime.MONTH},
+      	    	            {pixelsPerInterval: 100,  unit: Timeline.DateTime.MONTH} // default zoom index 
+      	    		)})];
+
+      	// Initialize the timeline with the band info
+      	tm.initTimeline(bands);
+      	tm.timeline.autoWidth = true;
+      	
+        loadFacets();
+        
+		// Overwrite show map tab, map has to be repainted 
+		$('#mapLink').click( function() {
+			$(this).tab('show')
+			google.maps.event.trigger(map, "resize");
+			tm.timeline.layout();
+			tm.map.autoCenterAndZoom();
+			return false;
+		});
+		
+		
+		jQuery.getJSON("./hako/schema", function(data) {
+			$("#hakotypes").empty();
+			bgraph.opts['project'] = data['project'];
+			bgraph.opts['types'] = {};
+			
+			$('#bgraph_visualizations').change(function() {
+				bgraph.opts['viztype'] = $(this).children(":selected").attr("type");
+				bgraph.update_query();
+			});
+
+			$.each(data["types"], function(index, element) {
+				bgraph.opts['types'][element.uri] = {uri: element.uri, index: index, label: element.label};
+			});
+			 
+			bgraph.update_bgraph();
+
+			$.each(data["properties"], function(index, element) {
+				$('#bgraph_xaxis_property_selector').append('<option uri="'+element.uri+'">'+element.label+'</option>');
+				$('#bgraph_yaxis_property_selector').append('<option uri="'+element.uri+'">'+element.label+'</option>');
+			});
+		});
+       loadResults();
+      });
+
+      function loadFacets(query) {
+          if (!query)
+              query = "";
+              
+          jQuery.getJSON("./hako/ui_categories?"+query, function(data) {
+            $("#facetList").empty();
+            $("#facetList").append( $("#facetsTemplate").render(data) );
+
+            $(".nav-header").bind('click', function() {
+              $(this).nextUntil("#categoryHeader").not(".active").slideToggle('slow'); 
+            });
+
+            $('.facetListItem').mouseover( function() { $(this).find('.badge').show(); } );
+            $('.facetListItem').mouseout( function() { $(this).find('.badge').hide(); } );
+            
+            $('.facetLink').click(function() {
+                $(this).parent().toggleClass('active');
+                History.pushState({query:this.hash.split('#query=')[1] }, null, null);
+                return false;
+            }); 
+            
+        });
+      }
+      
+      function open_properties( id, uri ) {
+		if ($('#'+id).children('tr').length > 0) {
+			$('#'+id).children('tr').remove()
+		} else {
+	    	jQuery.getJSON("./hako/resource_properties", {URI: uri}, function(data) {
+	    		var propertyTable = "";
+	    		for (var i in data) {
+	    			propertyTable += "<tr><td>"+i+"</td><td>"; 
+	    			for (var j in data[i]) {
+	    				propertyTable += "<div>"+data[i][j]+"</div>";
+	    			}
+	    			propertyTable += "</td></tr>"
+	    		}
+	    		$("#"+id).append(propertyTable);
+	    	});
+		}
+      }
+      
+      var numberOfResults = 0;
+      function loadResults(query) {
+          if (!query) {
+              query = "";
+          }
+          jQuery.getJSON("./hako/instances?from=" + numberOfResults +  "&to=" + (numberOfResults + 100) + "&" +query, function(data) {
+        	  if (numberOfResults == 0) {
+              	$("#resultsTable").empty();
+              	
+                tm.datasets.markers.items = new Array();
+                tm.map.removeAllMarkers();
+                tm.map.removeAllPolylines();
+                markers.eventSource.clear();              
+        	  }
+
+        	  $('#resultListWaypoint').remove();
+              $("#resultsTable").append( $("#listItemTemplate").render(data, {start: numberOfResults}) );
+              $('#resultListWaypoint').waypoint( function() { numberOfResults = numberOfResults + 100; loadResults(query); }, { offset: 'bottom-in-view', onlyOnScroll: true, triggerOnce: true } );
+              
+              // Repopulate map/markers
+              for (var i in data["results"]) {
+                  var obj = data["results"][i];
+		            markers.loadItem( obj.tmdata );
+              }
+
+              // Repaint map            
+        	  google.maps.event.trigger(map, "resize");
+        	  tm.timeline.layout();
+        	  tm.map.autoCenterAndZoom();
+        	  
+        	  // FIXME: autoCenterTimeline
+        	  tm.timeline.getBand(0).setCenterVisibleDate(new Date("2000-01-01"));
+          });
+      }
+      </script>
+  </body>
+</html>

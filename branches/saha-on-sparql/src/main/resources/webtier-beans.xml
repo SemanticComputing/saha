@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xmlns:dwr="http://www.directwebremoting.org/schema/spring-dwr"
+  xsi:schemaLocation="
+  	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd
+	http://www.directwebremoting.org/schema/spring-dwr http://www.directwebremoting.org/schema/spring-dwr-3.0.xsd" 
+  default-lazy-init="true" 
+  default-autowire="no" 
+  default-dependency-check="none">
+
+	<description>Smetana web tier specific beans</description>
+	
+	<dwr:configuration>
+        <dwr:convert type="bean" class="fi.seco.saha3.chat.Message"/>        
+        <dwr:convert type="exception" class="java.lang.Throwable"/>
+        <dwr:convert type="bean" class="java.lang.StackTraceElement"/> 
+    </dwr:configuration>
+    
+	<bean
+		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
+		p:lazy-init-handlers="true" p:always-use-full-path="true">
+		<property name="mappings">
+			<value>		
+				/dwr/**=DWRController
+			    /poka.shtml=PokaWSController
+			</value>
+		</property>
+	</bean>
+
+	<!-- 
+	<bean
+		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
+		p:lazy-init-handlers="true" p:always-use-full-path="true">
+		<property name="mappings">
+			<value>		
+				/sahamain.shtml=SahaController
+				/get.shtml=SahaGetController
+				/editor.shtml=SahaController
+				/documentView.shtml=SahaDocumentViewController
+				/frameset.shtml=SahaFrameController
+			    /vera_result.shtml=VeraController	
+				/vera.shtml=VeraFPController
+				/vera_instance.shtml=VeraSahaLinkController
+				/file.shtml=SahaController
+				/service/pictures/**=ImageRetrieverController				
+				/uploader.shtml=NullController
+				/lock_admin.shtml=LockAdminController
+				/index_admin.shtml=IndexAdminController
+			</value>
+		</property>
+	</bean>
+	 -->
+	
+	<bean id="WebContextBuilder" class="org.directwebremoting.impl.DefaultWebContextBuilder" />
+	<bean id="ScriptSessionManager" class="org.directwebremoting.impl.DefaultScriptSessionManager" p:scriptSessionTimeout="86400000"/> <!-- set script session timeout -->
+    <dwr:controller id="DWRController" debug="true"> 
+    	<dwr:config-param name="activeReverseAjaxEnabled" value="true"/>
+    	<dwr:config-param name="maxCallCount" value="500"/>
+    	<dwr:config-param name="crossDomainSessionSecurity" value="false"/>
+    	<dwr:config-param name="allowScriptTagRemoting" value="true"/>
+    	<dwr:config-param name="allowGetForSafariButMakeForgeryEasier" value="true"/>
+    </dwr:controller>
+
+    <bean id="multipartResolver"
+        class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+
+	<!-- freemarker config -->
+	<bean id="fmConfigurer"
+		class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<property name="templateLoaderPath" value="/WEB-INF/app/" />
+	</bean>
+
+	<bean id="fmConfig" factory-bean="fmConfigurer"
+		factory-method="getConfiguration" />
+
+	<bean id="freemarkerViewResolver"
+		class="fi.seco.semweb.infrastructure.springmvc.SmarterFreeMarkerViewResolver">
+		<property name="cache" value="true" />
+		<property name="prefix" value="" />
+		<property name="suffix" value=".ftl" />
+		<property name="contentType" value="text/html;charset=UTF-8" />
+
+		<!-- if you want to use the Spring FreeMarker macros, set this property to true -->
+		<property name="exposeSpringMacroHelpers" value="true" />
+
+	</bean>
+
+	<!-- this bean with the well known name generates view names for us -->
+	<bean id="viewNameTranslator"
+		class="org.springframework.web.servlet.view.DefaultRequestToViewNameTranslator" />
+
+	<bean id="jspViewResolver"
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="viewClass"
+			value="org.springframework.web.servlet.view.JstlView" />
+		<property name="prefix" value="WEB-INF/app/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+</beans>

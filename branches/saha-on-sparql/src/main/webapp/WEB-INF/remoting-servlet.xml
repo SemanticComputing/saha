@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:aop="http://www.springframework.org/schema/aop"
+  xmlns:util="http://www.springframework.org/schema/util"
+  xmlns:p="http://www.springframework.org/schema/p"
+  xsi:schemaLocation="
+  	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+	http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd" 
+  default-lazy-init="false" 
+  default-autowire="no" 
+  default-dependency-check="none">
+  <description>remoting beans</description>
+  
+  <import resource="classpath:org/codehaus/xfire/spring/xfire.xml"/>
+  
+  <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+    <property name="urlMap">
+        <map>
+            <entry key="/EchoService">
+                <ref bean="echo"/>
+            </entry>
+        </map>
+    </property>
+  </bean>
+
+   <!-- Declare a parent bean with all properties common to both services -->
+<!--  <bean id="echo" class="org.codehaus.xfire.spring.remoting.XFireExporter">
+    <property name="serviceFactory">
+        <ref bean="xfire.serviceFactory"/>
+    </property>
+    <property name="xfire">
+        <ref bean="xfire"/>
+    </property>
+    <property name="serviceBean">
+        <ref bean="echoBean"/>
+    </property>
+    <property name="serviceClass">
+        <value>org.codehaus.xfire.test.Echo</value>
+    </property>
+  </bean>
+
+  <bean id="echoBean" class="org.codehaus.xfire.test.EchoImpl"/> -->
+  
+<!--   
+  <bean id="testWebService" class="org.codehaus.xfire.spring.remoting.XFireClientFactoryBean">
+   	<property name="serviceClass">
+   		<value>org.codehaus.xfire.test.Echo</value>
+  	</property>
+   	<property name="wsdlDocumentUrl">
+   		<value>http://localhost:8080/kulsa/remoting/EchoService?WSDL</value>
+   	</property>
+  </bean>  -->
+  
+</beans>
