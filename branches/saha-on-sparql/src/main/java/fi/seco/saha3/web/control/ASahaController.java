@@ -12,12 +12,14 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 
 import fi.seco.saha3.infrastructure.SahaHelpManager;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
-import fi.seco.saha3.model.SahaProject;
+import fi.seco.saha3.model.IModelEditor;
+import fi.seco.saha3.model.IModelReader;
+import fi.seco.saha3.model.configuration.IConfigService;
 
 /**
  * General controller superclass for various SAHA controllers. Loads up the
  * proper template (according to the request URL) and adds general, SAHA-wide
- * properties (project name, language, etc.) to it so there's no need to add 
+ * properties (project name, language, etc.) to it so there's no need to add
  * them in every separate controller.
  * 
  */
@@ -38,21 +40,23 @@ public abstract class ASahaController extends AbstractController {
 
 	@Override
 	public ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		
+
 		String pathInfo = request.getPathInfo();
-		String model = parseModelName(pathInfo);
+		String model = parseModelName(request);
 
 		Locale locale = RequestContextUtils.getLocale(request);
-		SahaProject project = sahaProjectRegistry.getSahaProject(model);
+		IModelEditor editor = sahaProjectRegistry.getModelEditor(model);
+		IModelReader reader = sahaProjectRegistry.getModelReader(model);
+		IConfigService config = sahaProjectRegistry.getConfig(model);
 
-		if (project != null) {
+		if (editor != null) {
 			String view = parseViewName(pathInfo);
 			ModelAndView mav = new ModelAndView(view);
 			mav.addObject("model", model);
 			mav.addObject("lang", locale.getLanguage());
-			mav.addObject("aboutLink", project.getConfig().getAboutLink());
+			mav.addObject("aboutLink", config.getAboutLink());
 			mav.addObject("helpText", SahaHelpManager.getHelpString(view));
-			return handleRequest(request, response, project, locale, mav);
+			return handleRequest(request, response, reader, editor, config, locale, mav);
 		} else {
 			ModelAndView mav = new ModelAndView(SAHA_TEMPLATE_BASE + "/add");
 			mav.addObject("model", model);
@@ -62,15 +66,14 @@ public abstract class ASahaController extends AbstractController {
 	}
 
 	public abstract ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response,
-			SahaProject project, Locale locale, ModelAndView mav) throws Exception;
-
-	public static String parseModelName(String servletPath) {
-		servletPath = servletPath.substring(0, servletPath.lastIndexOf('/'));
-		return servletPath.substring(servletPath.lastIndexOf('/') + 1, servletPath.length());
-	}
+			IModelReader reader, IModelEditor editor, IConfigService config, Locale locale, ModelAndView mav) throws Exception;
 
 	protected static String parseViewName(String servletPath) {
 		return SAHA_TEMPLATE_BASE + servletPath.substring(servletPath.lastIndexOf('/'), servletPath.lastIndexOf('.'));
+	}
+
+	public static String parseModelName(HttpServletRequest request) {
+		return request.getParameter("model");
 	}
 
 }

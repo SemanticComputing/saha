@@ -32,9 +32,9 @@
 			[/#if]
 		</div>
 		<div style="margin-bottom:10px;margin-left:5px;">
-			<a href="resource.shtml?uri=${uri?url}" style="color:black">[view]</a> |
-			<a href="export.shtml?uri=${uri?url}" style="color:#777">[rdf]</a>
-			<a href="config.shtml?uri=${uri?url}" style="color:#777">[config]</a> |
+			<a href="resource.shtml?uri=${uri?url}&model=${model?url}" style="color:black">[view]</a> |
+			<a href="export.shtml?uri=${uri?url}&model=${model?url}" style="color:#777">[rdf]</a>
+			<a href="config.shtml?uri=${uri?url}&model=${model?url}" style="color:#777">[config]</a> |
 			<a href="javascript:remove_resource('${model}','${instance.uri?url}','${instance.label?html?js_string}')" style="color:crimson">[remove]</a>
 		</div>
 		

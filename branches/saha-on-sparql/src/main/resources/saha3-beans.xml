@@ -39,12 +39,6 @@
 	<bean
 		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
 		p:lazy-init-handlers="true" p:always-use-full-path="true">
-		<property name="interceptors">
-			<list>
-				<ref bean="localeChangeInterceptor" />
-				<bean class="fi.seco.saha3.web.control.ProjectRedirectInterceptor"/>
-			</list>
-		</property>
 		<property name="mappings">
 		<!-- /project/**=NullController
 				/saha3/irma.shtml=NullController -->
@@ -54,20 +48,14 @@
 				/service/pics/**=Saha3ImageController
            		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
            		/service/ws/**=MessageDispatcher
-           		/*/hako/schema=HakoJSONController
-           		/*/hako/instances=HakoJSONController
-           		/*/hako/ui_categories=HakoJSONController
-           		/*/hako/ui_categories=HakoJSONController
-           		/*/hako/resource_properties=HakoJSONController
-				/*/index.shtml=Saha3Controller
-				/*/resource.shtml=ResourceController
-				/*/editor.shtml=EditorController
-				/*/config.shtml=EditorController
-				/*/export.shtml=ExportController
-				/*/upload.shtml=Saha3ImageUploadController
-				/*/hako.shtml=HakoController
-				/*/map.shtml=MapEditController		
-				/*/manage.shtml=ProjectAdminController		
+				/project/index.shtml=Saha3Controller
+				/project/resource.shtml=ResourceController
+				/project/editor.shtml=EditorController
+				/project/config.shtml=EditorController
+				/project/export.shtml=ExportController
+				/project/upload.shtml=Saha3ImageUploadController
+				/project/map.shtml=MapEditController		
+				/project/manage.shtml=ProjectAdminController		
 				/saha3/admin.shtml=AdminController
 				/=FrontPageController
 				/saha3/=FrontPageController
@@ -87,16 +75,12 @@
         </property>
     </bean>
     
-	<bean id="ScopedProject" scope="project" class="fi.seco.saha3.model.SahaProject">
+	<bean id="ScopedModelReader" scope="project" class="fi.seco.saha3.model.IModelReader">
 		<aop:scoped-proxy/>
 	</bean>
 
-	<bean id="ScopedModel" scope="project" class="com.hp.hpl.jena.rdf.model.Model">
-		<aop:scoped-proxy/>
-	</bean>
-	
 	<bean id="Saha3OnkiService" class="fi.seco.saha3.service.OnkiService"
-		p:model-ref="ScopedModel" p:sahaProject-ref="ScopedProject"/>
+		p:modelReader-ref="ScopedModelReader"/>
 
 	<bean id="ResourceEditService" class="fi.seco.saha3.service.ResourceEditService"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
@@ -154,18 +138,6 @@
 		</dwr:remote>
 	</bean>
 	
-	<bean id="SparqlService" class="fi.seco.saha3.service.SparqlService" 
-	p:sahaProjectRegistry-ref="SahaProjectRegistry"
-	lazy-init="false" />
-
-	<bean id="HakoController" class="fi.seco.saha3.web.control.HakoController"
-	p:sahaProjectRegistry-ref="SahaProjectRegistry"
-	p:cacheSeconds="0" />
-	
-	<bean id="HakoJSONController" class="fi.seco.saha3.web.control.HakoJSONController" 
-	p:sahaProjectRegistry-ref="SahaProjectRegistry"
-	p:cacheSeconds="0" />
-	
 	<bean id="ImportProjectController" class="fi.seco.saha3.web.control.ImportProjectController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 
@@ -217,7 +189,11 @@
 	p:command-class="fi.seco.saha3.web.control.ImageBean"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 	
+	<bean id="ModelLister" class="fi.seco.saha3.model.RemoteSPARQLModelLister"
+	p:sparqlService="http://localhost:3030/bsbm/sparql" />
+	
 	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
+	p:modelLister-ref="ModelLister"
 	p:projectBaseDirectory-ref="ProjectBaseDirectory">
 		<dwr:remote javascript="SahaProjectRegistry">
 			<dwr:include method="closeSahaProject" />

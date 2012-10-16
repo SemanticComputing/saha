@@ -232,7 +232,7 @@
 	<div style="position:relative;margin:5px 5px 5px 5px;padding-bottom:20px;padding-top:5px;font-family:sans-serif;border-bottom:medium solid hotpink;font-size:10pt;">
 		<strong>
 			<a href="../saha3/main.shtml" style="color:black;">SAHA3</a> | 
-		</strong><a href="index.shtml" style="color:black">${model}</a> - search 
+		</strong><a href="index.shtml?model=${model?url}" style="color:black">${model}</a> - search 
 		<div id="uber_search"></div>
 		<div style="position:absolute;right:5px;top:5px;color:deeppink;">
 			<script>
@@ -304,7 +304,7 @@
 			[#if !property.config.hidden]
 			<tr class="[#if entry_index % 2 == 0]even[#else]odd[/#if]">
 				<td class="key">
-					<a href="resource.shtml?uri=${entry.key.uri?url}" style="text-decoration:none">
+					<a href="resource.shtml?uri=${entry.key.uri?url}&model=${model?url}" style="text-decoration:none">
 						${entry.key.label}
 					</a>
 				</td>
@@ -344,7 +344,7 @@
 							<a target="_blank" href="http://demo.seco.tkk.fi/jokeri/speech/?data=${label}">[play]</a>
 							--]
 						[#else]
-							<a href="resource.shtml?uri=${property.valueUri?url}" 
+							<a href="resource.shtml?uri=${property.valueUri?url}&model=${model?url}" 
 							 onMouseOver="showResourceTooltip(this,'${property.valueUri}')" onMouseOut="hideResourceTooltip(this)">
 								${property.valueLabel}</a>[#if property_has_next], [/#if]
 						[/#if]
@@ -557,7 +557,7 @@
 	[/#if]
 			
 	[#if !mapExists]
-			[#list instance.editorProperties as property]
+			[#list instance.properties as property]
 				[#assign latPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#lat" /]
 				[#assign longPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#long" /]
 				[#assign polygonUri = "http://www.yso.fi/onto/sapo/hasPolygon" /]

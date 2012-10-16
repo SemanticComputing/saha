@@ -16,7 +16,7 @@
 			ResourceEditService.createInstance(model,type,null, {
 				callback:function(dataFromServer) {
 					document.body.style.cursor="";
-					location.href='editor.shtml?uri=' + encodeURIComponent(dataFromServer);
+					location.href='editor.shtml?model=${model}&uri=' + encodeURIComponent(dataFromServer);
 				}
 			});
 		}
@@ -56,7 +56,7 @@
 		<div style="max-width:500px;font-family:monospace;font-size:9pt;margin-left:3px;">
 		[#list 0..(result.size/pageSize) as i]
 			[#if from != i*pageSize]
-				[#if i<9]&nbsp;[/#if]<a href="index.shtml?query=${query}&type=${type?url}&from=${(i*pageSize)?c}&to=${((i*pageSize)+pageSize)?c}" style="color:#333;">${i+1}</a>
+				[#if i<9]&nbsp;[/#if]<a href="index.shtml?query=${query}&type=${type?url}&from=${(i*pageSize)?c}&to=${((i*pageSize)+pageSize)?c}&model=${model?url}" style="color:#333;">${i+1}</a>
 		 	[#else]
 		 		[#if i<9]&nbsp;[/#if]<strong style="color:crimson">${i+1}</strong>
 		 	[/#if] 
@@ -66,12 +66,13 @@
 	[/#if]
 	<form method="get" style="margin:0;margin-top:15px;margin-bottom:15px;padding:0;">
 		<input type="hidden" name="type" value="${type}"/>
+		<input type="hidden" name="model" value="${model}"/>
 		<div style="color:black">Filter</div>
 		<input type="text" name="query" value="${query}" style="width:400px;"/>
 	</form>
 	[#list result.iterator() as instance]
 		<div id="instance_list">
-			<a href="resource.shtml?uri=${instance.uri?url}">
+			<a href="resource.shtml?uri=${instance.uri?url}&model=${model?url}">
 				[#assign label=instance.label]
 				[#if label?length > 70]
 					${label?substring(0,67)}...
@@ -98,7 +99,7 @@
 		[#if type == class.uri]
 			<strong>${class.label}</strong>
 		[#else]
-			<a href="index.shtml?type=${class.uri?url}">${class.label}</a>
+			<a href="index.shtml?type=${class.uri?url}&model=${model?url}">${class.label}</a>
 		[/#if]
 		[#if class.instanceCount > 0](${class.instanceCount})[/#if]
 		<a class="createNewInstance" href="javascript:create_new_instance('${model}','${class.uri}')" style="color:forestgreen;display:none;">

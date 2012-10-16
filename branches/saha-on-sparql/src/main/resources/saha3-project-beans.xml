@@ -20,10 +20,6 @@
 		<constructor-arg value="false"/>
 	</bean>
 	
-	<bean id="model" class="com.hp.hpl.jena.tdb.TDBFactory" factory-method="createModel" destroy-method="close">
-		<constructor-arg ref="projectPath"/>
-	</bean>
-	
 	<bean id="onkiWebService" class="fi.seco.saha3.infrastructure.OnkiWebService">
 		<property name="accessKey"><value>51d3cdaa81331c9117d77f443a2c5404</value></property>
 	</bean>
@@ -31,27 +27,25 @@
 	<bean id="config" class="fi.seco.saha3.model.configuration.ConfigService">
 		<constructor-arg ref="projectPath"/>
 	</bean>
+
+	<bean id="modelEditor" class="fi.seco.saha3.model.RemoteSPARULModelEditor" 
+		p:configService-ref="config"
+		p:SPARULService-ref="SPARULService"
+		p:SPARQLService-ref="SPARQLService"
+		p:graphURI-ref="projectIdentifier" />
+		
+	<bean id="modelReader" class="fi.seco.saha3.model.RemoteSPARQLModelReader"
+		p:configService-ref="config"
+		p:SPARQLService-ref="SPARQLService" 
+		p:graphURI-ref="projectIdentifier"/>
 	
-	<bean id="index" class="fi.seco.saha3.index.ResourceIndex" destroy-method="close">
-		<constructor-arg ref="model"/>
-		<constructor-arg ref="projectPath"/>
-		<constructor-arg value="false"/><!-- use RAM-based index -->
+		<bean id="SPARULService" class="java.lang.String">
+		<constructor-arg value="http://localhost:3030/bsbm/update"/>
 	</bean>
-	
-	<bean id="searcher" class="fi.seco.saha3.index.ResourceIndexSearcher">
-		<constructor-arg ref="index"/>
+
+	<bean id="SPARQLService" class="java.lang.String">
+		<constructor-arg value="http://localhost:3030/bsbm/sparql"/>
 	</bean>
-	
-	<bean id="rangeCache" class="fi.seco.saha3.index.PropertyRangeCache" 
-	p:caching-ref="caching"/>
-	<bean id="categoryBuilder" class="fi.seco.saha3.index.category.CategoryBuilder"
-	p:caching-ref="caching"/>
-	<bean id="treeBuilder" class="fi.seco.saha3.factory.TreeBuilder" />
-	<bean id="modelEditor" class="fi.seco.saha3.model.ModelEditor" />
-	<bean id="referenceTracker" class="fi.seco.saha3.factory.ReferenceTracker" />	
-	<bean id="uiCategoryBuilder" class="fi.seco.saha3.index.category.UICategoryBuilder"/>
-	<bean id="resourceFactory" class="fi.seco.saha3.factory.ResourceFactory" />
-	<bean id="propertyFactory" class="fi.seco.saha3.factory.PropertyFactory" />
 	
 	<bean id="project" class="fi.seco.saha3.model.SahaProject"/>
 	

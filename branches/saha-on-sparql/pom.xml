@@ -26,12 +26,12 @@
 			<type>jar</type>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>com.springsource.org.antlr.runtime</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
@@ -51,6 +51,11 @@
 			</exclusions>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>jena-arq</artifactId>
+			<version>2.9.3</version>
+		</dependency>
+<!--  		<dependency>
 			<groupId>com.hp.hpl.jena</groupId>
 			<artifactId>jena</artifactId>
 			<type>jar</type>
@@ -81,19 +86,19 @@
 					<artifactId>log4j</artifactId>
 				</exclusion>
 			</exclusions>
-		</dependency>
-		<dependency>
+		</dependency> -->
+<!-- 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
+		</dependency> -->
+<!-- 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
 			<artifactId>dwr-core</artifactId>
@@ -130,31 +135,31 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.freemarker</groupId>
 			<artifactId>freemarker</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+<!--		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.google.collections</groupId>
 			<artifactId>google-collections</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+<!--  		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<type>jar</type>
@@ -177,7 +182,7 @@
       <artifactId>jmxri</artifactId>
     </exclusion>
   </exclusions>
-		</dependency>
+		</dependency>-->  
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
@@ -190,7 +195,7 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>com.springsource.org.apache.commons.collections</artifactId>
 			<type>jar</type>
@@ -219,16 +224,16 @@
 			<artifactId>trove</artifactId>
 			<type>jar</type>
 			<scope>compile</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.springframework.ws</groupId>
 			<artifactId>spring-ws-core</artifactId>
 		</dependency>
-		<dependency>
+<!-- 		<dependency>
                         <groupId>org.joseki</groupId>
                         <artifactId>joseki</artifactId>
                         <version>3.4.4</version>
-                </dependency>
+                </dependency> -->
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
