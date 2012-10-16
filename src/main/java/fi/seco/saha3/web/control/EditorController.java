@@ -11,7 +11,9 @@ import org.springframework.web.servlet.ModelAndView;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 import fi.seco.saha3.infrastructure.ResourceLockManager;
-import fi.seco.saha3.model.SahaProject;
+import fi.seco.saha3.model.IModelEditor;
+import fi.seco.saha3.model.IModelReader;
+import fi.seco.saha3.model.configuration.IConfigService;
 
 /**
  * Controller for the editor view of SAHA
@@ -27,13 +29,14 @@ public class EditorController extends ASahaController {
 	}
 
 	@Override
-	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response, SahaProject project, Locale locale, ModelAndView mav) throws Exception {
+	public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response, IModelReader reader,
+			IModelEditor editor, IConfigService config, Locale locale, ModelAndView mav) throws Exception {
 		String uri = request.getParameter("uri");
 		if (request.getParameter("image_url") != null) { // file upload controller via media.onki.fi throws us this
 			String target = request.getParameter("target");
 			String property = request.getParameter("property");
 			String url = request.getParameter("image_url");
-			project.addLiteralProperty(target, property, url);
+			editor.addLiteralProperty(target, property, url);
 		}
 		String sessionId = request.getSession().getId();
 
@@ -43,21 +46,20 @@ public class EditorController extends ASahaController {
 		}
 
 		String typeUri = request.getParameter("type");
-		if (typeUri != null && !typeUri.isEmpty())
-			project.addObjectProperty(uri, RDF.type.getURI(), typeUri, locale);
+		if (typeUri != null && !typeUri.isEmpty()) editor.addObjectProperty(uri, RDF.type.getURI(), typeUri, locale);
 
 		mav.addObject("uri", uri);
-		mav.addObject("instance", project.getResource(uri, locale));
+		mav.addObject("instance", reader.getResource(uri, locale));
 		mav.addObject("locked", !lockManager.acquireLock(uri, sessionId));
 		mav.addObject("literalFormatter", new LiteralFormatter());
 		return mav;
 	}
-	
+
 	public static class LiteralFormatter {
 		public static String wordIndices(String in) {
 			String[] words = in.split("\\s+");
 			StringBuffer out = new StringBuffer();
-			for (int i=0; i < words.length; i++) {
+			for (int i = 0; i < words.length; i++) {
 				out.append(words[i]);
 				out.append("<sub>");
 				out.append(i);

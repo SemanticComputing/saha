@@ -9,8 +9,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import fi.seco.saha3.web.control.ASahaController;
 
 /**
- * Custom Spring scope for SAHA projects. Used to enable project-specific
- * beans of many classes instead of global singletons.
+ * Custom Spring scope for SAHA projects. Used to enable project-specific beans
+ * of many classes instead of global singletons.
  * 
  */
 public class SahaProjectScope implements Scope {
@@ -24,15 +24,13 @@ public class SahaProjectScope implements Scope {
 
 	private String getSahaProjectName() {
 		ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
-		return ASahaController.parseModelName(attributes.getRequest().getRequestURI());
+		return ASahaController.parseModelName(attributes.getRequest());
 	}
 
 	@Override
 	public Object get(String name, ObjectFactory<?> objectFactory) {
-		if ("scopedTarget.ScopedModel".equals(name))
-			return spr.getModel(getSahaProjectName());
-		else if ("scopedTarget.ScopedProject".equals(name)) return spr.getSahaProject(getSahaProjectName(), true);
-		throw new UnsupportedOperationException("Bean name needs to be either ScopedModel or ScopedProject: " + name);
+		if ("scopedTarget.ScopedModelReader".equals(name)) return spr.getModelReader(getSahaProjectName(), true);
+		throw new UnsupportedOperationException("Bean name needs to be ScopedModelReader: " + name);
 	}
 
 	@Override

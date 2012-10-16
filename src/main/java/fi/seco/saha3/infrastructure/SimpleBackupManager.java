@@ -22,8 +22,8 @@ import org.springframework.beans.factory.annotation.Required;
  * project, deleting previous backups.
  * 
  */
-public class SimpleBackupManager implements DisposableBean, InitializingBean {    
-	
+public class SimpleBackupManager implements DisposableBean, InitializingBean {
+
 	private class BackupTask extends TimerTask {
 		@Override
 		public void run() {
@@ -31,66 +31,68 @@ public class SimpleBackupManager implements DisposableBean, InitializingBean {
 			backup();
 		}
 	}
-	
-    private Logger log = Logger.getLogger(getClass());
-    
-    private Timer timer = new Timer();
 
-    private SahaProjectRegistry registry;
-    private String backupDirectory;
-        
-    @Required
-    public void setBackupDirectory(String backupDirectory) {
-        this.backupDirectory = backupDirectory;
-    }
-    
-    @Required
-    public void setSahaProjectRegistry(SahaProjectRegistry registry) {
-        this.registry = registry;
-    }
-    
-    private void scheduleNewBackupTask() {
-    	log.info("Scheduling new backup task for: " + getNextBackupDate());
-		timer.schedule(new BackupTask(),getNextBackupDate());
-    }
-    
-    private Date getNextBackupDate() {
-    	return tomorrow4am();
-    }
-    
-    private Date tomorrow4am() {
-    	Calendar c = new GregorianCalendar();
-    	c.set(c.get(Calendar.YEAR),c.get(Calendar.MONTH),c.get(Calendar.DATE)+1,4,0,0);
-    	return c.getTime();
-    }
-    
-    private void backup() {
-    	for (String projectName : registry.getOpenedProjects())
-    		backupProject(projectName,new File(backupDirectory+projectName+".nt"));
-    }
-    
-    private void backupProject(final String projectName, final File file) {
+	private final Logger log = Logger.getLogger(getClass());
+
+	private final Timer timer = new Timer();
+
+	private SahaProjectRegistry registry;
+	private String backupDirectory;
+
+	@Required
+	public void setBackupDirectory(String backupDirectory) {
+		this.backupDirectory = backupDirectory;
+	}
+
+	@Required
+	public void setSahaProjectRegistry(SahaProjectRegistry registry) {
+		this.registry = registry;
+	}
+
+	private void scheduleNewBackupTask() {
+		log.info("Scheduling new backup task for: " + getNextBackupDate());
+		timer.schedule(new BackupTask(), getNextBackupDate());
+	}
+
+	private Date getNextBackupDate() {
+		return tomorrow4am();
+	}
+
+	private Date tomorrow4am() {
+		Calendar c = new GregorianCalendar();
+		c.set(c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DATE) + 1, 4, 0, 0);
+		return c.getTime();
+	}
+
+	private void backup() {
+		for (String projectName : registry.getOpenedProjects())
+			backupProject(projectName, new File(backupDirectory + projectName + ".nt"));
+	}
+
+	private void backupProject(final String projectName, final File file) {
 		new Thread() {
 			@Override
 			public void run() {
 				try {
-					FileChannel channel = new RandomAccessFile(file,"rw").getChannel();
+					FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
 					FileLock lock = channel.lock();
-					registry.getModel(projectName).write(new FileWriter(file),"N-TRIPLE");
+					registry.getModelReader(projectName).getWholeProject().write(new FileWriter(file), "N-TRIPLE");
 					log.info("Wrote backup to: " + file.getAbsolutePath() + " (" + file.length() + " bytes)");
 					registry.closeSahaProject(projectName);
 					lock.release();
 				} catch (IOException e) {
-					log.error("",e);
+					log.error("", e);
 				}
 			}
 		}.start();
 	}
 
+	@Override
 	public void destroy() throws Exception {
 		timer.cancel();
 	}
 
+	@Override
 	public void afterPropertiesSet() throws Exception {
 		scheduleNewBackupTask();
 	}

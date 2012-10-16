@@ -11,8 +11,6 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
-import com.hp.hpl.jena.rdf.model.Model;
-
 import fi.helsinki.cs.seco.onki.service.ArrayOfOnkiQueryResult;
 import fi.helsinki.cs.seco.onki.service.ArrayOfStatement;
 import fi.helsinki.cs.seco.onki.service.ArrayOfString;
@@ -27,27 +25,21 @@ import fi.helsinki.cs.seco.onki.service.OnkiQueryResultsMetadata;
 import fi.helsinki.cs.seco.onki.service.Search;
 import fi.helsinki.cs.seco.onki.service.SearchResponse;
 import fi.helsinki.cs.seco.onki.service.Statement;
+import fi.seco.saha3.model.IModelReader;
 import fi.seco.saha3.model.IResults;
 import fi.seco.saha3.model.IResults.IResult;
 import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.ISahaResource;
-import fi.seco.saha3.model.SahaProject;
 
 @Endpoint
 public class OnkiService {
 
 	private static final Logger log = LoggerFactory.getLogger(OnkiService.class);
 
-	private Model m;
-	private SahaProject spr;
+	private IModelReader spr;
 
 	@Required
-	public void setModel(Model m) {
-		this.m = m;
-	}
-
-	@Required
-	public void setSahaProject(SahaProject spr) {
+	public void setModelReader(IModelReader spr) {
 		this.spr = spr;
 	}
 
@@ -88,10 +80,10 @@ public class OnkiService {
 			oqr.setTitle(of.createOnkiQueryResultTitle(qres.getLabel()));
 			oqr.setSerkki(of.createOnkiQueryResultTitle(qres.getLabel()));
 			oqr.setUri(of.createOnkiQueryResultUri(qres.getUri()));
-			int pl = qres.getUri().lastIndexOf('#');
-			if (pl == -1) pl = qres.getUri().lastIndexOf('/');
-			if (pl != -1)
-				oqr.setNamespacePrefix(of.createOnkiQueryResultNamespacePrefix(this.m.getNsURIPrefix(qres.getUri().substring(0, pl + 1))));
+			/*			int pl = qres.getUri().lastIndexOf('#');
+						if (pl == -1) pl = qres.getUri().lastIndexOf('/');
+						if (pl != -1)
+							oqr.setNamespacePrefix(of.createOnkiQueryResultNamespacePrefix(this.m.getNsURIPrefix(qres.getUri().substring(0, pl + 1)))); */
 			res2.add(oqr);
 		}
 		/*		Collections.sort(res2, new Comparator<OnkiQueryResult>() {

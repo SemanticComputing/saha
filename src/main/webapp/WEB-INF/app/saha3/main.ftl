@@ -17,7 +17,7 @@
 		<h2 style="color:grey;">Projects</h2>
 		<ul>
 			[#list projectList as project]
-			<li><a href="../${project}/index.shtml" style="color:black">${project}</a></li> 
+			<li><a href="../project/index.shtml?model=${project?url}" style="color:black">${project}</a></li> 
 			[/#list]
 		</ul>
 		</div>

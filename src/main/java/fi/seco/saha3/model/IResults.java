@@ -1,6 +1,7 @@
 package fi.seco.saha3.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
@@ -8,34 +9,67 @@ public interface IResults extends Iterable<IResults.IResult> {
 
 	public interface IResult {
 		public String getUri();
+
 		public String getLabel();
+
 		public String getAltLabel();
+
 		public List<String> getAltLabels();
 	}
-	
-	public class Result extends UriLabel implements IResult {
+
+	public static class Results implements IResults {
+
+		private final Collection<IResult> results;
+		private final int totalSize;
+
+		public Results(Collection<IResult> results, int totalSize) {
+			this.results = results;
+			this.totalSize = totalSize;
+		}
+
+		@Override
+		public int getSize() {
+			return totalSize;
+		}
+
+		@Override
+		public Iterator<IResult> iterator() {
+			return results.iterator();
+		}
+
+	}
+
+	public static class Result extends UriLabel implements IResult {
 		private List<String> altLabels = new ArrayList<String>();
+
 		public Result(String uri, String label) {
-			super(uri,label);
+			super(uri, label);
 		}
+
 		public Result(String uri, String label, String altLabel) {
-			super(uri,label);
-			if (altLabel != null)
-				altLabels.add(altLabel);
+			super(uri, label);
+			if (altLabel != null) altLabels.add(altLabel);
 		}
+
 		public Result(String uri, String label, List<String> altLabels) {
-			super(uri,label);
+			super(uri, label);
 			this.altLabels = altLabels;
 		}
+
+		@Override
 		public String getAltLabel() {
 			return altLabels.isEmpty() ? "" : altLabels.get(0);
 		}
+
+		@Override
 		public List<String> getAltLabels() {
 			return altLabels;
 		}
 	}
-	
+
 	public int getSize();
+
+	@Override
 	public Iterator<IResult> iterator();
-	
+
 }

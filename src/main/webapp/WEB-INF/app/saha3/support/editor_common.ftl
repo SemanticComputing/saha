@@ -179,8 +179,7 @@
 			document.body.style.cursor="progress";
 			ResourceEditService.removeLiteralProperty(model,resourceUri,propertyUri,valueShaHex, {
 				callback:function(dataFromServer) {
-					if (dataFromServer == true)
-						dojo.byId(id).style.textDecoration = 'line-through';
+					dojo.byId(id).style.textDecoration = 'line-through';
 					document.body.style.cursor="";
 				}
 			});
@@ -189,8 +188,7 @@
 			document.body.style.cursor="progress";
 			ResourceEditService.removeObjectProperty(model,resourceUri,propertyUri,valueUri, {
 				callback:function(dataFromServer) {
-					if (dataFromServer == true)
-						dojo.byId(id).style.textDecoration = 'line-through';
+					dojo.byId(id).style.textDecoration = 'line-through';
 					document.body.style.cursor="";
 				}
 			});
@@ -201,7 +199,7 @@
 				ResourceEditService.removeResource(model,uri, {
 					callback:function(dataFromServer) {
 						document.body.style.cursor="";
-						location.href='index.shtml';
+						location.href='index.shtml?model=${model?url}';
 					}
 				});
 			} else {
@@ -449,7 +447,7 @@
 			<a href="javascript:remove_object_property('value_${id}','${model}','${resourceUri?url}',
 			'${propertyUri}','${propertyValueUri?url}');" style="color:crimson">
 			[remove]</a> 
-			<a href="resource.shtml?uri=${propertyValueUri?url}" 
+			<a href="resource.shtml?uri=${propertyValueUri?url}&model=${model?url}" 
 			 onMouseOver="showResourceTooltip(this,'${propertyValueUri}')" 
 			 onMouseOut="hideResourceTooltip(this)">${propertyValueLabel}</a>
 			<a href="javascript:render_inline_editor('${id}','${model}','${propertyValueUri?url}')" style="color:grey">[edit]</a>

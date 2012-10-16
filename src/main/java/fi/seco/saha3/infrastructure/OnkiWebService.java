@@ -31,10 +31,9 @@ import fi.helsinki.cs.seco.onki.service.IOnkiQueryPortType;
 import fi.helsinki.cs.seco.onki.service.OnkiQueryResult;
 import fi.helsinki.cs.seco.onki.service.OnkiQueryResults;
 import fi.helsinki.cs.seco.onki.service.Statement;
-import fi.seco.saha3.factory.TreeBuilder.UITreeNode;
-import fi.seco.saha3.model.IRepository;
 import fi.seco.saha3.model.IResults;
 import fi.seco.saha3.model.ISahaProperty;
+import fi.seco.saha3.model.UITreeNode;
 import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.PropertyConfig;
 
@@ -171,7 +170,7 @@ public class OnkiWebService {
 		}
 	}
 
-	public class OnkiRepository implements IRepository {
+	public class OnkiRepository {
 		private final IOnkiQueryPortType port;
 		private final String ontology;
 
@@ -195,7 +194,6 @@ public class OnkiWebService {
 			port = tport;
 		}
 
-		@Override
 		public IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris,
 				Locale locale, int maxResults) {
 			try {
