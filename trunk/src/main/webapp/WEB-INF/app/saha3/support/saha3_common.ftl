@@ -247,11 +247,15 @@
 					element.style.display = 'none';
 					document.getElementById('about_link_id').href = element.value;
 				}
+				
+		function popup(url) {
+		popupWindow = window.open(url,'popUpWindow','left=10,top=10,width=1000,height=800,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no')
+			}
 			</script>
 			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
 			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
 			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] ||				 
-			<a href="hako.shtml" style="color:deeppink">HAKO</a> || 
+			<a href="hako.shtml" style="color:deeppink">HAKO</a> || <a href="javascript:popup('stats.shtml')" style="color:deeppink">STATS</a> || <a href="javascript:popup('visu.shtml')" style="color:deeppink">VISU</a> ||
 			<div style="display: inline;">
 				<a href="${aboutLink}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
 				<span onclick="javascript: var element = document.getElementById('about_link_box'); element.style.display = 'inline'; element.focus()" style="font-size: 50%">[edit]
