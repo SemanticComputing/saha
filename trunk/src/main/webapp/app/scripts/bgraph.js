@@ -19,25 +19,63 @@
  * Some parts of BGraph are taken from sgvizler project: http://code.google.com/p/sgvizler/
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  */
+
 function BGraph() {
 	this.opts = {};
+	
 	this.opts['namespace'] = {
-        'rdf' : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        'rdfs': "http://www.w3.org/2000/01/rdf-schema#",
-        'owl' : "http://www.w3.org/2002/07/owl#",
-        'xsd' : "http://www.w3.org/2001/XMLSchema#"
-    };
-	this.opts['types'] = {};
-	this.opts['properties'] = [];
+	        'rdf' : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+	        'rdfs': "http://www.w3.org/2000/01/rdf-schema#",
+	        'owl' : "http://www.w3.org/2002/07/owl#",
+	        'xsd' : "http://www.w3.org/2001/XMLSchema#",
+	        'foaf' : "http://xmlns.com/foaf/0.1/",
+	        'dct' : "http://purl.org/dc/terms/",
+	        'skos' : "http://www.w3.org/2004/02/skos/core#",
+	        'schema' : "http://schema.org/",
+	        'org' : "http://www.w3.org/ns/org#",
+	        'geo' : "http://www.w3.org/2003/01/geo/wgs84_pos#",
+			'afn' : "http://jena.hpl.hp.com/ARQ/function#"
+	    };
+	    
+		this.opts['types'] = {};
+		this.opts['properties'] = [];
+		
+		// Returns prefixes as string for sparql query
+		this.getPrefixes = function () {
+			var prefixString = "";
+
+			for(ns in bgraph.opts.namespace) 
+				prefixString+="prefix "+ns+": <"+bgraph.opts.namespace[ns]+"> ";
+				
+			return prefixString;
+	    };
+	    
+	    // Returns list of prefixes as string with line breaks
+		this.getPrefixList = function () {
+			var prefixString = "";
+
+			for(ns in bgraph.opts.namespace) 
+				prefixString+="prefix "+ns+": "+bgraph.opts.namespace[ns]+"\n";
+				
+			return prefixString;
+	    };
+	    
+	    // Adds new prefix to opts
+	    this.addPrefix = function (prefix,namespace) {
+			bgraph.opts.namespace[prefix] = namespace;
+		}
+	
 	this.init = function() { 
 		bgraph.opts['typeCount'] = 0;
 		bgraph.opts['selectedTypes'] = {};
+		
 		$('#bgraph_submit_query').click( function() {
 			var viztype = $('#bgraph_visualizations').children(":selected").attr("type");
 			if (bgraph.valid_selection(viztype)) {
 				bgraph.execute_query(viztype, bgraph.opts['xaxis'], bgraph.opts['yaxis']);
 			}
 		}); 
+		
 		$('#bgraph_add_type').click( function() {
 			$("#bgraph_types").append( $("#bgraphTypeTemplate").render([bgraph.opts]) );
 			
@@ -45,16 +83,20 @@ function BGraph() {
 				bgraph.opts['selectedTypes'][bgraph.opts['typeCount']] = ($(this).children(":selected").attr("uri"));
 				bgraph.update_query();
 			});
+			
 			bgraph.opts['typeCount'] += 1;
 		}); 
 		$('#bgraph_yaxis').hide();
 	};
+	
+	
 	this.remove_type = function(typeCount) {
 		delete bgraph.opts["selectedTypes"][typeCount];
 		$('#bgraph_typediv_'+typeCount).remove();
 		console.log('#bgraph_typediv_'+typeCount);
 		this.update_query();
 	};
+	
 	this.update_query = function() {
 		var viztype = $('#bgraph_visualizations').children(":selected").attr("type");
 		if (viztype == "scatter") {
@@ -83,6 +125,8 @@ function BGraph() {
 			});
 		});
 	};
+	
+	
 	this.update_bgraph = function() {
 		this.update_type_selection();
 		this.update_query();
@@ -109,12 +153,18 @@ function BGraph() {
 		
 		return true;
 	}; 
+	
+	
 	this.execute_query = function(vizualization_type, xlabel, ylabel) {
 		$('#bgraph_visualization_holder').empty();
 		var queryHeader = "";
 		var queryFooter = "";
+		
+		
 		var queryXAxis = $('select#bgraph_xaxis_property_selector').children(":selected").attr("uri"); 
 		var queryYAxis = $('select#bgraph_yaxis_property_selector').children(":selected").attr("uri");
+		
+		
 		if (vizualization_type == "scatter") {
 			queryHeader += 	"select DISTINCT ?x ?y where {\n" +
 							"\tOPTIONAL {" +
@@ -131,6 +181,10 @@ function BGraph() {
 			}
 			queryFooter += "\t} \n}\n";
 			queryFooter += "}";
+			
+			
+			
+			
 		} else if (vizualization_type == "bar") {
 			queryHeader += 	"SELECT ?label ?count where {"+
 							"\tOPTIONAL {" +
@@ -144,6 +198,9 @@ function BGraph() {
 				queryFooter += "\t\t<"+queryXAxis+"> ?xaxis ;\n";
 			}
 			queryFooter += 	"\t} GROUP BY ?xaxis\n }\n } order by DESC(?count)\n";
+			
+			
+			
 		} else if (vizualization_type == "bar2") {
 			queryHeader += "SELECT DISTINCT (count(?s) as ?count) ?xaxis  { ?s\n";
 			if (queryXAxis) {
@@ -151,6 +208,9 @@ function BGraph() {
 			}
 			queryFooter += "\t} GROUP BY ?xaxis\n";
 		}
+		
+		
+		
 		queryFooter += "LIMIT "+ $('#bgraph_result_limit').children(":selected").text(); 
 		var queryBody = "";
 		var requestCnt = 0;
@@ -168,6 +228,7 @@ function BGraph() {
 			} else {
 				queryBody = "";
 			}
+			console.log(queryHeader + queryBody + queryFooter);
 			jQuery.getJSON("../service/data/"+bgraph.opts["project"]+"/sparql", {query: queryHeader + queryBody + queryFooter, output: "json"}, function(response) {
 				if (requestCnt == 0) {
 					jsonData = bgraph.SparqlJSON2GoogleJSON(response);
@@ -290,6 +351,7 @@ function BGraph() {
 			}
 		});*/
 	
+    // Main loop for transformer
 	this.SparqlJSON2GoogleJSON = function (stable) {
         var c,
         r,
@@ -309,7 +371,8 @@ function BGraph() {
 	        stype = null;
 	        sdatatype = null;
 	        // find a row where there is a value for this column
-	        while (typeof srows[r][scols[c]] === 'undefined' && r + 1 < srows.length) { r += 1; }
+	        while (typeof srows[r][scols[c]] === 'undefined' && r + 1 < srows.length) 
+				{ r += 1; }
 	        if (typeof srows[r][scols[c]] !== 'undefined') {
 	            stype = srows[r][scols[c]].type;
 	            sdatatype = srows[r][scols[c]].datatype;
@@ -335,6 +398,8 @@ function BGraph() {
 	    }
 	    return {'cols': gcols, 'rows': grows};
 	};
+	
+	// Transforms SPARQL JSON values to Google JSON values
 	this.getGoogleJsonValue = function (value, gdatatype, stype) {
         var newvalue;
         if (gdatatype === 'number') {
@@ -361,20 +426,28 @@ function BGraph() {
             if (stype === 'uri') { // replace namespace with prefix
                 newvalue = this.prefixify(value);
             }
-            newvalue = value;
+            else newvalue = value;
         }
         return newvalue;
     };
+    
+    // Transforms SPARQL JSON datatypes to Google JSON datatypes
     this.getGoogleJsonDatatype = function (stype, sdatatype) {
-        var gdatatype = this.defaultGDatatype,
+        var gdatatype = 'string',
             xsdns = bgraph.opts.namespace.xsd;
+                        
         if (typeof stype !== 'undefined' && (stype === 'typed-literal' || stype === 'literal')) {
             if (sdatatype === xsdns + "float"   ||
                     sdatatype === xsdns + "double"  ||
                     sdatatype === xsdns + "decimal" ||
                     sdatatype === xsdns + "int"     ||
                     sdatatype === xsdns + "long"    ||
-                    sdatatype === xsdns + "integer") {
+                    sdatatype === xsdns + "integer" ||
+                    sdatatype === xsdns + "gYearMonth" ||
+					sdatatype === xsdns + "gYear" ||
+					sdatatype === xsdns + "gMonthDay" ||
+					sdatatype === xsdns + "gDay" ||
+					sdatatype === xsdns + "gMonth") {
                 gdatatype =  'number';
             } else if (sdatatype === xsdns + "boolean") {
                 gdatatype =  'boolean';
@@ -384,11 +457,12 @@ function BGraph() {
                 gdatatype =  'datetime';
             } else if (sdatatype === xsdns + "time") {
                 gdatatype =  'timeofday';
-            }
-        }
+            } 
+        } 
         return gdatatype;
     };
 
+	// Prexifies URI
     this.prefixify = function (url) {
         var ns = null;
         for (ns in bgraph.opts.namespace) {
@@ -396,10 +470,12 @@ function BGraph() {
                     url.lastIndexOf(bgraph.opts.namespace[ns], 0) === 0) {
                 return url.replace(bgraph.opts.namespace[ns], ns + ":");
             }
+   
         }
         return url;
     };
     
+    // Unprexifies URI
     this.unprefixify = function (qname) {
         var ns = null;
         for (ns in bgraph.opts.namespace) {
