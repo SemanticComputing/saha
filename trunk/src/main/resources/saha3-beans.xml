@@ -66,6 +66,8 @@
 				/*/export.shtml=ExportController
 				/*/upload.shtml=Saha3ImageUploadController
 				/*/hako.shtml=HakoController
+				/*/stats.shtml=StatsController
+				/*/visu.shtml=VisuController
 				/*/map.shtml=MapEditController		
 				/*/manage.shtml=ProjectAdminController		
 				/saha3/admin.shtml=AdminController
@@ -163,6 +165,14 @@
 	p:cacheSeconds="0" />
 	
 	<bean id="HakoJSONController" class="fi.seco.saha3.web.control.HakoJSONController" 
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
+	<bean id="StatsController" class="fi.seco.saha3.web.control.StatsController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry"
+	p:cacheSeconds="0" />
+	
+	<bean id="VisuController" class="fi.seco.saha3.web.control.VisuController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
 	p:cacheSeconds="0" />
 	
