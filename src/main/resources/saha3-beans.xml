@@ -43,7 +43,7 @@
 		<!-- /project/**=NullController
 				/saha3/irma.shtml=NullController -->
 			<value>
-				/service/import_project/**=ImportProjectController
+				<!-- /service/import_project/**=ImportProjectController -->
 				/service/instance_search/**=ResourceSearchService
 				/service/pics/**=Saha3ImageController
            		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
@@ -138,8 +138,8 @@
 		</dwr:remote>
 	</bean>
 	
-	<bean id="ImportProjectController" class="fi.seco.saha3.web.control.ImportProjectController"
-	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+	<!-- <bean id="ImportProjectController" class="fi.seco.saha3.web.control.ImportProjectController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" /> -->
 
 	<bean id="AdminController" class="fi.seco.saha3.web.control.AdminController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
