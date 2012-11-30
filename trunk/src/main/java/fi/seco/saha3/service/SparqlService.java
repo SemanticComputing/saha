@@ -60,11 +60,10 @@ public class SparqlService extends NamedModelAssembler implements InitializingBe
 		Property jaDefGraph = josekiConfig.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#defaultGraph");
 		Property jaModelName = josekiConfig.createProperty("http://jena.hpl.hp.com/2005/11/Assembler#modelName");
 
-		int serviceNumber = 0;
 		for (String modelName : projectRegistry.getAllProjects()) {
-			Resource sparqlService = josekiConfig.createResource("#sparqlService" + ++serviceNumber);
-			Resource sparulService = josekiConfig.createResource("#sparulService" + serviceNumber);
-			Resource data = josekiConfig.createResource("http://demo.seco.tkk.fi/saha/joseki_service/" + serviceNumber);
+			Resource sparqlService = josekiConfig.createResource("#sparqlService" + modelName);
+			Resource sparulService = josekiConfig.createResource("#sparulService" + modelName);
+			Resource data = josekiConfig.createResource("http://demo.seco.tkk.fi/saha/joseki_service/" + modelName);
 
 			josekiConfig.add(sparqlService, RDF.type, josekiService);
 			josekiConfig.add(sparqlService, RDFS.label, "SPARQL");
