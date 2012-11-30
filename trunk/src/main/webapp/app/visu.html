@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Statistics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Le styles -->
+    <link href="../app/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="../app/css/alert.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 0px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+    </style>
+    <link href="../app/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    
+
+    <!-- jQuery and Simile timemap -->
+    <script src="../app/scripts/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript" src="../app/scripts/mxn/mxn.js?(googlev3)"></script>
+    <script type="text/javascript" src="../app/scripts/rawdeflate.js"></script>
+	<script type="text/javascript" src="../app/scripts/rawinflate.js"></script>
+    <script type="text/javascript" src="../app/scripts/timeline-2.3.0.js"></script>
+    <script type="text/javascript" src="../app/scripts/timemap.js" ></script>
+    <script type="text/javascript" src="../app/scripts/bgraph.js"></script>
+    <script type="text/javascript" src="../app/scripts/jsrender.js"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+</head>
+<body>
+<div class="container">
+<section>
+<div>
+<h1>VISUaliser</h1>
+<p id="load" style="display: inherit;">Loading <img src="../app/images/load.gif" alt="Loading ..."/></p>
+<div id="sparqlviz"><div class="form" id="queryForm" style="display: none;">
+<p>Create new visualization from your SAHA-project.</p>
+<p id="prefix" style="font-size: 10px;"></p>
+<div>
+<select id="querySelect">
+<option value="-1">New query</option>
+<option value="0">All classes and instances</option>
+<option value="1">All properties and sum of subject and objects</option>
+<option value="2">All properties and sum of all triples</option>
+</select>
+</div>
+<textarea id="area" style="width:400px; height:150px;">
+## Write a new query
+</textarea>
+<div>
+<button class="btn" id="query">Visualize</button>
+</div></div>
+</div>
+</div>
+</section>
+<section>
+<div id="chartHolder">
+<div id="editChart" style="visibility:hidden;"><a onclick='openEditor()'>Edit this visualization</a> | <a onclick='editQuery()'>Edit query</a> | <a onclick='newQuery()'>New query</a> | <a onclick='manualEdit()'>Manual edit</a></div>
+<div><h2 id="title"></h2></div>
+<div id='visualization' style="width:800px;height:600px;"></div>
+<div id="confJSON" style="display: none">
+    <h2>Warning! Experimental feature!</h2>
+    <div id="editMe" style="width:800px;height:100px;"></div>
+</div>
+</div>
+<div style="visibility:hidden;" id="querycopy"></div>
+<div style="visibility:hidden;" id="urlcopy"></div>
+</section>
+</div>
+<script>
+var bgraph = new BGraph();	
+var prefix = bgraph.getPrefixes();
+var gJSON;
+var wrapper;
+var submittedQuery = "";
+$('#prefix').html(bgraph.getPrefixList().replace(/\n/g,"<br/>"));
+
+google.load("visualization", "1", {packages:["charteditor"],language: "en"});
+
+
+
+google.setOnLoadCallback(function() {
+	$('#load').css("display", "none");
+	if(window.location.href.indexOf("?query=")>0) {
+		var decodedQuery = decodeURIComponent(window.location.href.substr(window.location.href.indexOf("?query=")+7))
+		$('#area').val(decodedQuery);
+	 }
+	 if(window.location.hash) {
+		var decodedHash = decode(window.location.hash.substr(1));
+		decodedData = decodedHash.substr(0,decodedHash.indexOf("?query="));
+		decodedQuery = decodedHash.substr(decodedHash.indexOf("?query=")+7);	
+		if(decodedData != null) {
+			submitQuery(decodedQuery,decodedData);
+			$('#load').css("display", "inherit");
+		}
+		else {
+			alert("There seems to be something wrong with the url");
+			newQuery();
+		}
+	   }
+   else {
+	   newQuery();
+	} 
+});
+
+var queries = ["SELECT  ?class (COUNT(?s) AS ?count ) { ?s a ?class } GROUP BY ?class ORDER BY ?count","SELECT  ?p (COUNT(DISTINCT ?o ) AS ?objectCount) (COUNT(DISTINCT ?s ) AS ?subjectCount) { ?s ?p ?o } GROUP BY ?p ORDER BY ?subjectCount","SELECT  ?p (COUNT(?s) AS ?count ) { ?s ?p ?o } GROUP BY ?p ORDER BY ?count"];
+
+$('#querySelect').change(function() {
+	decodedData = null; wrapper = null;
+	if($('#querySelect option:selected').val()<0) {
+	$('#area').val("## Write a new query\nSELECT ?anything (count(?you) as ?pop) WHERE {\n?like rdf:type ?fancy ; rdfs:label ?anything.\n?you foaf:topic_interest ?like.}\nGROUP BY ?anything\nHAVING(count(?you) > 5)");
+	}
+	else {
+    $('#area').val(queries[$('#querySelect option:selected').val()]);
+	}
+});
+
+function ajaxQuery(q) {
+	var loc = window.location.protocol + "//" + window.location.host + "/";
+	var paths = window.location.pathname.split("/");
+	return $.ajax({url: loc+paths[1]+"/service/data/"+paths[2]+"/sparql?query="+encodeURIComponent(q)+"&format=json"});
+}
+
+function submitQuery(queryString,decodedData) {
+	ajaxQuery(queryString).done(function(data) {
+	//FIXME: comment this out
+	//data = $.parseJSON(data); // For debugging only
+	$('#load').css("display", "none");
+	if(data.results.bindings.length>0) {
+		submittedQuery = queryString;
+		var gTable = new google.visualization.DataTable(bgraph.SparqlJSON2GoogleJSON(data));
+		gJSON = gTable.toJSON();
+		
+		if(decodedData != null) initDecoded(decodedData);
+		else init();
+		
+	} else { gJSON = null;
+	alert("SPARQL-query did not return any results");
+	$('#queryForm').css("display", "inherit");
+}
+}).fail(function(request, status, error) { 
+	alert(request.responseText.replace(/(<([^>]+)>)/ig,""));
+	$('#load').css("display", "none");
+	$('#queryForm').css("display", "inherit"); 
+});
+}
+
+$('#query').click(function() {
+  var q = $("#area").val();
+  $('#queryForm').css("display", "none");
+  $('#load').css("display", "inherit");
+  if(wrapper!=null) submitQuery(q,wrapper.toJSON());
+  else if(decodedData != null) submitQuery(prefix+q,decodedData);
+  else submitQuery(prefix+q);
+  return false;
+});
+
+function init() {
+	$('#editChart').css("visibility", "visible");
+	$('#chartHolder').css("display", "inherit");	
+  wrapper = new google.visualization.ChartWrapper({
+    chartType: 'Table',
+    dataTable: new google.visualization.DataTable(gJSON),
+    options: {title: 'VISUalisation',width:800,height:600},
+    containerId: 'visualization'
+  });
+   openEditor();
+}
+
+function initDecoded(decodedData) {
+	$('#editChart').css("visibility", "visible");
+	$('#chartHolder').css("display", "inherit");
+	$('#queryForm').css("display", "none");
+	wrapper = new google.visualization.ChartWrapper(decodedData);
+	wrapper.setDataTable(gJSON);
+	drawWrapper();
+}
+
+function b64en(e){var t="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";var n,r,i,s,o,u,a,f,l=0,c=0,h="",p=[];if(!e){return e}do{n=e.charCodeAt(l++);r=e.charCodeAt(l++);i=e.charCodeAt(l++);f=n<<16|r<<8|i;s=f>>18&63;o=f>>12&63;u=f>>6&63;a=f&63;p[c++]=t.charAt(s)+t.charAt(o)+t.charAt(u)+t.charAt(a)}while(l<e.length);h=p.join("");var d=e.length%3;return(d?h.slice(0,d-3):h)+"===".slice(d||3)}
+function encode(str) { return b64en(RawDeflate.deflate(unescape(encodeURIComponent(str))));}
+
+function b64de(e){var t="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";var n,r,i,s,o,u,a,f,l=0,c=0,h="",p=[];if(!e){return e}e+="";do{s=t.indexOf(e.charAt(l++));o=t.indexOf(e.charAt(l++));u=t.indexOf(e.charAt(l++));a=t.indexOf(e.charAt(l++));f=s<<18|o<<12|u<<6|a;n=f>>16&255;r=f>>8&255;i=f&255;if(u==64){p[c++]=String.fromCharCode(n)}else if(a==64){p[c++]=String.fromCharCode(n,r)}else{p[c++]=String.fromCharCode(n,r,i)}}while(l<e.length);h=p.join("");return h}
+function decode(str) { return decodeURIComponent(escape(RawDeflate.inflate(b64de(str))));}
+
+function openEditor() {
+      // Handler for the "Open Editor" button.
+      var editor = new google.visualization.ChartEditor();
+
+      google.visualization.events.addListener(editor, 'ok',
+        function() {
+    	   	// Just draw the #(=/"#(? thing
+    	    wrapper = editor.getChartWrapper();
+			drawWrapper();
+      });
+      
+      google.visualization.events.addListener(editor, 'cancel',
+        function() {
+		if(wrapper!=null) {
+			drawWrapper();
+		} else newQuery();
+		});
+      
+      editor.openDialog(wrapper);
+ }
+ 
+ // Draws wrapper to visualization div
+ function drawWrapper() {
+	wrapper.draw(document.getElementById('visualization'));
+	var title = wrapper.getChartName();
+	if(title != null && title.length>1) $('#title').html(title);
+	else  $('#title').html("");
+	$('#editChart').css("visibility", "visible");
+	$('#chartHolder').css("display", "inherit");
+	$('#confJSON').css("display", "none");
+	createHash();
+ }
+ 
+ 
+ // Removes nulls and empty strings
+ function removeNulls(data) {
+	for (var key in data) {
+        if(!data[key] || data[key].length == 0) delete data[key];
+        else if (typeof data[key] == "object") removeNulls(data[key]);    
+    }
+
+}
+// Removes empty object
+function removeEmptyObjects(data) {
+	for (var key in data) {
+        if(data[key] instanceof Object && Object.keys(data[key]).length === 0) delete data[key];
+        else if (typeof data[key] == "object") removeEmptyObjects(data[key]);    
+    }
+}
+ 
+ // Creates neat hash from google chart wrapper and sparql-query
+ function createHash() {
+		var wrapJSON = $.parseJSON(wrapper.toJSON());
+		delete wrapJSON["dataTable"];
+		removeNulls(wrapJSON);
+		removeEmptyObjects(wrapJSON);
+		var packed = JSON.stringify(wrapJSON);
+		packed+="?query=";
+		packed+=submittedQuery;			
+		packed = encode(packed);
+		window.location.hash="#"+packed; 
+ }
+ 
+ function manualEdit() {
+	if(wrapper != null) {
+		var op = wrapper.getOptions();
+		//console.log(wrapper.toJSON());
+		removeNulls(op);
+		removeEmptyObjects(op);
+		$('#confJSON').css("display", "inherit");
+		$('#editMe').html(JSON.stringify(op));
+	}
+ }
+ 
+ $('#editMe').click(function() {
+ this.contentEditable='true';
+});
+ 
+$('#editMe').focusout(function(){
+	var obj = $.parseJSON(this.innerHTML);
+	wrapper.setOptions(obj);
+	drawWrapper();
+});
+ 
+ 
+ // encodes current wrapper and opens old query
+ function editQuery() {
+	if(submittedQuery != null && submittedQuery.length > 1) {
+		$('#area').val(submittedQuery);
+		$('#editChart').css("visibility", "hidden");
+		$('#queryForm').css("display", "inherit");
+		$('#chartHolder').css("display", "none");
+		$('#confJSON').css("display", "none");
+	} else { 
+		alert("There seems to be something wrong with the query");
+		newQuery();
+}
+}
+
+// Deletes old wrapper and open new query form
+ function newQuery() {
+   decodedData = null;
+   wrapper = null;
+   window.location.hash="";
+   $('#editChart').css("visibility", "hidden");
+   $('#queryForm').css("display", "inherit");
+   $('#chartHolder').css("display", "none");
+   $('#confJSON').css("display", "none");
+ }
+</script>
+</body>
+</html>
+
