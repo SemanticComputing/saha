@@ -128,7 +128,7 @@ $('#querySelect').change(function() {
 function ajaxQuery(q) {
 	var loc = window.location.protocol + "//" + window.location.host + "/";
 	var paths = window.location.pathname.split("/");
-	return $.ajax({url: loc+paths[1]+"/service/data/"+paths[2]+"/sparql?query="+encodeURIComponent(q)+"&format=json"});
+	return $.ajax({url: loc+"service/data/"+paths[1]+"/sparql?query="+encodeURIComponent(q)+"&format=json"});
 }
 
 function submitQuery(queryString,decodedData) {

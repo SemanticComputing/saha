@@ -77,8 +77,8 @@ function ajaxQuery(q) {
 	var loc = window.location.protocol + "//" + window.location.host + "/";
 	var paths = window.location.pathname.split("/");
 	console.log(paths.length);
-	console.log(loc+paths[1]+"/service/data/"+paths[2]+"/sparql?query=");
-	return $.ajax({url: loc+paths[1]+"/service/data/"+paths[2]+"/sparql?query="+encodeURIComponent(q)+"&format=json"});
+	console.log(loc+"service/data/"+paths[1]+"/sparql?query=");
+	return $.ajax({url: loc+"service/data/"+paths[1]+"/sparql?query="+encodeURIComponent(q)+"&format=json"});
 }
 
 function plotText(queryString,elem) {
