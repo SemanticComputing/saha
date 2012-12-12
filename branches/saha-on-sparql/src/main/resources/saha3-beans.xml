@@ -190,7 +190,7 @@
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 	
 	<bean id="ModelLister" class="fi.seco.saha3.model.RemoteSPARQLModelLister"
-	p:sparqlService="http://localhost:3030/bsbm/sparql" />
+	p:sparqlService="http://data.aalto.fi/sparql" />
 	
 	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
 	p:modelLister-ref="ModelLister"

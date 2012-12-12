@@ -24,6 +24,17 @@
                 <outputDirectory>src/main/webapp/WEB-INF/classes/</outputDirectory>
         </build>
         <dependencies>
+	  <dependency>
+	    <groupId>org.apache.jena</groupId>
+	    <artifactId>jena-arq</artifactId>
+	    <version>2.9.3</version>
+                        <exclusions>
+                                <exclusion>
+                                        <groupId>xerces</groupId>
+                                        <artifactId>xercesImpl</artifactId>
+                                </exclusion>
+			</exclusions>
+	  </dependency>
                 <dependency>
                         <groupId>javax.servlet</groupId>
                         <artifactId>servlet-api</artifactId>
@@ -51,38 +62,6 @@
                                 <exclusion>
                                         <artifactId>commons-logging</artifactId>
                                         <groupId>commons-logging</groupId>
-                                </exclusion>
-                        </exclusions>
-                </dependency>
-                <dependency>
-                        <groupId>com.hp.hpl.jena</groupId>
-                        <artifactId>jena</artifactId>
-                        <type>jar</type>
-                        <scope>compile</scope>
-                        <exclusions>
-                                <exclusion>
-                                        <groupId>org.slf4j</groupId>
-                                        <artifactId>slf4j-log4j12</artifactId>
-                                </exclusion>
-                                <exclusion>
-                                        <groupId>log4j</groupId>
-                                        <artifactId>log4j</artifactId>
-                                </exclusion>
-                        </exclusions>
-                </dependency>
-                <dependency>
-                        <groupId>com.hp.hpl.jena</groupId>
-                        <artifactId>tdb</artifactId>
-                        <type>jar</type>
-                        <scope>compile</scope>
-                        <exclusions>
-                                <exclusion>
-                                        <groupId>org.slf4j</groupId>
-                                        <artifactId>slf4j-log4j12</artifactId>
-                                </exclusion>
-                                <exclusion>
-                                        <groupId>log4j</groupId>
-                                        <artifactId>log4j</artifactId>
                                 </exclusion>
                         </exclusions>
                 </dependency>
@@ -255,16 +234,6 @@
                         <groupId>org.springframework</groupId>
                         <artifactId>spring-webmvc</artifactId>
                         <version>3.0.5.RELEASE</version>
-                </dependency>
-                <dependency>
-                        <groupId>com.hp.hpl.jena</groupId>
-                        <artifactId>jena</artifactId>
-                        <version>2.6.4</version>
-                </dependency>
-                <dependency>
-                        <groupId>com.hp.hpl.jena</groupId>
-                        <artifactId>tdb</artifactId>
-                        <version>0.8.10</version>
                 </dependency>
                 <dependency>
                         <groupId>commons-logging</groupId>
@@ -475,19 +444,13 @@
 <!--                    <name>SharcaConsulting Repository</name> -->
 <!--                    <url>http://www.sharca.com/repository</url> -->
 <!--            </repository> -->
-                <repository>
-                        <id>openjena</id>
-                        <name>openjena</name>
-                        <url>http://openjena.org/repo/</url>
-                        <snapshots>
-                                <enabled>false</enabled>
-                        </snapshots>
-                </repository>
-                <repository>
-                        <id>openjena.dev</id>
-                        <name>openjena dev</name>
-                        <url>http://openjena.org/repo-dev/</url>
-                </repository>
+<repository>
+  <id>apache-repo-releases</id>
+  <url>https://repository.apache.org/content/repositories/releases/</url>
+  <releases>
+    <enabled>true</enabled>
+  </releases>
+</repository>
                 <repository>
                         <id>com.springsource.repository.bundles.release</id>
                         <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>

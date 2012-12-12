@@ -40,11 +40,11 @@
 		p:graphURI-ref="projectIdentifier"/>
 	
 		<bean id="SPARULService" class="java.lang.String">
-		<constructor-arg value="http://localhost:3030/bsbm/update"/>
+		<constructor-arg value="http://data.aalto.fi/sparql"/>
 	</bean>
 
 	<bean id="SPARQLService" class="java.lang.String">
-		<constructor-arg value="http://localhost:3030/bsbm/sparql"/>
+		<constructor-arg value="http://data.aalto.fi/sparql"/>
 	</bean>
 	
 	<bean id="project" class="fi.seco.saha3.model.SahaProject"/>
