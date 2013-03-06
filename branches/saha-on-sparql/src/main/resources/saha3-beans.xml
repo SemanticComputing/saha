@@ -39,6 +39,11 @@
 	<bean
 		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
 		p:lazy-init-handlers="true" p:always-use-full-path="true">
+		<property name="interceptors">
+			<list>
+				<ref bean="localeChangeInterceptor" />
+			</list>
+		</property>		
 		<property name="mappings">
 		<!-- /project/**=NullController
 				/saha3/irma.shtml=NullController -->

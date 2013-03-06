@@ -52,11 +52,11 @@ public class ImageController implements Controller
         String model = request.getParameter("model");        
         String picName = request.getParameter("name");
          
-        log.debug("Retrieving image " + picName + " from model " + model);
+        if (log.isDebugEnabled()) log.debug("Retrieving image " + picName + " from model " + model);
         
         if (picName.startsWith(LEGACY_PREFIX) && !picName.endsWith("/"))      
         {
-            log.debug("Omitting legacy picture literal prefix from " + picName);
+            if (log.isDebugEnabled()) log.debug("Omitting legacy picture literal prefix from " + picName);
             picName = picName.substring(picName.lastIndexOf("/") + 1);
         }            
         
@@ -86,7 +86,7 @@ public class ImageController implements Controller
                     picName.lastIndexOf('.') + 1).toLowerCase(),
                     response.getOutputStream());
                 
-                log.debug("Retrieved image: " + picName);
+                if (log.isDebugEnabled()) log.debug("Retrieved image: " + picName);
             } 
             else 
             {

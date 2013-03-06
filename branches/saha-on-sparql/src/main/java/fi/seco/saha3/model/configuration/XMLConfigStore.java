@@ -43,11 +43,11 @@ public class XMLConfigStore {
 	public synchronized void load() {
 		if (file.exists()) {
 			try {
-				log.debug("Loading configuration from: " + file.getAbsolutePath());
+				if (log.isDebugEnabled()) log.debug("Loading configuration from: " + file.getAbsolutePath());
 				XMLDecoder decoder = new XMLDecoder(new FileInputStream(file));
 				config = (ProjectConfig)decoder.readObject();
 				decoder.close(); 
-				log.debug("Done.");
+				if (log.isDebugEnabled()) log.debug("Done.");
 			} catch (FileNotFoundException e) {
 				log.error("",e);
 			}
@@ -59,12 +59,12 @@ public class XMLConfigStore {
 	
 	public synchronized void save() {
 		try {
-			log.debug("Saving configuration to: " + file.getAbsolutePath());
+			if (log.isDebugEnabled()) log.debug("Saving configuration to: " + file.getAbsolutePath());
 			FileOutputStream out = new FileOutputStream(file);
 			XMLEncoder encoder = new XMLEncoder(out);
 			encoder.writeObject(config);
 			encoder.close();
-			log.debug("Done.");
+			if (log.isDebugEnabled()) log.debug("Done.");
 		} catch (FileNotFoundException e) {
 			log.error("",e);
 		}

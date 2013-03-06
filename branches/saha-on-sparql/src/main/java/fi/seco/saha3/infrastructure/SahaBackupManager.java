@@ -149,7 +149,7 @@ public class SahaBackupManager implements DisposableBean {
 				while (line != null) {
 					File file = new File(this.backupDirectory + line);
 					if (!file.exists()) {
-						log.debug("File " + file.getAbsolutePath() + " did not exist.");
+						if (log.isDebugEnabled()) log.debug("File " + file.getAbsolutePath() + " did not exist.");
 						line = br.readLine();
 					} else {
 						Date expireDate = dateFormat.parse(br.readLine());

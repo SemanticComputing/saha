@@ -19,6 +19,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -37,6 +39,7 @@ import com.hp.hpl.jena.rdf.model.Statement;
 import com.hp.hpl.jena.rdf.model.StmtIterator;
 import com.hp.hpl.jena.shared.PrefixMapping;
 import com.hp.hpl.jena.shared.impl.PrefixMappingImpl;
+import com.hp.hpl.jena.util.iterator.ExtendedIterator;
 import com.hp.hpl.jena.vocabulary.OWL;
 import com.hp.hpl.jena.vocabulary.RDF;
 import com.hp.hpl.jena.vocabulary.RDFS;
@@ -53,6 +56,8 @@ import fi.seco.saha3.model.configuration.PropertyConfig;
  */
 public class RemoteSPARQLModelReader implements IModelReader {
 
+	private static final Logger log = LoggerFactory.getLogger(RemoteSPARQLModelReader.class);
+
 	private String sparqlService;
 
 	static final PrefixMapping pm = new PrefixMappingImpl();
@@ -60,6 +65,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		pm.setNsPrefix("rdf", RDF.getURI());
 		pm.setNsPrefix("rdfs", RDFS.getURI());
 		pm.setNsPrefix("owl", OWL.getURI());
+		pm.setNsPrefix("skos", "http://www.w3.org/2004/02/skos/core#");
 	}
 
 	private String graphURI;
@@ -76,7 +82,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 	private static final Query getWholeProjectQuery = QueryFactory.create("CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }");
 
-	private static final String getStringMatchesQuery = "SELECT ?item ?itemLabel ?property ?propertyLabel ?object WHERE { ?item ?property ?object . FILTER ((langMatches(?object,?lang) || lang(?object)=\"\") && REGEX(?object,?query)) OPTIONAL { ?item rdfs:label ?itemLabel . FILTER (langMatches(?itemLabel,?lang) || lang(?itemLabel)=\"\")} OPTIONAL { ?property rdfs:label ?propertyLabel . FILTER (langMatches(?propertyLabel,?lang) || lang(?propertyLabel)=\"\")} }";
+	private static final String getStringMatchesQuery = "SELECT ?item ?itemLabel ?property ?propertyLabel ?object WHERE { ?item ?property ?object . FILTER ((langMatches(lang(?object),?lang) || lang(?object)=\"\") && REGEX(?object,?query)) OPTIONAL { ?item rdfs:label|skos:prefLabel ?itemLabel . FILTER (langMatches(lang(?itemLabel),?lang) || lang(?itemLabel)=\"\")} OPTIONAL { ?property rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || lang(?propertyLabel)=\"\")} }";
 
 	@Override
 	public IResults search(String query, Collection<String> parentRestrictions, Collection<String> typeRestrictions,
@@ -105,7 +111,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		return new Results(ret, maxResults);
 	}
 
-	private static final String instanceQuery = "SELECT ?item ?label WHERE { ?item rdf:type ?type . OPTIONAL { ?item rdfs:label ?label FILTER (langMatches(?label,?lang) || lang(?label)=\"\")} }";
+	private static final String instanceQuery = "SELECT ?item ?label WHERE { ?item rdf:type ?type . OPTIONAL { ?item rdfs:label|skos:prefLabel ?label FILTER (langMatches(lang(?label),?lang) || lang(?label)=\"\")} }";
 
 	@Override
 	public IResults getSortedInstances(String label, String type, Locale locale, int from, int to) {
@@ -120,7 +126,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			for (int i = from; i < to; i++) {
 				if (!rs.hasNext()) return new Results(ret, i);
 				QuerySolution qs = rs.next();
-				ret.add(new Result(qs.get("item").toString(), qs.contains("label") ? qs.get("label").toString() : qs.get("item").toString()));
+				ret.add(new Result(qs.get("item").toString(), qs.contains("label") ? qs.get("label").asLiteral().getString() : qs.get("item").toString()));
 			}
 			while (rs.hasNext()) {
 				rs.next();
@@ -131,14 +137,14 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		return null;
 	}
 
-	static final String getLabelQuery = "SELECT ?label WHERE { ?uri rdfs:label ?label . FILTER (langMatches(?label,?lang) || LANG(?label)=\"\") }";
+	static final String getLabelQuery = "SELECT ?label WHERE { ?uri rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || LANG(?label)=\"\") }";
 
-	private static final String getTypesQuery = "SELECT ?type ?label WHERE { ?uri rdf:type ?type . OPTIONAL { ?type rdfs:label ?label . FILTER (langMatches(?label,?lang) || LANG(?label)=\"\") } }";
+	private static final String getTypesQuery = "SELECT ?type ?label WHERE { ?uri rdf:type ?type . OPTIONAL { ?type rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || LANG(?label)=\"\") } }";
 
-	private static final String getPropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel WHERE { ?uri ?propertyURI ?object . OPTIONAL { ?propertyURI rdfs:label ?propertyLabel . FILTER (langMatches(?propertyLabel,?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label ?objectLabel . FILTER (langMatches(?objectLabel,?lang) || LANG(?objectLabel)=\"\") }}";
-	private static final String getInversePropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel ?objectType ?objectTypeLabel WHERE { ?object ?propertyURI ?uri . OPTIONAL { ?propertyURI rdfs:label ?propertyLabel . FILTER (langMatches(?propertyLabel,?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label ?objectLabel . FILTER (langMatches(?objectLabel,?lang) || LANG(?objectLabel)=\"\") } OPTIONAL { ?object rdf:type ?objectType . OPTIONAL {?objectType rdfs:label ?objectTypeLabel . FILTER (langMatches(?objectTypeLabel,?lang) || LANG(?objectTypeLabel)=\"\")}}}";
+	private static final String getPropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel WHERE { ?uri ?propertyURI ?object . OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") }}";
+	private static final String getInversePropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel ?objectType ?objectTypeLabel WHERE { ?object ?propertyURI ?uri . OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") } OPTIONAL { ?object rdf:type ?objectType . OPTIONAL {?objectType rdfs:label|skos:prefLabel ?objectTypeLabel . FILTER (langMatches(lang(?objectTypeLabel),?lang) || LANG(?objectTypeLabel)=\"\")}}}";
 
-	private static final String getEditorPropertiesQuery = "SELECT ?propertyURI ?propertyComment ?propertyLabel ?propertyRangeURI ?propertyRangeLabel ?object ?objectLabel WHERE { { ?uri ?propertyURI ?object } UNION { ?propertyURI rdfs:domain ?typeURI OPTIONAL { ?propertyURI rdfs:range ?propertyRangeURI OPTIONAL { ?propertyRangeURI rdfs:label ?propertyRangeLabel . FILTER (langMatches(?propertyRangeLabel,?lang) || LANG(?propertyRangeLabel)=\"\") }}} OPTIONAL { ?propertyURI rdfs:label ?propertyLabel . FILTER (langMatches(?propertyLabel,?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?propertyURI rdfs:comment ?propertyComment . FILTER (langMatches(?propertyComment,?lang) || LANG(?propertyComment)=\"\") } OPTIONAL { ?object rdfs:label ?objectLabel . FILTER (langMatches(?objectLabel,?lang) || LANG(?objectLabel)=\"\") }}";
+	private static final String getEditorPropertiesQuery = "SELECT ?propertyURI ?propertyComment ?propertyLabel ?propertyRangeURI ?propertyRangeLabel ?object ?objectLabel WHERE { { ?uri ?propertyURI ?object } UNION { ?propertyURI rdfs:domain ?typeURI OPTIONAL { ?propertyURI rdfs:range ?propertyRangeURI OPTIONAL { ?propertyRangeURI rdfs:label|skos:prefLabel ?propertyRangeLabel . FILTER (langMatches(lang(?propertyRangeLabel),?lang) || LANG(?propertyRangeLabel)=\"\") }}} OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?propertyURI rdfs:comment ?propertyComment . FILTER (langMatches(lang(?propertyComment),?lang) || LANG(?propertyComment)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") }}";
 
 	private final class SahaSPARQLResultProperty implements ISahaProperty {
 
@@ -185,7 +191,8 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 		@Override
 		public String getValueUri() {
-			return objectNode.asResource().getURI();
+			if (objectNode.isURIResource()) return objectNode.asResource().getURI();
+			return "";
 		}
 
 		private final String valueType;
@@ -262,7 +269,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			return ranges;
 		}
 
-		private static final String getPropertyTreeQuery = "CONSTRUCT { ?propertyURI rdfs:range ?s . ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . } WHERE { { ?propertyURI rdfs:range ?s } UNION { ?s rdfs:subClassOf ?oc } UNION { ? rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label ?label . FILTER (langMatches(?label,?lang) || lang(?label)=\"\")} }";
+		private static final String getPropertyTreeQuery = "CONSTRUCT { ?propertyURI rdfs:range ?s . ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . } WHERE { { ?propertyURI rdfs:range ?s } UNION { ?s rdfs:subClassOf ?oc } UNION { ? rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || lang(?label)=\"\")} }";
 
 		@Override
 		public Set<UITreeNode> getRangeTree() {
@@ -321,7 +328,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					ResultSet rs = execSelect(q.asQuery());
 					if (!rs.hasNext())
 						label = resourceUri;
-					else label = rs.next().get("label").toString();
+					else label = rs.next().get("label").asLiteral().getString();
 				}
 				return label;
 			}
@@ -338,7 +345,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					ResultSet rs = execSelect(q.asQuery());
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
-						types.add(new UriLabel(qs.get("type").toString(), qs.contains("label") ? qs.get("label").toString() : qs.get("type").toString()));
+						types.add(new UriLabel(qs.get("type").toString(), qs.contains("label") ? qs.get("label").asLiteral().getString() : qs.get("type").toString()));
 					}
 				}
 				return types;
@@ -453,7 +460,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 	private static final Property cp = ResourceFactory.createProperty(RDF.getURI() + "count");
 
-	private static final String getClassTreeQuery = "CONSTRUCT { ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . ?s rdf:count ?count . } WHERE { { SELECT (count(?foo) as ?count) ?s WHERE { ?foo rdf:type ?s } GROUP BY ?s } UNION { ?s rdf:type owl:Class } UNION { ?s rdf:type rdfs:Class } UNION { ?s rdfs:subClassOf ?oc } UNION { ?sc rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label ?label . FILTER (langMatches(?label,?lang) || lang(?label)=\"\")} }";
+	private static final String getClassTreeQuery = "CONSTRUCT { ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . ?s rdf:count ?count . } WHERE { { SELECT (count(?foo) as ?count) ?s WHERE { ?foo rdf:type ?s } GROUP BY ?s } UNION { ?s rdf:type owl:Class } UNION { ?s rdf:type rdfs:Class } UNION { ?s rdfs:subClassOf ?oc } UNION { ?sc rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || lang(?label)=\"\")} }";
 
 	@Override
 	public Set<UITreeNode> getClassTree(Locale locale) {
@@ -461,9 +468,12 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		ParameterizedSparqlString q = new ParameterizedSparqlString(getClassTreeQuery, pm);
 		q.setLiteral("lang", locale.toString());
 		Model m = execConstruct(q.asQuery());
-		ResIterator ri = m.listSubjects();
+		ExtendedIterator<RDFNode> ri = m.listObjects().andThen(m.listSubjects());
 		while (ri.hasNext()) {
-			Resource r = ri.next();
+			RDFNode rn = ri.next();
+			if (!rn.isResource()) continue;
+			Resource r = rn.asResource();
+			if (nodes.containsKey(r)) continue;
 			int count = 0;
 			Statement s = r.getProperty(cp);
 			if (s != null) count = s.getInt();
