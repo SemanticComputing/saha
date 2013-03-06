@@ -32,7 +32,7 @@
 		p:configService-ref="config"
 		p:SPARULService-ref="SPARULService"
 		p:SPARQLService-ref="SPARQLService"
-		p:graphURI-ref="projectIdentifier" />
+		p:graphURI-ref="projectIdentifierUpdate" />
 		
 	<bean id="modelReader" class="fi.seco.saha3.model.RemoteSPARQLModelReader"
 		p:configService-ref="config"

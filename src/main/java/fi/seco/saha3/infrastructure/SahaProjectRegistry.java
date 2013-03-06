@@ -109,9 +109,6 @@ public class SahaProjectRegistry {
 			ConstructorArgumentValues args = new ConstructorArgumentValues();
 			args.addGenericArgumentValue(projectBaseDirectory + projectName);
 			bf.registerBeanDefinition("projectPath", new RootBeanDefinition(String.class, args, null));
-			args = new ConstructorArgumentValues();
-			args.addGenericArgumentValue(projectName);
-			bf.registerBeanDefinition("projectIdentifier", new RootBeanDefinition(String.class, args, null));
 			if (projectName.contains(";")) {
 				String[] addr = projectName.split(";");
 				args = new ConstructorArgumentValues();
@@ -120,6 +117,21 @@ public class SahaProjectRegistry {
 				args = new ConstructorArgumentValues();
 				args.addGenericArgumentValue(addr[1]);
 				bf.registerBeanDefinition("SPARULService", new RootBeanDefinition(String.class, args, null));
+				args = new ConstructorArgumentValues();
+				if (addr.length == 2)
+					args.addGenericArgumentValue("default");
+				else args.addGenericArgumentValue(addr[2]);
+				bf.registerBeanDefinition("projectIdentifier", new RootBeanDefinition(String.class, args, null));
+				if (addr.length > 3) {
+					args = new ConstructorArgumentValues();
+					args.addGenericArgumentValue(addr[3]);
+				}
+				bf.registerBeanDefinition("projectIdentifierUpdate", new RootBeanDefinition(String.class, args, null));
+			} else {
+				args = new ConstructorArgumentValues();
+				args.addGenericArgumentValue(projectName);
+				bf.registerBeanDefinition("projectIdentifier", new RootBeanDefinition(String.class, args, null));
+				bf.registerBeanDefinition("projectIdentifierUpdate", new RootBeanDefinition(String.class, args, null));
 			}
 			beanFactoryMap.put(projectName, bf);
 		}

@@ -39,20 +39,20 @@ public class ResourceConfigService {
 	}
 
 	public void setPropertyOrder(String model, String typeUri, String[] propertyUris) {
-		log.debug("setPropertyOrder(" + model + ", " + typeUri + ", " + Arrays.asList(propertyUris) + ")");
+		if (log.isDebugEnabled()) log.debug("setPropertyOrder(" + model + ", " + typeUri + ", " + Arrays.asList(propertyUris) + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.setPropertyOrder(typeUri, Arrays.asList(propertyUris));
 	}
 
 	public boolean removeRepositoryConfig(String model, String propertyUri, String sourceName) {
-		log.debug("removeRepositoryConfig(" + model + ", " + propertyUri + ", " + sourceName + ")");
+		if (log.isDebugEnabled()) log.debug("removeRepositoryConfig(" + model + ", " + propertyUri + ", " + sourceName + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		return config.removeRepositoryConfig(propertyUri, sourceName);
 	}
 
 	public String addRepositoryConfig(String model, String id, String propertyUri, String sourceName,
 			String[] parentRestrictions, String[] typeRestrictions) {
-		log.debug("addRepositoryConfig(" + model + ", " + id + ", " + propertyUri + ", " + sourceName + ", " + parentRestrictions + ", " + typeRestrictions + ")");
+		if (log.isDebugEnabled()) log.debug("addRepositoryConfig(" + model + ", " + id + ", " + propertyUri + ", " + sourceName + ", " + parentRestrictions + ", " + typeRestrictions + ")");
 
 		RepositoryConfig repositoryConfig = buildRepositoryConfig(sourceName, parentRestrictions, typeRestrictions);
 
@@ -88,43 +88,43 @@ public class ResourceConfigService {
 	}
 
 	public void toggleDenyInstantiation(String model, String propertyUri) {
-		log.debug("toggleDenyInstantiation(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("toggleDenyInstantiation(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.toggleDenyInstantiation(propertyUri);
 	}
 
 	public void toggleDenyLocalReferences(String model, String propertyUri) {
-		log.debug("toggleDenyLocalReferences(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("toggleDenyLocalReferences(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.toggleDenyLocalReferences(propertyUri);
 	}
 
 	public void toggleHidden(String model, String propertyUri) {
-		log.debug("toggleHidden(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("toggleHidden(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.toggleHidden(propertyUri);
 	}
 
 	public void toggleLocalized(String model, String propertyUri) {
-		log.debug("toggleLocalized(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("toggleLocalized(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.toggleLocalized(propertyUri);
 	}
 
 	public void toggleWordIndices(String model, String propertyUri) {
-		log.debug("toggleWordIndices(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("toggleWordIndices(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.toggleWordIndices(propertyUri);
 	}
 
 	public void togglePictureProperty(String model, String propertyUri) {
-		log.debug("togglePictureProperty(" + model + ", " + propertyUri + ")");
+		if (log.isDebugEnabled()) log.debug("togglePictureProperty(" + model + ", " + propertyUri + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.togglePictureProperty(propertyUri);
 	}
 
 	public void setAboutLink(String model, String link) {
-		log.debug("setAboutLink(" + model + ", " + link + ")");
+		if (log.isDebugEnabled()) log.debug("setAboutLink(" + model + ", " + link + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.setAboutLink(link);
 	}
