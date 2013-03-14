@@ -144,7 +144,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 	private static final String getPropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel WHERE { ?uri ?propertyURI ?object . OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") }}";
 	private static final String getInversePropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel ?objectType ?objectTypeLabel WHERE { ?object ?propertyURI ?uri . OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") } OPTIONAL { ?object rdf:type ?objectType . OPTIONAL {?objectType rdfs:label|skos:prefLabel ?objectTypeLabel . FILTER (langMatches(lang(?objectTypeLabel),?lang) || LANG(?objectTypeLabel)=\"\")}}}";
 
-	private static final String getEditorPropertiesQuery = "SELECT ?propertyURI ?propertyComment ?propertyLabel ?propertyRangeURI ?propertyRangeLabel ?object ?objectLabel WHERE { { ?uri ?propertyURI ?object } UNION { ?propertyURI rdfs:domain ?typeURI OPTIONAL { ?propertyURI rdfs:range ?propertyRangeURI OPTIONAL { ?propertyRangeURI rdfs:label|skos:prefLabel ?propertyRangeLabel . FILTER (langMatches(lang(?propertyRangeLabel),?lang) || LANG(?propertyRangeLabel)=\"\") }}} OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?propertyURI rdfs:comment ?propertyComment . FILTER (langMatches(lang(?propertyComment),?lang) || LANG(?propertyComment)=\"\") } OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") }}";
+	private static final String getEditorPropertiesQuery = "SELECT ?propertyURI ?propertyComment ?propertyLabel ?propertyRangeURI ?propertyRangeLabel ?object ?objectLabel WHERE { { ?uri ?propertyURI ?object FILTER isURI(?object) OPTIONAL { ?object rdfs:label|skos:prefLabel ?objectLabel . FILTER (langMatches(lang(?objectLabel),?lang) || LANG(?objectLabel)=\"\") } } UNION { ?uri a ?typeURI .  ?propertyURI rdfs:domain ?typeURI OPTIONAL { ?propertyURI rdfs:range ?propertyRangeURI OPTIONAL { ?propertyRangeURI rdfs:label|skos:prefLabel ?propertyRangeLabel . FILTER (langMatches(lang(?propertyRangeLabel),?lang) || LANG(?propertyRangeLabel)=\"\") }}} OPTIONAL { ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . FILTER (langMatches(lang(?propertyLabel),?lang) || LANG(?propertyLabel)=\"\") } OPTIONAL { ?propertyURI rdfs:comment ?propertyComment . FILTER (langMatches(lang(?propertyComment),?lang) || LANG(?propertyComment)=\"\") }}";
 
 	private final class SahaSPARQLResultProperty implements ISahaProperty {
 
@@ -157,7 +157,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			if (qs.contains("objectLabel"))
 				valueLabel = qs.get("objectLabel").asLiteral().getString();
 			else if (objectNode == null)
-				valueLabel = null;
+				valueLabel = "";
 			else if (objectNode.isLiteral())
 				valueLabel = objectNode.asLiteral().getString();
 			else valueLabel = objectNode.asResource().getURI();
@@ -191,15 +191,16 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 		@Override
 		public String getValueUri() {
-			if (objectNode.isURIResource()) return objectNode.asResource().getURI();
-			return "";
+		    if (objectNode == null) return "";		    
+		    if (objectNode.isURIResource()) return objectNode.asResource().getURI();
+		    return "";
 		}
 
 		private final String valueType;
 
 		@Override
 		public String getValueTypeUri() {
-			return valueType;
+		    return valueType;
 		}
 
 		private final String valueTypeLabel;
@@ -269,7 +270,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			return ranges;
 		}
 
-		private static final String getPropertyTreeQuery = "CONSTRUCT { ?propertyURI rdfs:range ?s . ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . } WHERE { { ?propertyURI rdfs:range ?s } UNION { ?s rdfs:subClassOf ?oc } UNION { ? rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || lang(?label)=\"\")} }";
+		private static final String getPropertyTreeQuery = "CONSTRUCT { ?propertyURI rdfs:range ?s . ?s rdfs:subClassOf ?oc . ?sc rdfs:subClassOf ?s . ?s rdfs:label ?label . } WHERE { { ?propertyURI rdfs:range ?s } UNION { ?s rdfs:subClassOf ?oc } UNION { ?sc rdfs:subClassOf ?s } OPTIONAL { ?s rdfs:label|skos:prefLabel ?label . FILTER (langMatches(lang(?label),?lang) || lang(?label)=\"\")} }";
 
 		@Override
 		public Set<UITreeNode> getRangeTree() {
@@ -297,14 +298,17 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			}
 			sti = m.listStatements(null, RDFS.range, (RDFNode) null);
 			Set<UITreeNode> roots = new HashSet<UITreeNode>();
-			while (sti.hasNext())
-				roots.add(nodes.get(sti.next().getResource()));
+			while (sti.hasNext()) {
+			    Statement pl = sti.next();				
+			    if ( nodes.get(pl.getResource()) != null) // FIXME: There should not be null resource in the first place 
+				roots.add(nodes.get(pl.getResource()));	    
+			}
 			return roots;
 		}
 
 		private void addPropertyRanges(QuerySolution qs) {
-			if (qs.contains("propertyRangeURI"))
-				ranges.add(new UriLabel(qs.get("properyRangeURI").asResource().getURI(), qs.contains("propertyRangeLabel") ? qs.get("propertyRangeLabel").asLiteral().getString() : qs.get("properyRangeURI").asResource().getURI()));
+		    if (qs.contains("propertyRangeURI") && qs.get("propertyRangeURI").isResource())
+			    ranges.add(new UriLabel(qs.get("propertyRangeURI").asResource().getURI(), qs.contains("propertyRangeLabel") ? qs.get("propertyRangeLabel").asLiteral().getString() : qs.get("propertyRangeURI").asResource().getURI()));
 		}
 	}
 
@@ -409,12 +413,13 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					q.setIri("uri", resourceUri);
 					q.setLiteral("lang", locale.toString());
 					ResultSet rs = execSelect(q.asQuery());
+
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
 						SahaSPARQLResultProperty sp = pmap.get(qs.get("propertyURI"));
 						if (sp == null) {
 							sp = new SahaSPARQLResultProperty(qs, locale);
-							pmap.put(qs.get("propertyURI"), sp);
+  							pmap.put(qs.get("propertyURI"), sp);
 						}
 						sp.addPropertyRanges(qs);
 					}
@@ -544,9 +549,9 @@ public class RemoteSPARQLModelReader implements IModelReader {
 	}
 
 	private final static int compareSahaProperties(ISahaProperty o1, ISahaProperty o2) {
-		int c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueLabel(), o2.getValueLabel());
-		if (c == 0) c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueShaHex(), o2.getValueShaHex());
-		return c != 0 ? c : o1.getValueUri().compareTo(o2.getValueUri());
+	    int c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueLabel(), o2.getValueLabel());
+	    if (c == 0) c = String.CASE_INSENSITIVE_ORDER.compare(o1.getValueShaHex(), o2.getValueShaHex());
+	    return c != 0 ? c : o1.getValueUri().compareTo(o2.getValueUri());
 	}
 
 	private final static Comparator<ISahaProperty> propertyComparator = new Comparator<ISahaProperty>() {
