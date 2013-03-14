@@ -195,7 +195,7 @@
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
 	
 	<bean id="ModelLister" class="fi.seco.saha3.model.RemoteSPARQLModelLister"
-	p:sparqlService="http://data.aalto.fi/sparql" />
+	p:sparqlService="http://purl.org/ww1lod/sparql" />
 	
 	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
 	p:modelLister-ref="ModelLister"
