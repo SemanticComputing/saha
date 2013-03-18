@@ -36,13 +36,26 @@ public class ExportController extends AbstractController {
 
 	@Override
 	protected ModelAndView handleRequestInternal(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		response.setCharacterEncoding("UTF-8");
-		response.setContentType("text/plain");
+	    String lang = parseLang(request.getParameter("l"));
+	    response.setCharacterEncoding("UTF-8");	    
+
+	    if ( request.getHeader("Accept").contains("turtle") ) {
+		response.setContentType("application/rdf+turtle");
+		lang = "TTL";
+	    } else if ( request.getHeader("Accept").contains("rdf+xml") ) {
+                response.setContentType("application/rdf+xml");
+		lang = "RDF/XML";
+	    } else if ( request.getHeader("Accept").contains("n-triples") ) {
+                response.setContentType("application/n-triples");
+		lang = "N-TRIPLES";
+	    } else {
+		response.setContentType("text/plain");		
+	    }
 
 		String uri = request.getParameter("uri");
 		String config = request.getParameter("config");
 		String schema = request.getParameter("schema");
-		String lang = parseLang(request.getParameter("l"));
+		
 
 		String projectName = ASahaController.parseModelName(request);
 
