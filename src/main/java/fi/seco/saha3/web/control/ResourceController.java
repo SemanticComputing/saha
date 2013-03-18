@@ -39,6 +39,8 @@ public class ResourceController extends ASahaController {
 			response.getWriter().write("URI parameter is not set.");
 			return null;
 		}
+		if( !request.getHeader("Accept").contains("html") ) 
+		    mav.setViewName( "forward:/project/export.shtml" );
 
 		mav.addObject("uri", uri);
 		mav.addObject("gmaputil", BeansWrapper.getDefaultInstance().getStaticModels().get("fi.seco.semweb.util.GoogleMapsUtil"));
