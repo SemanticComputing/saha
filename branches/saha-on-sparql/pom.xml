@@ -437,7 +437,7 @@
                 <repository>
                         <id>prova</id>
                         <name>Prova repository</name>
-                        <url>http://prova.ws/maven2</url>
+                        <url>https://prova.ws/maven2</url>
                         <releases>
                                 <enabled>true</enabled>
                         </releases>
