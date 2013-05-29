@@ -1,5 +1,6 @@
 package fi.seco.saha3.web.control;
 
+import java.net.URLEncoder;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,20 +49,24 @@ public abstract class ASahaController extends AbstractController {
 		IModelEditor editor = sahaProjectRegistry.getModelEditor(model);
 		IModelReader reader = sahaProjectRegistry.getModelReader(model);
 		IConfigService config = sahaProjectRegistry.getConfig(model);
-
-		if (editor != null) {
-			String view = parseViewName(pathInfo);
+		String view = parseViewName(pathInfo);
+		if (editor != null || view.equals("saha3/manage")) {
 			ModelAndView mav = new ModelAndView(view);
 			mav.addObject("model", model);
 			mav.addObject("lang", locale.getLanguage());
-			mav.addObject("aboutLink", config.getAboutLink());
-			mav.addObject("helpText", SahaHelpManager.getHelpString(view));
+			if (config != null) {
+				mav.addObject("aboutLink", config.getAboutLink());
+				mav.addObject("helpText", SahaHelpManager.getHelpString(view));
+			}
 			return handleRequest(request, response, reader, editor, config, locale, mav);
 		} else {
-			ModelAndView mav = new ModelAndView(SAHA_TEMPLATE_BASE + "/add");
-			mav.addObject("model", model);
-			mav.addObject("lang", locale.getLanguage());
-			return mav;
+			response.sendRedirect("manage.shtml?model=" + URLEncoder.encode(model, "UTF-8"));
+			return null;
+			/*			ModelAndView mav = new ModelAndView(SAHA_TEMPLATE_BASE + "/manage");
+						mav.addObject("sparqlConfiguration", sahaProjectRegistry.getSPARQLConfig(model));
+						mav.addObject("model", model);
+						mav.addObject("lang", locale.getLanguage());
+						return mav; */
 		}
 	}
 

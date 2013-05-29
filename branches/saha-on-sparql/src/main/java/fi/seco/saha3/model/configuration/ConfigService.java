@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
@@ -33,7 +34,7 @@ import fi.seco.semweb.util.iterator.IteratorToIIterableIterator;
  */
 public class ConfigService implements IConfigService {
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ConfigService.class);
 
 	private static final String DEFAULT_NAMESPACE = "http://seco.tkk.fi/saha3/";
 	private static final String DEFAULT_LABEL_PROPERTY = "http://www.w3.org/2004/02/skos/core#prefLabel";

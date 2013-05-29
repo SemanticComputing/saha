@@ -20,7 +20,8 @@ import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Required;
 
@@ -34,7 +35,7 @@ import com.hp.hpl.jena.rdf.model.Model;
  */
 public class SahaBackupManager implements DisposableBean {
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(SahaBackupManager.class);
 
 	private final Timer timer;
 
@@ -240,7 +241,7 @@ public class SahaBackupManager implements DisposableBean {
 			try {
 				if (lock != null && lock.isValid()) lock.release();
 			} catch (IOException e) {
-				log.fatal("Could not release lock for backup manifest -- lock might have to be released manually");
+				log.error("Could not release lock for backup manifest -- lock might have to be released manually");
 				errors = true;
 			}
 

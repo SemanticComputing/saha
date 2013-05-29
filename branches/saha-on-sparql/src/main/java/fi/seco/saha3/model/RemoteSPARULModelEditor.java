@@ -17,9 +17,9 @@ import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateFactory;
 import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
 
 import fi.seco.saha3.model.configuration.IConfigService;
+import fi.seco.saha3.model.configuration.ISPARQLConfigService;
 import fi.seco.saha3.util.SAHA3;
 
 /**
@@ -28,11 +28,6 @@ import fi.seco.saha3.util.SAHA3;
  */
 public class RemoteSPARULModelEditor implements IModelEditor {
 
-	private String sparulService;
-	private String sparqlService;
-
-	private String graphURI;
-
 	private IConfigService config;
 
 	@Required
@@ -40,51 +35,88 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		this.config = config;
 	}
 
-	@Required
-	public void setGraphURI(String graphURI) {
-		this.graphURI = "default".equals(graphURI) ? null : "<" + graphURI + ">";
-	}
+	private ISPARQLConfigService sparqlConfigService;
 
 	@Required
-	public void setSPARULService(String sparulService) {
-		this.sparulService = sparulService;
-	}
-
-	@Required
-	public void setSPARQLService(String sparqlService) {
-		this.sparqlService = sparqlService;
+	public void setSPARQLConfigService(ISPARQLConfigService sparqlConfigService) {
+		this.sparqlConfigService = sparqlConfigService;
 	}
 
 	private ResultSet execSelect(Query query) {
-		if (graphURI != null) return QueryExecutionFactory.sparqlService(sparqlService, query, graphURI).execSelect();
-		return QueryExecutionFactory.sparqlService(sparqlService, query).execSelect();
+		if (sparqlConfigService.getGraphURI() != null)
+			return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query, sparqlConfigService.getGraphURI()).execSelect();
+		return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query).execSelect();
 	}
 
 	@Override
 	public UriLabel addObjectProperty(String s, String p, String o, Locale locale) {
-		execUpdate("INSERT DATA " + (graphURI != null ? "INTO " + graphURI : "") + " { <" + s + "> <" + p + "> <" + o + "> }");
-		ParameterizedSparqlString q = new ParameterizedSparqlString(RemoteSPARQLModelReader.getLabelQuery, RemoteSPARQLModelReader.pm);
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s ?p ?o }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("INSERT DATA { ?s ?p ?o }");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		u.setIri("o", o);
+		execUpdate(u.toString());
+		ParameterizedSparqlString q = new ParameterizedSparqlString(sparqlConfigService.getLabelQuery(), RemoteSPARQLModelReader.pm);
 		q.setIri("uri", o);
-		q.setLiteral("lang", locale.toString());
+		String lstring = locale.toString();
+		q.setLiteral("lang", lstring);
 		ResultSet rs = execSelect(q.asQuery());
-		if (!rs.hasNext()) return new UriLabel(o, o);
-		return new UriLabel(o, rs.next().get("label").toString());
+		String label = null;
+		if (!rs.hasNext())
+			label = o;
+		else while (rs.hasNext()) {
+			Literal l = rs.next().get("label").asLiteral();
+			if (lstring.equals(l.getLanguage())) {
+				label = l.getString();
+				break;
+			} else if ("".equals(l.getLanguage()))
+				label = l.getString();
+			else if (label == null) label = l.getString();
+		}
+		return new UriLabel(o, label);
 	}
 
 	@Override
 	public void removeObjectProperty(String s, String p, String o) {
-		execUpdate("DELETE DATA " + (graphURI != null ? "FROM " + graphURI : "") + " { <" + s + "> <" + p + "> <" + o + "> }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		u.setIri("o", o);
+		execUpdate(u.toString());
 	}
 
 	@Override
 	public UriLabel addLiteralProperty(String s, String p, String l) {
-		execUpdate("INSERT DATA " + (graphURI != null ? "INTO " + graphURI : "") + " { <" + s + "> <" + p + "> \"" + l + "\" }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s ?p ?o }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("INSERT DATA { ?s ?p ?o }");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		u.setLiteral("o", l);
+		execUpdate(u.toString());
 		return new UriLabel("", "", l);
 	}
 
 	@Override
 	public UriLabel addLiteralProperty(String s, String p, String l, String lang) {
-		execUpdate("INSERT DATA " + (graphURI != null ? "INTO " + graphURI : "") + " { <" + s + "> <" + p + "> \"" + l + "\"@" + lang + " }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s ?p ?o }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("INSERT DATA { ?s ?p ?o }");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		u.setLiteral("o", l, lang);
+		execUpdate(u.toString());
 		return new UriLabel("", lang, l);
 	}
 
@@ -98,13 +130,17 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		ResultSet rs = execSelect(q.asQuery());
 		while (rs.hasNext()) {
 			QuerySolution qs = rs.next();
-			if (DigestUtils.shaHex(qs.get("value").toString()).equals(valueShaHex)) {
+			if (DigestUtils.sha1Hex(qs.get("value").toString()).equals(valueShaHex)) {
 				Literal l = qs.get("value").asLiteral();
-				String lit = "\"" + l.getString() + "\"";
-				if (!"".equals(l.getLanguage()))
-					lit += "@" + l.getLanguage();
-				else if (l.getDatatypeURI() != null) lit += "^^<" + l.getDatatypeURI() + ">";
-				execUpdate("DELETE DATA " + (graphURI != null ? "FROM " + graphURI : "") + " { <" + s + "> <" + p + "> " + lit + " }");
+				ParameterizedSparqlString u;
+				if (sparqlConfigService.getGraphURI() != null) {
+					u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+					u.setIri("g", sparqlConfigService.getGraphURI());
+				} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
+				u.setIri("s", s);
+				u.setIri("p", p);
+				u.setLiteral("o", l);
+				execUpdate(u.toString());
 				break;
 			}
 		}
@@ -112,7 +148,14 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 
 	@Override
 	public void removeProperty(String s, String p) {
-		execUpdate("DELETE " + (graphURI != null ? "FROM " + graphURI : "") + " { <" + s + "> <" + p + "> ?o } WHERE { <" + s + "> <" + p + "> ?o }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		execUpdate(u.toString());
 	}
 
 	@Override
@@ -122,20 +165,44 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 
 	@Override
 	public String createResource(String uri, String type, String label) {
-		if (label != null)
-			execUpdate("INSERT DATA " + (graphURI != null ? "INTO " + graphURI : "") + " { <" + uri + "> <" + RDF.type.getURI() + "> <" + type + "> . <" + uri + "> <" + RDFS.label.getURI() + "> \"" + label + "\"}");
-		else execUpdate("INSERT DATA " + (graphURI != null ? "INTO " + graphURI : "") + " { <" + uri + "> <" + RDF.type.getURI() + "> <" + type + "> }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			if (label != null) {
+				u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s <" + RDF.type.getURI() + "> ?type . ?s ?lprop ?label .}");
+				u.setIri("lprop", sparqlConfigService.getLabelURI());
+				u.setLiteral("label", label);
+			} else u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s <" + RDF.type.getURI() + "> ?type }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else if (label != null) {
+			u = new ParameterizedSparqlString("INSERT DATA { ?s <" + RDF.type.getURI() + "> ?type . ?s ?lprop ?label .}");
+			u.setIri("lprop", sparqlConfigService.getLabelURI());
+			u.setLiteral("label", label);
+		} else u = new ParameterizedSparqlString("INSERT DATA { ?s <" + RDF.type.getURI() + "> ?type }");
+		u.setIri("s", uri);
+		u.setIri("type", type);
+		execUpdate(u.toString());
 		return uri;
 	}
 
 	@Override
 	public void removeResource(String uri) {
-		execUpdate("DELETE " + (graphURI != null ? "FROM " + graphURI : "") + " { <" + uri + "> ?p ?o . ?s ?p <" + uri + "> . } WHERE { { <" + uri + "> ?p ?o } UNION { ?s ?p <" + uri + "> } }");
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { { ?s ?p ?o } UNION { ?o ?p ?s } }");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("DELETE DATA { { ?s ?p ?o } UNION { ?o ?p ?s } }");
+		u.setIri("s", uri);
+		execUpdate(u.toString());
 	}
 
 	@Override
 	public void clear() {
-		execUpdate(graphURI == null ? "CLEAR" : "CLEAR GRAPH " + graphURI);
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("CLEAR GRAPH ?g");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("CLEAR");
+		execUpdate(u.toString());
 	}
 
 	@Override
@@ -158,7 +225,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 	}
 
 	private void execUpdate(String update) {
-		UpdateExecutionFactory.createRemote(UpdateFactory.create(update), sparulService).execute();
+		UpdateExecutionFactory.createRemote(UpdateFactory.create(update), sparqlConfigService.getSparulURL()).execute();
 	}
 
 }

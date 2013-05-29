@@ -7,11 +7,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
-import org.springframework.beans.factory.xml.XmlBeanFactory;
+import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.ClassPathResource;
 
 import fi.seco.saha3.model.IModelEditor;
@@ -20,6 +22,7 @@ import fi.seco.saha3.model.IModelReader;
 import fi.seco.saha3.model.ISahaProject;
 import fi.seco.saha3.model.SahaProject;
 import fi.seco.saha3.model.configuration.IConfigService;
+import fi.seco.saha3.model.configuration.ISPARQLConfigService;
 
 /**
  * General manager class for SAHA. Controls the creation, deletion and
@@ -32,11 +35,11 @@ import fi.seco.saha3.model.configuration.IConfigService;
  */
 public class SahaProjectRegistry {
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(SahaProjectRegistry.class);
 
 	private String projectBaseDirectory;
 
-	private final Map<String, XmlBeanFactory> beanFactoryMap = new HashMap<String, XmlBeanFactory>();
+	private final Map<String, DefaultListableBeanFactory> beanFactoryMap = new HashMap<String, DefaultListableBeanFactory>();
 	private final Map<String, SahaProject> projects = new HashMap<String, SahaProject>();
 	private final Map<String, ReentrantReadWriteLock> projectLocks = new HashMap<String, ReentrantReadWriteLock>();
 
@@ -58,7 +61,11 @@ public class SahaProjectRegistry {
 	}
 
 	public IConfigService getConfig(String modelName) {
-		return getSahaProject(modelName, false);
+		return getConfig(modelName, false);
+	}
+
+	public IConfigService getConfig(String modelName, boolean createNew) {
+		return getSahaProject(modelName, createNew);
 	}
 
 	public IModelReader getModelReader(String modelName) {
@@ -67,6 +74,10 @@ public class SahaProjectRegistry {
 
 	public IModelReader getModelReader(String modelName, boolean createNew) {
 		return getSahaProject(modelName, createNew);
+	}
+
+	public ISPARQLConfigService getSPARQLConfig(String modelName) {
+		return (ISPARQLConfigService) getBean(modelName, "SPARQLConfigService");
 	}
 
 	private synchronized ISahaProject getSahaProject(String modelName, boolean createNew) {
@@ -102,36 +113,24 @@ public class SahaProjectRegistry {
 		return getBeanFactory(projectName).getBean(beanName);
 	}
 
-	private XmlBeanFactory getBeanFactory(String projectName) {
+	private DefaultListableBeanFactory getBeanFactory(String projectName) {
 		if (!beanFactoryMap.containsKey(projectName)) {
-			XmlBeanFactory bf = new XmlBeanFactory(new ClassPathResource("/saha3-project-beans.xml"));
+			DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
+			new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new ClassPathResource("/saha3-project-beans.xml"));
 			// register "projectPath"
 			ConstructorArgumentValues args = new ConstructorArgumentValues();
 			args.addGenericArgumentValue(projectBaseDirectory + projectName);
 			bf.registerBeanDefinition("projectPath", new RootBeanDefinition(String.class, args, null));
 			if (projectName.contains(";")) {
 				String[] addr = projectName.split(";");
-				args = new ConstructorArgumentValues();
-				args.addGenericArgumentValue(addr[0]);
-				bf.registerBeanDefinition("SPARQLService", new RootBeanDefinition(String.class, args, null));
-				args = new ConstructorArgumentValues();
-				args.addGenericArgumentValue(addr[1]);
-				bf.registerBeanDefinition("SPARULService", new RootBeanDefinition(String.class, args, null));
-				args = new ConstructorArgumentValues();
-				if (addr.length == 2)
-					args.addGenericArgumentValue("default");
-				else args.addGenericArgumentValue(addr[2]);
-				bf.registerBeanDefinition("projectIdentifier", new RootBeanDefinition(String.class, args, null));
-				if (addr.length > 3) {
-					args = new ConstructorArgumentValues();
-					args.addGenericArgumentValue(addr[3]);
-				}
-				bf.registerBeanDefinition("projectIdentifierUpdate", new RootBeanDefinition(String.class, args, null));
+				bf.registerSingleton("SPARQLService", addr[0]);
+				bf.registerSingleton("SPARQLService", addr[1]);
+				String pi = addr.length > 2 ? addr[2] : "default";
+				bf.registerSingleton("projectIdentifier", pi);
+				bf.registerSingleton("projectIdentifierUpdate", addr.length > 3 ? addr[3] : pi);
 			} else {
-				args = new ConstructorArgumentValues();
-				args.addGenericArgumentValue(projectName);
-				bf.registerBeanDefinition("projectIdentifier", new RootBeanDefinition(String.class, args, null));
-				bf.registerBeanDefinition("projectIdentifierUpdate", new RootBeanDefinition(String.class, args, null));
+				bf.registerSingleton("projectIdentifier", projectName);
+				bf.registerSingleton("projectIdentifierUpdate", projectName);
 			}
 			beanFactoryMap.put(projectName, bf);
 		}

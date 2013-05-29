@@ -24,8 +24,8 @@
 		</div>
 		<div style="margin-bottom:10px;margin-left:5px;">
 			return links: 
-			<a href="resource.shtml?uri=${uri?url}" style="color:black">[view <em>${instance.label}</em>]</a>
-			<a href="editor.shtml?uri=${uri?url}" style="color:black">[edit <em>${instance.label}</em>]</a>
+			<a href="resource.shtml?uri=${uri?url}&model=${model?url}" style="color:black">[view <em>${instance.label}</em>]</a>
+			<a href="editor.shtml?uri=${uri?url}&model=${model?url}" style="color:black">[edit <em>${instance.label}</em>]</a>
 		</div>
 		
 		<div style="margin-bottom:2px;margin-left:5px;color:grey;">
@@ -37,7 +37,7 @@
 				[#assign property = entry.value?first]
 				<tr class="dojoDndItem [#if entry_index % 2 == 0]even[#else]odd[/#if]" id="${entry.key.uri}">
 					<td class="key">
-						<a href="resource.shtml?uri=${entry.key.uri?url}" style="text-decoration:none">
+						<a href="resource.shtml?uri=${entry.key.uri?url}&model=${model?url}" style="text-decoration:none">
 							${entry.key.label}
 						</a>
 						<div style="color:crimson;font-weight:normal;margin:1px;">
@@ -87,7 +87,7 @@
 						ResourceEditService.setObjectProperty('${model}','',propertyUri,rdfsDomain,'${instanceType.uri?js_string}', {
 							callback:function(dataFromServer) {
 								document.body.style.cursor="";
-								location.href='config.shtml?uri=' + encodeURIComponent('${uri}');
+								location.href='config.shtml?model=${model?url}&uri=' + encodeURIComponent('${uri}');
 							}
 						});
 					}

@@ -12,7 +12,8 @@ import java.util.GregorianCalendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Required;
@@ -32,7 +33,7 @@ public class SimpleBackupManager implements DisposableBean, InitializingBean {
 		}
 	}
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(SimpleBackupManager.class);
 
 	private final Timer timer = new Timer();
 

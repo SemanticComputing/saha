@@ -33,7 +33,7 @@
 	</script>
 </head>
 
-<body class="tundra">
+<body class="tundra" onmouseover="if (typeof(dijit)!='undefined' && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip('',this)">
 
 [@searchBar model lang/]
 
@@ -72,7 +72,8 @@
 	</form>
 	[#list result.iterator() as instance]
 		<div id="instance_list">
-			<a href="resource.shtml?uri=${instance.uri?url}&model=${model?url}">
+			<a href="resource.shtml?uri=${instance.uri?url}&model=${model?url}" onMouseOver="showResourceTooltip(this,'${instance.uri}')" 
+					 onMouseOut="hideResourceTooltip(this)">
 				[#assign label=instance.label]
 				[#if label?length > 70]
 					${label?substring(0,67)}...

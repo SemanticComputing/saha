@@ -49,7 +49,7 @@
 	 <script>	 
 		function openInstance(uri) {
 			if (uri.length > 0)
-				location.href='resource.shtml?uri=' + encodeURIComponent(uri);
+				location.href='resource.shtml?model=${model?url}&uri=' + encodeURIComponent(uri);
 		}
 		
 		var timer;
@@ -98,19 +98,19 @@
 		function showResourceTooltip(domNode,uri) {
 			ResourceEditService.getPropertyTable('${model}',uri, {
 				callback:function(dataFromServer) {
-					dijit.showTooltip(dataFromServer,domNode);
+					if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip(dataFromServer,domNode);
 				}
 			});
 		}
 		function showExternalResourceTooltip(domNode,ontology,uri) {
 			ResourceEditService.getExternalPropertyTable(ontology,uri, {
 				callback:function(dataFromServer) {
-					dijit.showTooltip(dataFromServer,domNode);
+					if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip(dataFromServer,domNode);
 				}
 			});
 		}
 		function hideResourceTooltip(domNode) {
-			dijit.hideTooltip(domNode);
+			if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.hideTooltip(domNode);
 		}
 		
 		dojo.addOnLoad(initChat);
@@ -251,21 +251,21 @@
 			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
 			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
 			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] ||				 
-			<a href="hako.shtml" style="color:deeppink">HAKO</a> || 
+			<a href="hako.shtml?model=${model?url}" style="color:deeppink">HAKO</a> || 
 			<div style="display: inline;">
-				<a href="${aboutLink}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
+				<a href="${aboutLink!'#'}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
 				<span onclick="javascript: var element = document.getElementById('about_link_box'); element.style.display = 'inline'; element.focus()" style="font-size: 50%">[edit]
 				</span>
-				<input style="display: none;" type="text" id="about_link_box" value="${aboutLink}" 
+				<input style="display: none;" type="text" id="about_link_box" value="${aboutLink!'#'}" 
 					onBlur="javascript: setAboutLink(this);"
 					onKeyPress="javascript: if (event.keyCode==13) { setAboutLink(this) }"/>
-				<a style="color:black;" href="manage.shtml"><img title="Manage project" alt="Manage project" src="../app/images/saha3/saha3_manage_project.png" /></a>
+				<a style="color:black;" href="manage.shtml?model=${model?url}"><img title="Manage project" alt="Manage project" src="../app/images/saha3/saha3_manage_project.png" /></a>
 			</div>	
-			<a href="export.shtml?l=ttl" style="color:deeppink"><img title="Export data+schema" alt="Export data+schema" src="../app/images/saha3/saha3_export_all.png" /></a>
-			<a href="export.shtml?l=ttl&schema" style="color:deeppink"><img title="Export schema" alt="Export schema" src="../app/images/saha3/saha3_export_schema.png" /></a>
-			<a href="export.shtml?l=ttl&config" style="color:deeppink"><img title="Export configuration" alt="Export configuration" src="../app/images/saha3/saha3_export_config.png" /></a> 
+			<a href="export.shtml?model=${model?url}&l=ttl" style="color:deeppink"><img title="Export data+schema" alt="Export data+schema" src="../app/images/saha3/saha3_export_all.png" /></a>
+			<a href="export.shtml?model=${model?url}&l=ttl&schema" style="color:deeppink"><img title="Export schema" alt="Export schema" src="../app/images/saha3/saha3_export_schema.png" /></a>
+			<a href="export.shtml?model=${model?url}&l=ttl&config" style="color:deeppink"><img title="Export configuration" alt="Export configuration" src="../app/images/saha3/saha3_export_config.png" /></a> 
 			<span 
-				onMouseOver="javascript: dijit.showTooltip('${helpText}',this);"
+				onMouseOver="javascript: dijit.showTooltip('${helpText!''}',this);"
 				onMouseOut="javascript: dijit.hideTooltip(this);"
 			 	style="color:deeppink; margin-left: 20px; text-decoration: underline;"><img src="../app/images/saha3/saha3_help.png" /></span>
 			 
@@ -287,7 +287,7 @@
 				autoComplete:false,
 				labelAttr:"name",
 				onChange:openInstance,
-				searchDelay:300,
+				searchDelay:1000,
 				labelType:"html",
 				labelFunc:function() {return "loading...";},
 				hasDownArrow:false
@@ -455,12 +455,12 @@
 				+ '<br/>';
 				
 				if (allowEdit) {
-					html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[edit point]</span>';
+					html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[edit point]</span>';
 					html += ' <span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'singlepoint\');">[remove point]</span>';
 					
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;			
@@ -487,11 +487,11 @@
 				html += '&size=420x300&sensor=false&key=${googleMapsKey}"/>';
 				
 				if (allowEdit) {
-					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[edit area]</span>';
+					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[edit area]</span>';
 					html += '<span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'polygon\');">[remove area]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					
@@ -520,11 +520,11 @@
 				html += '&size=420x300&sensor=false&key=${googleMapsKey}"/>';
 				
 				if (allowEdit) {
-					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[edit route]</span>';
+					html += '<br/><span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[edit route]</span>';
 					html += ' <span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'route\');">[remove route]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					

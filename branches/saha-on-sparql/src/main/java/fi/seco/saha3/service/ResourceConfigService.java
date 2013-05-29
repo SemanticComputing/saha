@@ -6,7 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
@@ -23,7 +24,7 @@ public class ResourceConfigService {
 
 	private static final String REPOSITORY_CONFIG_TEMPLATE = "saha3/standalone/repositoryConfig.ftl";
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ResourceConfigService.class);
 
 	private SahaProjectRegistry sahaProjectRegistry;
 	private Configuration configuration;
@@ -39,20 +40,23 @@ public class ResourceConfigService {
 	}
 
 	public void setPropertyOrder(String model, String typeUri, String[] propertyUris) {
-		if (log.isDebugEnabled()) log.debug("setPropertyOrder(" + model + ", " + typeUri + ", " + Arrays.asList(propertyUris) + ")");
+		if (log.isDebugEnabled())
+			log.debug("setPropertyOrder(" + model + ", " + typeUri + ", " + Arrays.asList(propertyUris) + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		config.setPropertyOrder(typeUri, Arrays.asList(propertyUris));
 	}
 
 	public boolean removeRepositoryConfig(String model, String propertyUri, String sourceName) {
-		if (log.isDebugEnabled()) log.debug("removeRepositoryConfig(" + model + ", " + propertyUri + ", " + sourceName + ")");
+		if (log.isDebugEnabled())
+			log.debug("removeRepositoryConfig(" + model + ", " + propertyUri + ", " + sourceName + ")");
 		IConfigService config = sahaProjectRegistry.getConfig(model);
 		return config.removeRepositoryConfig(propertyUri, sourceName);
 	}
 
 	public String addRepositoryConfig(String model, String id, String propertyUri, String sourceName,
 			String[] parentRestrictions, String[] typeRestrictions) {
-		if (log.isDebugEnabled()) log.debug("addRepositoryConfig(" + model + ", " + id + ", " + propertyUri + ", " + sourceName + ", " + parentRestrictions + ", " + typeRestrictions + ")");
+		if (log.isDebugEnabled())
+			log.debug("addRepositoryConfig(" + model + ", " + id + ", " + propertyUri + ", " + sourceName + ", " + parentRestrictions + ", " + typeRestrictions + ")");
 
 		RepositoryConfig repositoryConfig = buildRepositoryConfig(sourceName, parentRestrictions, typeRestrictions);
 
