@@ -10,7 +10,7 @@
 	[@header model/]
 </head>
 
-<body class="tundra">
+<body class="tundra" onmouseover="if (typeof(dijit)!='undefined' && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip('',this)">
 
 	[@searchBar model lang/]
 	

@@ -8,10 +8,11 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
@@ -40,7 +41,7 @@ public class ResourceEditService {
 	private static final String HAKO_PROPERTY_TABLE_TEMPLATE = "saha3/standalone/hakoPropertyTable.ftl";
 	private static final String HAKO_TIMEMAP_EVENT_TEMPLATE = "saha3/standalone/hakoTimemapEvent.ftl";
 
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ResourceEditService.class);
 
 	private SahaProjectRegistry sahaProjectRegistry;
 	private Configuration configuration;

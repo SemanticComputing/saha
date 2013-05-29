@@ -217,7 +217,7 @@
 		[#if !property.config.hidden]
 			<tr class="[#if entry_index % 2 == 0]even[#else]odd[/#if]">
 				<td class="key">
-					<a href="resource.shtml?uri=${entry.key.uri?url}" style="text-decoration:none">
+					<a href="resource.shtml?uri=${entry.key.uri?url}&model=${model?url}" style="text-decoration:none">
 						${entry.key.label}
 					</a>
 					<div style="color:#666;font-weight:normal;font-size:90%;">${property.comment}</div>

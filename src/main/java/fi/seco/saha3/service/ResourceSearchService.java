@@ -10,10 +10,11 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
@@ -36,7 +37,7 @@ import fi.seco.saha3.model.configuration.RepositoryConfig;
 public class ResourceSearchService implements Controller {
 
 	@SuppressWarnings("unused")
-	private final Logger log = Logger.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ResourceSearchService.class);
 
 	private SahaProjectRegistry sahaProjectRegistry;
 	private OnkiWebService onkiWebService;
@@ -153,14 +154,14 @@ public class ResourceSearchService implements Controller {
 	}
 
 	private JSONObject buildObject(String uri, String label, List<String> altLabels, String name) throws JSONException {
-		if (!altLabels.isEmpty()) return buildObject(uri, parseTooltip(uri, name, label + parseAltLabels(altLabels)));
-		return buildObject(uri, parseTooltip(uri, name, label));
+		if (!altLabels.isEmpty()) return buildObject(uri, parseTooltip(uri, name, label, parseAltLabels(altLabels)));
+		return buildObject(uri, parseTooltip(uri, name, label, ""));
 	}
 
-	private String parseTooltip(String resourceUri, String ontology, String label) {
+	private String parseTooltip(String resourceUri, String ontology, String label, String altLabels) {
 		if (ontology.isEmpty())
-			return "<span onMouseOver=\"showResourceTooltip(this,'" + resourceUri + "')\" " + "onMouseOut=\"hideResourceTooltip(this)\">" + label + "</span>";
-		return "<span onMouseOver=\"showExternalResourceTooltip(this,'" + ontology + "','" + resourceUri + "')\" " + "onMouseOut=\"hideResourceTooltip(this)\">" + label + "</span>";
+			return "<span onMouseOver=\"showResourceTooltip(this,'" + resourceUri + "')\" " + "onMouseOut=\"hideResourceTooltip(this)\">" + label + "</span>" + altLabels;
+		return "<span onMouseOver=\"showExternalResourceTooltip(this,'" + ontology + "','" + resourceUri + "')\" " + "onMouseOut=\"hideResourceTooltip(this)\">" + label + "</span>" + altLabels;
 	}
 
 	private String parseAltLabels(List<String> altLabels) {

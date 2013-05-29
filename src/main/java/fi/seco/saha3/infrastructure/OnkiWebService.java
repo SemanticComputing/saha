@@ -81,7 +81,7 @@ public class OnkiWebService {
 
 		@Override
 		public String getValueShaHex() {
-			return DigestUtils.shaHex(getValueLabel());
+			return DigestUtils.sha1Hex(getValueLabel());
 		}
 
 		@Override

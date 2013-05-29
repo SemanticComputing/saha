@@ -30,22 +30,14 @@
 
 	<bean id="modelEditor" class="fi.seco.saha3.model.RemoteSPARULModelEditor" 
 		p:configService-ref="config"
-		p:SPARULService-ref="SPARULService"
-		p:SPARQLService-ref="SPARQLService"
-		p:graphURI-ref="projectIdentifierUpdate" />
+		p:SPARQLConfigService-ref="SPARQLConfigService" />
 		
 	<bean id="modelReader" class="fi.seco.saha3.model.RemoteSPARQLModelReader"
 		p:configService-ref="config"
-		p:SPARQLService-ref="SPARQLService" 
-		p:graphURI-ref="projectIdentifier"/>
+		p:SPARQLConfigService-ref="SPARQLConfigService" />
 	
-		<bean id="SPARULService" class="java.lang.String">
-		<constructor-arg value="http://purl.org/ww1lod/sparql"/>
-	</bean>
-
-	<bean id="SPARQLService" class="java.lang.String">
-		<constructor-arg value="http://purl.org/ww1lod/sparql"/>
-	</bean>
+	<bean id="SPARQLConfigService" class="fi.seco.saha3.model.configuration.SPARQLConfigService"
+		p:path-ref="projectPath"/> 
 	
 	<bean id="project" class="fi.seco.saha3.model.SahaProject"/>
 	

@@ -10,9 +10,6 @@
 	<h2 style="color:grey;font-family:sans-serif">Create project: <span style="color:hotpink">${model}</span></h2>
 	<form id="form" action="../service/import_project/" enctype="multipart/form-data" method="post">
 		<input name="modelName" id="modelName" type="hidden" value="${model}">
-		<input name="operation" id="operation" type="hidden" value="import">
-		RDF file<br/>
-		<input name="file" id="file" type="file"><br/>
 		<input type="submit" value="Do it!" style="margin-top:5px">
 	</form>
 </div>

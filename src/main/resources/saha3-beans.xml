@@ -58,7 +58,6 @@
 				/project/editor.shtml=EditorController
 				/project/config.shtml=EditorController
 				/project/export.shtml=ExportController
-				/project/upload.shtml=Saha3ImageUploadController
 				/project/map.shtml=MapEditController		
 				/project/manage.shtml=ProjectAdminController		
 				/saha3/admin.shtml=AdminController
@@ -189,13 +188,12 @@
 	
 	<bean id="Saha3ImageController" class="fi.seco.saha3.web.control.ImageController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
+		
+	<!--   <bean id="ModelLister" class="fi.seco.saha3.model.RemoteSPARQLModelLister"
+	p:sparqlService="http://80.69.172.23:3030/kirjasampo/sparql" /> -->
 	
-	<bean id="Saha3ImageUploadController" class="fi.seco.saha3.web.control.ImageUploadController"
-	p:command-class="fi.seco.saha3.web.control.ImageBean"
-	p:sahaProjectRegistry-ref="SahaProjectRegistry" />
-	
-	<bean id="ModelLister" class="fi.seco.saha3.model.RemoteSPARQLModelLister"
-	p:sparqlService="http://purl.org/ww1lod/sparql" />
+	<bean id="ModelLister" class="fi.seco.saha3.model.DirectoryModelLister"
+		p:path-ref="ProjectBaseDirectory" />
 	
 	<bean id="SahaProjectRegistry" class="fi.seco.saha3.infrastructure.SahaProjectRegistry"
 	p:modelLister-ref="ModelLister"
