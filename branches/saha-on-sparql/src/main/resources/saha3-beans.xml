@@ -23,20 +23,10 @@
 	<mvc:resources mapping="/app/**" location="/app/" />
 	<mvc:resources mapping="/app/scripts/dwr/**" location="/scripts/" />
 	
-	<bean class="org.springframework.ws.transport.http.WebServiceMessageReceiverHandlerAdapter"
-	p:messageFactory-ref="messageFactory"/>
-	<bean id="messageFactory" class="org.springframework.ws.soap.saaj.SaajSoapMessageFactory"/>
-	<bean class="fi.seco.saha3.infrastructure.SahaWsdlDefinitionHandlerAdapter"
-		p:transformLocations="true"/>
 	<bean class="org.springframework.web.servlet.mvc.SimpleControllerHandlerAdapter"/>
 	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
 
-    <bean id="MessageDispatcher" class="org.springframework.ws.soap.server.SoapMessageDispatcher"/>
-    <bean class="fi.seco.saha3.infrastructure.StacktraceContainingSimpleSoapExceptionResolver"/>
-
-	<sws:static-wsdl id="onkiWSDL" location="classpath:OnkiAutocompletion.WSDL"/>
-	
-	<bean
+  	<bean
 		class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping"
 		p:lazy-init-handlers="true" p:always-use-full-path="true">
 		<property name="interceptors">
@@ -51,14 +41,13 @@
 				<!-- /service/import_project/**=ImportProjectController -->
 				/service/instance_search/**=ResourceSearchService
 				/service/pics/**=Saha3ImageController
-           		/service/ws/**/OnkiAutocompletion.wsdl=onkiWSDL
-           		/service/ws/**=MessageDispatcher
 				/project/index.shtml=Saha3Controller
 				/project/resource.shtml=ResourceController
 				/project/editor.shtml=EditorController
 				/project/config.shtml=EditorController
 				/project/export.shtml=ExportController
-				/project/map.shtml=MapEditController		
+				/project/map.shtml=MapEditController
+				/project/log.shtml=RequestLogController		
 				/project/manage.shtml=ProjectAdminController		
 				/saha3/admin.shtml=AdminController
 				/=FrontPageController
@@ -68,7 +57,7 @@
 		</property>
 	</bean>
 	
-	<bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
+	<!--  <bean class="org.springframework.beans.factory.config.CustomScopeConfigurer">
         <property name="scopes">
             <map>
                 <entry key="project">
@@ -81,14 +70,11 @@
     
 	<bean id="ScopedModelReader" scope="project" class="fi.seco.saha3.model.IModelReader">
 		<aop:scoped-proxy/>
-	</bean>
-
-	<bean id="Saha3OnkiService" class="fi.seco.saha3.service.OnkiService"
-		p:modelReader-ref="ScopedModelReader"/>
+	</bean> -->
 
 	<bean id="ResourceEditService" class="fi.seco.saha3.service.ResourceEditService"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
-	p:onkiWebService-ref="OnkiWebService"
+	p:externalRepositoryService-ref="ExternalRepositoryService"
 	p:freeMarkerConfiguration-ref="fmConfig">
     	<dwr:remote javascript="ResourceEditService">
 			<dwr:include method="setObjectProperty" />
@@ -156,9 +142,9 @@
 
 	<bean id="ResourceSearchService" class="fi.seco.saha3.service.ResourceSearchService"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry"
-	p:onkiWebService-ref="OnkiWebService" />
+	p:onkiWebService-ref="ExternalRepositoryService" />
 	
-	<bean id="OnkiWebService" class="fi.seco.saha3.infrastructure.OnkiWebService"
+	<bean id="ExternalRepositoryService" class="fi.seco.saha3.infrastructure.ExternalRepositoryService"
 	p:accessKey="51d3cdaa81331c9117d77f443a2c5404" />
 	
 	<bean id="Saha3LockManager" class="fi.seco.saha3.infrastructure.ResourceLockManager" />
@@ -166,6 +152,10 @@
 	<bean id="ResourceController" class="fi.seco.saha3.web.control.ResourceController"
 	p:sahaProjectRegistry-ref="SahaProjectRegistry" 
 	p:lockManager-ref="Saha3LockManager" 
+	p:cacheSeconds="0" />
+	
+	<bean id="RequestLogController" class="fi.seco.saha3.web.control.RequestLogController"
+	p:sahaProjectRegistry-ref="SahaProjectRegistry" 
 	p:cacheSeconds="0" />
 	
 	<bean id="ExportController" class="fi.seco.saha3.web.control.ExportController"

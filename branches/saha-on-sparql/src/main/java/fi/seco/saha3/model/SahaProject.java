@@ -59,8 +59,8 @@ public class SahaProject implements ISahaProject {
 	}
 
 	@Override
-	public void removeLiteralProperty(String s, String p, String valueShaHex) {
-		modelEditor.removeLiteralProperty(s, p, valueShaHex);
+	public UriLabel removeLiteralProperty(String s, String p, String valueShaHex) {
+		return modelEditor.removeLiteralProperty(s, p, valueShaHex);
 	}
 
 	@Override
@@ -94,14 +94,18 @@ public class SahaProject implements ISahaProject {
 	}
 
 	@Override
-	public IResults search(String query, Collection<String> parentRestrictions, Collection<String> typeRestrictions,
-			Locale locale, int maxResults) {
-		return modelReader.search(query, parentRestrictions, typeRestrictions, locale, maxResults);
+	public IResults inlineSearch(String query, Collection<String> typeRestrictions, Locale locale, int maxResults) {
+		return modelReader.inlineSearch(query, typeRestrictions, locale, maxResults);
 	}
 
 	@Override
-	public IResults getSortedInstances(String label, String type, Locale locale, int from, int to) {
-		return modelReader.getSortedInstances(label, type, locale, from, to);
+	public IResults topSearch(String query, Locale locale, int maxResults) {
+		return modelReader.topSearch(query, locale, maxResults);
+	}
+
+	@Override
+	public IResults getSortedInstances(String type, Locale locale, int from, int to) {
+		return modelReader.getSortedInstances(type, locale, from, to);
 	}
 
 	@Override

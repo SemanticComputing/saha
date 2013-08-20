@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.jena.atlas.lib.Pair;
 import org.apache.jena.riot.WebContent;
 import org.apache.lucene.analysis.Analyzer;
@@ -100,12 +99,53 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 	private static final QueryParser qp = new QueryParser(Version.LUCENE_43, "", analyzer);
 
+	private static final Collection<String> topSearchMarker = new ArrayList<String>(0);
+
 	@Override
-	public IResults search(String query, Collection<String> parentRestrictions, Collection<String> typeRestrictions,
-			Locale locale, int maxResults) {
+	public IResults topSearch(String query, Locale locale, int maxResults) {
+		return search(query, topSearchMarker, locale, maxResults);
+	}
+
+	@Override
+	public IResults inlineSearch(String query, Collection<String> typeRestrictions, Locale locale, int maxResults) {
+		return search(query, typeRestrictions, locale, maxResults);
+	}
+
+	private static void maybeUpdate(QuerySolution qs, String variable, RDFNode o, Map<RDFNode, Literal> map,
+			String lstring, boolean fallback) {
+		Literal current = map.get(o);
+		if (qs.contains(variable)) {
+			Literal potential = qs.get(variable).asLiteral();
+			if (current == null || (o.isURIResource() && o.asResource().getURI().equals(current.getString())) || (o.isAnon() && o.asResource().getId().getLabelString().equals(current.getString())) || lstring.equals(potential.getLanguage()))
+				map.put(o, potential);
+			else if ("".equals(potential.getLanguage()) && !lstring.equals(current.getLanguage()))
+				map.put(o, potential);
+		} else if (fallback) if (current == null) if (o.isURIResource())
+			map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getURI()));
+		else if (o.isAnon())
+			map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getId().getLabelString()));
+		else map.put(o, o.asLiteral());
+	}
+
+	private IResults search(String query, Collection<String> typeRestrictions, Locale locale, int maxResults) {
 		List<IResult> ret = new ArrayList<IResult>();
 		query = query.replaceAll("\\\\", "");
-		if ("".equals(query) || "*".equals(query)) return new Results(ret, 0);
+		if ("".equals(query) || "*".equals(query))
+			if (!typeRestrictions.isEmpty()) {
+				if (typeRestrictions.size() == 1)
+					return getSortedInstances(typeRestrictions.iterator().next(), locale, 0, maxResults);
+				int max = 0;
+				for (String type : typeRestrictions) {
+					IResults tmp = getSortedInstances(type, locale, 0, maxResults);
+					max += tmp.getSize();
+					int toAdd = maxResults - ret.size();
+					if (tmp.getSize() < toAdd) toAdd = tmp.getSize();
+					Iterator<IResult> iri = tmp.iterator();
+					for (int i = 0; i < toAdd; i++)
+						ret.add(iri.next());
+				}
+				return new Results(ret, max);
+			} else return new Results(ret, 0);
 		String actualQuery;
 		if (query.endsWith(";"))
 			actualQuery = '"' + query.substring(0, query.length() - 1) + '"';
@@ -125,115 +165,167 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		} catch (IOException e) {
 			throw new IOError(e);
 		}
-		String[] stringMatchesQuery = sparqlConfigService.getStringMatchesQuery().split("</?typelimit>");
-		ParameterizedSparqlString q = new ParameterizedSparqlString(stringMatchesQuery[0], pm);
-		if (!typeRestrictions.isEmpty()) {
-			String[] split = stringMatchesQuery[1].split("\\?typeURIs");
-			q.append(split[0]);
-			for (String t : typeRestrictions) {
-				q.appendIri(t);
-				q.append(' ');
+		ParameterizedSparqlString q;
+		if (typeRestrictions == topSearchMarker)
+			q = new ParameterizedSparqlString(sparqlConfigService.getTopStringMatchesQuery(), pm);
+		else {
+			String[] stringMatchesQuery = sparqlConfigService.getInlineStringMatchesQuery().split("</?typelimit>");
+			q = new ParameterizedSparqlString(stringMatchesQuery[0], pm);
+			if (typeRestrictions.size() == 1) {
+				q.append(stringMatchesQuery[1]);
+				q.setIri("typeURI", typeRestrictions.iterator().next());
+			} else if (typeRestrictions.size() > 1) {
+				Iterator<String> typeIterator = typeRestrictions.iterator();
+				for (int i = 0; i < typeRestrictions.size() - 1; i++) {
+					q.append("{");
+					q.append(stringMatchesQuery[1].replaceAll("\\?typeURI", "?typeURI_" + i));
+					q.append("} UNION ");
+					q.setIri("typeURI_" + i, typeIterator.next());
+				}
+				q.append("{");
+				q.append(stringMatchesQuery[1]);
+				q.append("}");
+				q.setIri("typeURI", typeIterator.next());
 			}
-			q.append(split[1]);
+			q.append(stringMatchesQuery[2]);
 		}
-		q.append(stringMatchesQuery[2]);
 		q.setLiteral("query", actualQuery);
-		q.setLiteral("lang", locale.toString());
+		String lstring = locale.toString();
+		q.setLiteral("lang", lstring);
+		q.setLiteral("limit", maxResults);
 		ResultSet rs = execSelect(q.asQuery());
-		Map<RDFNode, Result> rmap = new HashMap<RDFNode, Result>();
+		Map<RDFNode, Literal> bestItemLabel = new HashMap<RDFNode, Literal>();
+		Map<RDFNode, Set<RDFNode>> itemTypes = new HashMap<RDFNode, Set<RDFNode>>();
+		Map<RDFNode, Literal> bestItemTypeLabel = new HashMap<RDFNode, Literal>();
+		Map<RDFNode, Literal> bestPropertyLabel = new HashMap<RDFNode, Literal>();
+		Map<RDFNode, Set<Pair<RDFNode, RDFNode>>> propertyObjectMap = new HashMap<RDFNode, Set<Pair<RDFNode, RDFNode>>>();
+		while (rs.hasNext()) {
+			QuerySolution qs = rs.next();
+			RDFNode item = qs.get("item");
+			maybeUpdate(qs, "itemLabel", item, bestItemLabel, lstring, true);
+			if (qs.contains("itemType")) {
+				RDFNode itemType = qs.get("itemType");
+				Set<RDFNode> col = itemTypes.get(item);
+				if (col == null) {
+					col = new HashSet<RDFNode>();
+					itemTypes.put(item, col);
+				}
+				col.add(itemType);
+				maybeUpdate(qs, "itemTypeLabel", itemType, bestItemTypeLabel, lstring, true);
+			}
+			RDFNode property = qs.get("property");
+			maybeUpdate(qs, "propertyLabel", property, bestPropertyLabel, lstring, true);
+			Set<Pair<RDFNode, RDFNode>> col = propertyObjectMap.get(item);
+			if (col == null) {
+				col = new HashSet<Pair<RDFNode, RDFNode>>();
+				propertyObjectMap.put(item, col);
+			}
+			col.add(new Pair<RDFNode, RDFNode>(property, qs.get("object")));
+		}
+		if (bestItemLabel.size() < maxResults) maxResults = bestItemLabel.size();
+		Iterator<Entry<RDFNode, Literal>> itemIterator = bestItemLabel.entrySet().iterator();
 		try {
 			Highlighter h = new Highlighter(new QueryScorer(qp.parse(actualQuery)));
-			while (rs.hasNext()) {
-				QuerySolution qs = rs.next();
-				Result r = rmap.get(qs.get("item"));
-				//FIXME process multiple labels properly
-				if (r == null) {
-					String label = qs.contains("itemLabel") ? qs.get("itemLabel").asLiteral().getString() : qs.get("item").toString();
-					if (qs.contains("itemTypeLabel"))
-						label += "(" + qs.get("itemTypeLabel").asLiteral().getString() + ")";
-					r = new Result(qs.get("item").toString(), label);
-					rmap.put(qs.get("item"), r);
+
+			for (int i = 0; i < maxResults; i++) {
+				Entry<RDFNode, Literal> e = itemIterator.next();
+				RDFNode item = e.getKey();
+				String itemLabel = e.getValue().getString();
+				TokenStream ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(itemLabel)));
+				String hlstring = h.getBestFragment(ts, itemLabel);
+				if (hlstring == null) hlstring = itemLabel;
+				Collection<RDFNode> typesForItem = itemTypes.get(item);
+				if (typesForItem != null) {
+					StringBuilder itemTypesSB = new StringBuilder();
+					itemTypesSB.append(" (");
+					for (RDFNode type : typesForItem) {
+						itemTypesSB.append(bestItemTypeLabel.get(type).getString());
+						itemTypesSB.append(", ");
+					}
+					itemTypesSB.setLength(itemTypesSB.length() - 2);
+					itemTypesSB.append(')');
+					hlstring = hlstring + itemTypesSB.toString();
 				}
-				String hlstring = qs.get("object").asLiteral().getString();
-				try {
-					TokenStream ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(hlstring)));
-					hlstring = h.getBestFragment(ts, hlstring);
-				} catch (IOException e) {
-					throw new IOError(e);
-				} catch (InvalidTokenOffsetsException e) {
-					throw new RuntimeException(e);
+				Result r = new Result(e.getKey().toString(), hlstring);
+				Collection<Pair<RDFNode, RDFNode>> col = propertyObjectMap.get(item);
+				for (Pair<RDFNode, RDFNode> po : col) {
+					String lit = po.getRight().asLiteral().getString();
+					if (!lit.equals(itemLabel)) {
+						ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(lit)));
+						hlstring = h.getBestFragment(ts, lit);
+						r.getAltLabels().add(bestPropertyLabel.get(po.getLeft()).getString() + ": " + hlstring);
+					}
 				}
-				if (qs.contains("propertyLabel"))
-					r.getAltLabels().add(qs.get("propertyLabel").asLiteral().getString() + ": " + hlstring);
-				else r.getAltLabels().add(qs.get("property").asResource().getURI() + ": " + hlstring);
+				ret.add(r);
 			}
 		} catch (ParseException e) {
 			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new IOError(e);
+		} catch (InvalidTokenOffsetsException e) {
+			throw new RuntimeException(e);
 		}
-
-		if (rmap.size() < maxResults) maxResults = rmap.size();
-		Iterator<Result> mi = rmap.values().iterator();
-		for (int i = 0; i < maxResults; i++)
-			ret.add(mi.next());
 		return new Results(ret, maxResults);
 	}
 
 	@Override
-	public IResults getSortedInstances(String label, String type, Locale locale, int from, int to) {
-		if (label == null) {
-			ParameterizedSparqlString q = new ParameterizedSparqlString(sparqlConfigService.getInstanceQuery(), pm);
-			q.setIri("type", type);
-			String lstring = locale.toString();
-			q.setLiteral("lang", lstring);
-			ResultSet rs = execSelect(q.asQuery());
-			LinkedHashSet<Resource> rets = new LinkedHashSet<Resource>();
-			Map<Resource, Literal> rl = new HashMap<Resource, Literal>();
-			List<IResult> ret = new ArrayList<IResult>();
-			while (rs.hasNext()) {
-				QuerySolution qs = rs.next();
-				Resource r = qs.get("item").asResource();
-				Literal cl = rl.get(r);
-				if (qs.contains("label")) {
-					Literal pl = qs.get("label").asLiteral();
-					if (cl == null || r.getURI().equals(cl.getString()) || lstring.equals(pl.getLanguage())) {
-						rets.remove(r);
-						rets.add(r);
-						rl.put(r, pl);
-					} else if ("".equals(pl.getLanguage()) && !lstring.equals(cl.getLanguage())) {
-						rets.remove(r);
-						rets.add(r);
-						rl.put(r, pl);
-					}
-				} else if (cl == null) {
+	public IResults getSortedInstances(String type, Locale locale, int from, int to) {
+		ParameterizedSparqlString q = new ParameterizedSparqlString(sparqlConfigService.getInstanceQuery(), pm);
+		q.setIri("type", type);
+		String lstring = locale.toString();
+		q.setLiteral("lang", lstring);
+		ResultSet rs = execSelect(q.asQuery());
+		LinkedHashSet<Resource> rets = new LinkedHashSet<Resource>();
+		Map<Resource, Literal> rl = new HashMap<Resource, Literal>();
+		List<IResult> ret = new ArrayList<IResult>();
+		while (rs.hasNext()) {
+			QuerySolution qs = rs.next();
+			Resource r = qs.get("item").asResource();
+			Literal cl = rl.get(r);
+			if (qs.contains("label")) {
+				Literal pl = qs.get("label").asLiteral();
+				if (cl == null || r.getURI().equals(cl.getString()) || lstring.equals(pl.getLanguage())) {
+					rets.remove(r);
 					rets.add(r);
-					rl.put(r, ResourceFactory.createPlainLiteral(r.getURI()));
+					rl.put(r, pl);
+				} else if ("".equals(pl.getLanguage()) && !lstring.equals(cl.getLanguage())) {
+					rets.remove(r);
+					rets.add(r);
+					rl.put(r, pl);
 				}
+			} else if (cl == null) {
+				rets.add(r);
+				if (r.isURIResource())
+					rl.put(r, ResourceFactory.createPlainLiteral(r.getURI()));
+				else rl.put(r, ResourceFactory.createPlainLiteral(r.getId().getLabelString()));
 			}
-			Iterator<Resource> ti = rets.iterator();
-			for (int i = 0; i < from; i++)
-				ti.next();
-			for (int i = from; i < to; i++) {
-				if (!ti.hasNext()) return new Results(ret, i);
-				Resource r = ti.next();
-				ret.add(new Result(r.getURI(), rl.get(r).getString()));
-			}
-			return new Results(ret, rets.size());
 		}
-		return null;
+		Iterator<Resource> ti = rets.iterator();
+		for (int i = 0; i < from; i++)
+			ti.next();
+		for (int i = from; i < to; i++) {
+			if (!ti.hasNext()) return new Results(ret, i);
+			Resource r = ti.next();
+			ret.add(new Result(r.getURI(), rl.get(r).getString()));
+		}
+		return new Results(ret, rets.size());
 	}
 
 	private final class SahaSPARQLResultProperty implements ISahaProperty {
 
 		private final Locale locale;
 
+		@Override
+		public String toString() {
+			return propertyLabel + value + "/" + valueTypeLabel + ranges;
+		}
+
 		@SuppressWarnings("unchecked")
-		public SahaSPARQLResultProperty(Resource propertyNode, String propertyLabel, RDFNode objectNode,
-				String valueLabel, String valueType, String valueTypeLabel, String comment, boolean isLiteral,
-				List<UriLabel> ranges, Locale locale) {
+		public SahaSPARQLResultProperty(Resource propertyNode, String propertyLabel, UriLabel value, String valueType,
+				String valueTypeLabel, String comment, boolean isLiteral, List<UriLabel> ranges, Locale locale) {
 			this.propertyNode = propertyNode;
-			this.objectNode = objectNode;
+			this.value = value;
 			this.propertyLabel = propertyLabel;
-			this.valueLabel = valueLabel != null ? valueLabel : "";
 			this.isLiteral = isLiteral;
 			this.valueType = valueType;
 			this.valueTypeLabel = valueTypeLabel;
@@ -242,10 +334,9 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			this.locale = locale;
 		}
 
-		private final RDFNode objectNode;
+		private final UriLabel value;
 		private final Resource propertyNode;
 		private final String propertyLabel;
-		private final String valueLabel;
 
 		@Override
 		public int compareTo(ISahaProperty o) {
@@ -261,9 +352,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 		@Override
 		public String getValueUri() {
-			if (objectNode == null) return "";
-			if (objectNode.isURIResource()) return objectNode.asResource().getURI();
-			return "";
+			return value.getUri();
 		}
 
 		private final String valueType;
@@ -271,6 +360,11 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		@Override
 		public String getValueTypeUri() {
 			return valueType;
+		}
+
+		@Override
+		public String getValueDatatypeUri() {
+			return value.getDatatype();
 		}
 
 		private final String valueTypeLabel;
@@ -282,25 +376,17 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 		@Override
 		public String getValueShaHex() {
-			if (isLiteral() && objectNode != null) return DigestUtils.sha1Hex(objectNode.asLiteral().toString());
-			return DigestUtils.sha1Hex(getValueLabel());
+			return value.getShaHex();
 		}
 
 		@Override
 		public String getValueLang() {
-			return objectNode != null ? objectNode.asLiteral().getLanguage() : "";
+			return value.getLang();
 		}
 
 		@Override
 		public String getValueLabel() {
-			return valueLabel;
-		}
-
-		@Override
-		public String getValueDatatypeUri() {
-			if (objectNode == null) return "";
-			String dt = objectNode.asLiteral().getDatatypeURI();
-			return dt == null ? "" : dt;
+			return value.getLabel();
 		}
 
 		@Override
@@ -344,7 +430,8 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		public Set<UITreeNode> getRangeTree() {
 			Map<Resource, UITreeNode> nodes = new HashMap<Resource, UITreeNode>();
 			ParameterizedSparqlString q = new ParameterizedSparqlString(sparqlConfigService.getPropertyTreeQuery(), pm);
-			q.setLiteral("lang", locale.toString());
+			String lstring = locale.toString();
+			q.setLiteral("lang", lstring);
 			q.setIri("propertyURI", propertyNode.getURI());
 			Model m = execConstruct(q.asQuery());
 			ResIterator ri = m.listSubjects();
@@ -353,10 +440,20 @@ public class RemoteSPARQLModelReader implements IModelReader {
 				int count = 0;
 				Statement s = r.getProperty(cp);
 				if (s != null) count = s.getInt();
-				String label = r.getURI();
-				s = r.getProperty(RDFS.label);
-				if (s != null) label = s.getString();
-				nodes.put(r, new UITreeNode(r.getURI(), label, count));
+				Literal labelLit = null;
+				if (!r.hasProperty(RDFS.label))
+					labelLit = ResourceFactory.createPlainLiteral(r.getURI());
+				else {
+					StmtIterator sti = r.listProperties(RDFS.label);
+					while (sti.hasNext()) {
+						Literal candidate = sti.next().getLiteral();
+						if (labelLit == null)
+							labelLit = candidate;
+						else if (lstring.equals(candidate.getLanguage()) || "".equals(labelLit.getLanguage()) && !labelLit.getLanguage().equals(lstring))
+							labelLit = candidate;
+					}
+				}
+				nodes.put(r, new UITreeNode(r.getURI(), labelLit.getString(), count));
 			}
 			StmtIterator sti = m.listStatements(null, RDFS.subClassOf, (RDFNode) null);
 			while (sti.hasNext()) {
@@ -373,8 +470,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			Set<UITreeNode> roots = new HashSet<UITreeNode>();
 			while (sti.hasNext()) {
 				Statement pl = sti.next();
-				if (nodes.get(pl.getResource()) != null) // FIXME: There should not be null resource in the first place 
-					roots.add(nodes.get(pl.getResource()));
+				roots.add(nodes.get(pl.getResource()));
 			}
 			return roots;
 		}
@@ -426,22 +522,14 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					String lstring = locale.toString();
 					q.setLiteral("lang", lstring);
 					ResultSet rs = execSelect(q.asQuery());
-					Map<String, Literal> best = new HashMap<String, Literal>();
+					Map<RDFNode, Literal> best = new HashMap<RDFNode, Literal>();
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
-						String ct = qs.get("type").toString();
-						Literal cl = best.get(ct);
-						if (qs.contains("label")) {
-							Literal pl = qs.get("label").asLiteral();
-							if (cl == null || ct.equals(cl.getString()) || lstring.equals(pl.getLanguage()))
-								best.put(ct, pl);
-							else if ("".equals(pl.getLanguage()) && !lstring.equals(cl.getLanguage()))
-								best.put(ct, pl);
-						} else if (cl == null) best.put(ct, ResourceFactory.createPlainLiteral(ct));
-
+						RDFNode ct = qs.get("type");
+						maybeUpdate(qs, "label", ct, best, lstring, true);
 					}
-					for (Entry<String, Literal> e : best.entrySet())
-						types.add(new UriLabel(e.getKey(), e.getValue().getString()));
+					for (Entry<RDFNode, Literal> e : best.entrySet())
+						types.add(new UriLabel(e.getKey().asResource().getURI(), e.getValue().getString()));
 				}
 				return types;
 			}
@@ -457,41 +545,28 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					String lstring = locale.toString();
 					q.setLiteral("lang", lstring);
 					ResultSet rs = execSelect(q.asQuery());
-					Map<Resource, Literal> bestpl = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestpl = new HashMap<RDFNode, Literal>();
 					Map<RDFNode, Literal> bestol = new HashMap<RDFNode, Literal>();
-					Map<Resource, Boolean> pIsLiteral = new HashMap<Resource, Boolean>();
+					Map<RDFNode, Boolean> pIsLiteral = new HashMap<RDFNode, Boolean>();
 					Set<Pair<Resource, RDFNode>> po = new HashSet<Pair<Resource, RDFNode>>();
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
 						RDFNode objectNode = qs.get("object");
 						Resource property = qs.get("propertyURI").asResource();
 						po.add(new Pair<Resource, RDFNode>(property, objectNode));
-						Literal cpl = bestpl.get(property);
-						if (qs.contains("propertyLabel")) {
-							Literal ppl = qs.get("propertyLabel").asLiteral();
-							if (cpl == null || property.getURI().equals(cpl.getString()) || lstring.equals(ppl.getLanguage()))
-								bestpl.put(property, ppl);
-							else if ("".equals(ppl.getLanguage()) && !lstring.equals(cpl.getLanguage()))
-								bestpl.put(property, ppl);
-						} else if (cpl == null)
-							bestpl.put(property, ResourceFactory.createPlainLiteral(property.getURI()));
-						Literal col = bestol.get(objectNode);
-						if (qs.contains("objectLabel")) {
-							Literal pol = qs.get("objectLabel").asLiteral();
-							if (col == null || objectNode.asResource().getURI().equals(col.getString()) || lstring.equals(pol.getLanguage()))
-								bestol.put(objectNode, pol);
-							else if ("".equals(pol.getLanguage()) && !lstring.equals(col.getLanguage()))
-								bestol.put(objectNode, pol);
-						} else if (col == null)
-							if (objectNode.isURIResource())
-								bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getURI()));
-							else if (objectNode.isAnon())
-								bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getId().getLabelString()));
-							else bestol.put(objectNode, objectNode.asLiteral());
+						maybeUpdate(qs, "propertyLabel", property, bestpl, lstring, true);
+						maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true);
 						pIsLiteral.put(property, objectNode.isLiteral());
 					}
-					for (Pair<Resource, RDFNode> p : po)
-						properties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), p.getRight(), p.getRight().isLiteral() ? p.getRight().asLiteral().getString() : bestol.get(p.getRight()).getString(), null, null, null, pIsLiteral.get(p.getLeft()), null, locale));
+					for (Pair<Resource, RDFNode> p : po) {
+						UriLabel label;
+						if (p.getRight().isLiteral())
+							label = new UriLabel(p.getRight().asLiteral());
+						else if (p.getRight().isURIResource())
+							label = new UriLabel(p.getRight().asResource().getURI(), bestol.get(p.getRight()).getString());
+						else label = new UriLabel(p.getRight().asResource().getId().getLabelString(), bestol.get(p.getRight()).getString());
+						properties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), label, null, null, null, pIsLiteral.get(p.getLeft()), null, locale));
+					}
 				}
 				return properties;
 			}
@@ -507,10 +582,10 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					String lstring = locale.toString();
 					q.setLiteral("lang", lstring);
 					ResultSet rs = execSelect(q.asQuery());
-					Map<Resource, Literal> bestpl = new HashMap<Resource, Literal>();
-					Map<Resource, Literal> bestol = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestpl = new HashMap<RDFNode, Literal>();
+					Map<RDFNode, Literal> bestol = new HashMap<RDFNode, Literal>();
 					Map<Resource, Resource> otype = new HashMap<Resource, Resource>();
-					Map<Resource, Literal> bestotl = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestotl = new HashMap<RDFNode, Literal>();
 					Map<Resource, Boolean> pIsLiteral = new HashMap<Resource, Boolean>();
 					Set<Pair<Resource, Resource>> po = new HashSet<Pair<Resource, Resource>>();
 					while (rs.hasNext()) {
@@ -518,44 +593,23 @@ public class RemoteSPARQLModelReader implements IModelReader {
 						Resource objectNode = qs.get("object").asResource();
 						Resource property = qs.get("propertyURI").asResource();
 						po.add(new Pair<Resource, Resource>(property, objectNode));
-						Literal cpl = bestpl.get(property);
-						if (qs.contains("propertyLabel")) {
-							Literal ppl = qs.get("propertyLabel").asLiteral();
-							if (cpl == null || property.getURI().equals(cpl.getString()) || lstring.equals(ppl.getLanguage()))
-								bestpl.put(property, ppl);
-							else if ("".equals(ppl.getLanguage()) && !lstring.equals(cpl.getLanguage()))
-								bestpl.put(property, ppl);
-						} else if (cpl == null)
-							bestpl.put(property, ResourceFactory.createPlainLiteral(property.getURI()));
-						Literal col = bestol.get(objectNode);
-						if (qs.contains("objectLabel")) {
-							Literal pol = qs.get("objectLabel").asLiteral();
-							if (col == null || objectNode.asResource().getURI().equals(col.getString()) || lstring.equals(pol.getLanguage()))
-								bestol.put(objectNode, pol);
-							else if ("".equals(pol.getLanguage()) && !lstring.equals(col.getLanguage()))
-								bestol.put(objectNode, pol);
-						} else if (col == null)
-							if (objectNode.isURIResource())
-								bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getURI()));
-							else if (objectNode.isAnon())
-								bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getId().getLabelString()));
-							else bestol.put(objectNode, objectNode.asLiteral());
+						maybeUpdate(qs, "propertyLabel", property, bestpl, lstring, true);
+						maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true);
 						pIsLiteral.put(property, objectNode.isLiteral());
 						if (qs.contains("objectType")) {
 							otype.put(objectNode, qs.get("objectType").asResource());
-							Literal cotl = bestotl.get(objectNode);
-							if (qs.contains("objectTypeLabel")) {
-								Literal potl = qs.get("objectTypeLabel").asLiteral();
-								if (cotl == null || qs.get("objectType").asResource().getURI().equals(cotl.getString()) || lstring.equals(potl.getLanguage()))
-									bestotl.put(objectNode, potl);
-								else if ("".equals(potl.getLanguage()) && !lstring.equals(cotl.getLanguage()))
-									bestotl.put(objectNode, potl);
-							} else if (cotl == null)
-								bestotl.put(objectNode, ResourceFactory.createPlainLiteral(qs.get("objectType").asResource().getURI()));
+							maybeUpdate(qs, "objectTypeLabel", qs.get("objectType"), bestotl, lstring, true);
 						}
 					}
-					for (Pair<Resource, Resource> p : po)
-						inverseProperties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), p.getRight(), p.getRight().isLiteral() ? p.getRight().asLiteral().getString() : bestol.get(p.getRight()).getString(), otype.containsKey(p.getRight()) ? otype.get(p.getRight()).getURI() : null, otype.containsKey(p.getRight()) ? bestotl.get(p.getRight()).getString() : null, null, pIsLiteral.get(p.getLeft()), null, locale));
+					for (Pair<Resource, Resource> p : po) {
+						UriLabel label;
+						if (p.getRight().isLiteral())
+							label = new UriLabel(p.getRight().asLiteral());
+						else if (p.getRight().isURIResource())
+							label = new UriLabel(p.getRight().asResource().getURI(), bestol.get(p.getRight()).getString());
+						else label = new UriLabel(p.getRight().asResource().getId().getLabelString(), bestol.get(p.getRight()).getString());
+						inverseProperties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), label, otype.containsKey(p.getRight()) ? otype.get(p.getRight()).getURI() : null, otype.containsKey(p.getRight()) ? bestotl.get(otype.get(p.getRight())).getString() : null, null, pIsLiteral.get(p.getLeft()), null, locale));
+					}
 				}
 				return inverseProperties;
 			}
@@ -586,53 +640,27 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					String lstring = locale.toString();
 					q.setLiteral("lang", lstring);
 					ResultSet rs = execSelect(q.asQuery());
-					Map<Resource, Literal> bestpl = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestpl = new HashMap<RDFNode, Literal>();
 					Map<RDFNode, Literal> bestol = new HashMap<RDFNode, Literal>();
-					Map<Resource, Literal> bestpcomment = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestpcomment = new HashMap<RDFNode, Literal>();
 					Map<Resource, Boolean> pIsLiteral = new HashMap<Resource, Boolean>();
 					Map<Resource, Set<Resource>> pranges = new HashMap<Resource, Set<Resource>>();
-					Map<Resource, Literal> bestprangel = new HashMap<Resource, Literal>();
+					Map<RDFNode, Literal> bestprangel = new HashMap<RDFNode, Literal>();
 					Set<Pair<Resource, RDFNode>> po = new HashSet<Pair<Resource, RDFNode>>();
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
 						RDFNode objectNode = qs.get("object");
 						Resource property = qs.get("propertyURI").asResource();
 						po.add(new Pair<Resource, RDFNode>(property, objectNode));
-						Literal cpl = bestpl.get(property);
-						if (qs.contains("propertyLabel")) {
-							Literal ppl = qs.get("propertyLabel").asLiteral();
-							if (cpl == null || property.getURI().equals(cpl.getString()) || lstring.equals(ppl.getLanguage()))
-								bestpl.put(property, ppl);
-							else if ("".equals(ppl.getLanguage()) && !lstring.equals(cpl.getLanguage()))
-								bestpl.put(property, ppl);
-						} else if (cpl == null)
-							bestpl.put(property, ResourceFactory.createPlainLiteral(property.getURI()));
+						maybeUpdate(qs, "propertyLabel", property, bestpl, lstring, true);
 						if (objectNode != null) {
-							Literal col = bestol.get(objectNode);
-							if (qs.contains("objectLabel")) {
-								Literal pol = qs.get("objectLabel").asLiteral();
-								if (col == null || objectNode.asResource().getURI().equals(col.getString()) || lstring.equals(pol.getLanguage()))
-									bestol.put(objectNode, pol);
-								else if ("".equals(pol.getLanguage()) && !lstring.equals(col.getLanguage()))
-									bestol.put(objectNode, pol);
-							} else if (col == null)
-								if (objectNode.isURIResource())
-									bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getURI()));
-								else if (objectNode.isAnon())
-									bestol.put(objectNode, ResourceFactory.createPlainLiteral(objectNode.asResource().getId().getLabelString()));
-								else bestol.put(objectNode, objectNode.asLiteral());
+							maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true);
 							pIsLiteral.put(property, objectNode.isLiteral());
 						} else if (qs.contains("propertyType"))
 							pIsLiteral.put(property, qs.get("propertyType").equals(OWL.DatatypeProperty));
 						else if (!pIsLiteral.containsKey(property)) pIsLiteral.put(property, false);
-						Literal ccl = bestpcomment.get(property);
-						if (qs.contains("propertyComment")) {
-							Literal pcl = qs.get("propertyComment").asLiteral();
-							if (ccl == null || property.asResource().getURI().equals(ccl.getString()) || lstring.equals(pcl.getLanguage()))
-								bestpcomment.put(property, pcl);
-							else if ("".equals(pcl.getLanguage()) && !lstring.equals(ccl.getLanguage()))
-								bestpcomment.put(property, pcl);
-						}
+						if (qs.contains("propertyComment"))
+							maybeUpdate(qs, "propertyComment", property, bestpcomment, lstring, false);
 						if (qs.contains("propertyRangeURI") && qs.get("propertyRangeURI").isResource()) {
 							Set<Resource> cpranges = pranges.get(property);
 							if (cpranges == null) {
@@ -641,17 +669,8 @@ public class RemoteSPARQLModelReader implements IModelReader {
 							}
 							Resource rr = qs.get("propertyRangeURI").asResource();
 							cpranges.add(rr);
-							Literal crl = bestprangel.get(rr);
-							if (qs.contains("propertyRangeLabel")) {
-								Literal prl = qs.get("propertyRangeLabel").asLiteral();
-								if (crl == null || rr.getURI().equals(crl.getString()) || lstring.equals(prl.getLanguage()))
-									bestprangel.put(rr, prl);
-								else if ("".equals(prl.getLanguage()) && !lstring.equals(crl.getLanguage()))
-									bestprangel.put(rr, prl);
-							} else if (crl == null)
-								bestprangel.put(rr, ResourceFactory.createPlainLiteral(rr.getURI()));
+							maybeUpdate(qs, "propertyRangeLabel", rr, bestprangel, lstring, true);
 						}
-
 					}
 					editorProperties = new HashSet<ISahaProperty>(po.size());
 					Map<Resource, List<UriLabel>> ranges = new HashMap<Resource, List<UriLabel>>();
@@ -661,8 +680,17 @@ public class RemoteSPARQLModelReader implements IModelReader {
 							ul.add(new UriLabel(rtr.getURI(), bestprangel.get(rtr).getLanguage(), bestprangel.get(rtr).getString()));
 						ranges.put(rr.getKey(), ul);
 					}
-					for (Pair<Resource, RDFNode> p : po)
-						editorProperties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), p.getRight(), p.getRight() == null ? null : p.getRight().isLiteral() ? p.getRight().asLiteral().getString() : bestol.get(p.getRight()).getString(), null, null, bestpcomment.containsKey(p.getLeft()) ? bestpcomment.get(p.getLeft()).getString() : null, pIsLiteral.get(p.getLeft()), ranges.get(p.getLeft()), locale));
+					for (Pair<Resource, RDFNode> p : po) {
+						UriLabel label;
+						if (p.getRight() == null)
+							label = new UriLabel();
+						else if (p.getRight().isLiteral())
+							label = new UriLabel(p.getRight().asLiteral());
+						else if (p.getRight().isURIResource())
+							label = new UriLabel(p.getRight().asResource().getURI(), bestol.get(p.getRight()).getString());
+						else label = new UriLabel(p.getRight().asResource().getId().getLabelString(), bestol.get(p.getRight()).getString());
+						editorProperties.add(new SahaSPARQLResultProperty(p.getLeft(), bestpl.get(p.getLeft()).getString(), label, null, null, bestpcomment.containsKey(p.getLeft()) ? bestpcomment.get(p.getLeft()).getString() : null, pIsLiteral.get(p.getLeft()), ranges.get(p.getLeft()), locale));
+					}
 				}
 				return editorProperties;
 			}

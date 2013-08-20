@@ -65,7 +65,7 @@ public class ProjectAdminController extends ASahaController {
 				return null;
 			}
 			if (operation != null && operation.equals("changeSettings")) {
-				sparqlConfiguration.setConfiguration(request.getParameter("sparqlURL"), request.getParameter("sparulURL"), "".equals(request.getParameter("graphURI")) ? null : request.getParameter("graphURI"), request.getParameter("labelURI"), request.getParameter("wholeModelQuery"), request.getParameter("stringMatchesQuery"), request.getParameter("instanceQuery"), request.getParameter("labelQuery"), request.getParameter("typesQuery"), request.getParameter("propertiesQuery"), request.getParameter("inversePropertiesQuery"), request.getParameter("editorPropertiesQuery"), request.getParameter("propertyTreeQuery"), request.getParameter("classTreeQuery"));
+				sparqlConfiguration.setConfiguration(request.getParameter("sparqlURL"), request.getParameter("sparulURL"), "".equals(request.getParameter("graphURI")) ? null : request.getParameter("graphURI"), request.getParameter("labelURI"), request.getParameter("wholeModelQuery"), request.getParameter("topStringMatchesQuery"), request.getParameter("inlineStringMatchesQuery"), request.getParameter("instanceQuery"), request.getParameter("labelQuery"), request.getParameter("typesQuery"), request.getParameter("propertiesQuery"), request.getParameter("inversePropertiesQuery"), request.getParameter("editorPropertiesQuery"), request.getParameter("propertyTreeQuery"), request.getParameter("classTreeQuery"));
 				response.sendRedirect("index.shtml?model=" + URLEncoder.encode(parseModelName(request), "UTF-8"));
 				return null;
 			}

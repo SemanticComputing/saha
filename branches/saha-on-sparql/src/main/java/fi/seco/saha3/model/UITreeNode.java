@@ -44,4 +44,9 @@ public class UITreeNode extends TreeNode implements Comparable<UITreeNode> {
 	public int compareTo(UITreeNode o) {
 		return String.CASE_INSENSITIVE_ORDER.compare(getLabel(), o.getLabel());
 	}
+
+	@Override
+	public String toString() {
+		return label;
+	}
 }

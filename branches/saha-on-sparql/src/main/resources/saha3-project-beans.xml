@@ -20,7 +20,7 @@
 		<constructor-arg value="false"/>
 	</bean>
 	
-	<bean id="onkiWebService" class="fi.seco.saha3.infrastructure.OnkiWebService">
+	<bean id="externalRepositoryService" class="fi.seco.saha3.infrastructure.ExternalRepositoryService">
 		<property name="accessKey"><value>51d3cdaa81331c9117d77f443a2c5404</value></property>
 	</bean>
 		
@@ -38,6 +38,10 @@
 	
 	<bean id="SPARQLConfigService" class="fi.seco.saha3.model.configuration.SPARQLConfigService"
 		p:path-ref="projectPath"/> 
+		
+	<bean id="RequestLogger" class="fi.seco.saha3.model.SimpleFileRequestLogger"
+		p:modelReader-ref="modelReader"
+		p:path-ref="projectPath" />
 	
 	<bean id="project" class="fi.seco.saha3.model.SahaProject"/>
 	
