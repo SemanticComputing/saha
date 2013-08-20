@@ -19,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import fi.seco.saha3.model.IModelEditor;
 import fi.seco.saha3.model.IModelLister;
 import fi.seco.saha3.model.IModelReader;
+import fi.seco.saha3.model.IRequestLogger;
 import fi.seco.saha3.model.ISahaProject;
 import fi.seco.saha3.model.SahaProject;
 import fi.seco.saha3.model.configuration.IConfigService;
@@ -78,6 +79,10 @@ public class SahaProjectRegistry {
 
 	public ISPARQLConfigService getSPARQLConfig(String modelName) {
 		return (ISPARQLConfigService) getBean(modelName, "SPARQLConfigService");
+	}
+
+	public IRequestLogger getRequestLogger(String model) {
+		return (IRequestLogger) getBean(model, "RequestLogger");
 	}
 
 	private synchronized ISahaProject getSahaProject(String modelName, boolean createNew) {

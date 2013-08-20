@@ -13,10 +13,11 @@ import com.hp.hpl.jena.rdf.model.Model;
  */
 public interface IModelReader {
 
-	public IResults search(String query, Collection<String> parentRestrictions, Collection<String> typeRestrictions,
-			Locale locale, int maxResults);
+	public IResults topSearch(String query, Locale locale, int maxResults);
 
-	public IResults getSortedInstances(String label, String type, Locale locale, int from, int to);
+	public IResults inlineSearch(String query, Collection<String> typeRestrictions, Locale locale, int maxResults);
+
+	public IResults getSortedInstances(String type, Locale locale, int from, int to);
 
 	public ISahaResource getResource(String resourceUri, Locale locale);
 

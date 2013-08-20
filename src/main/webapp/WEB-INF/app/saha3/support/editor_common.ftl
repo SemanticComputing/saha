@@ -194,7 +194,7 @@
 			});
 		}
 		function remove_resource(model,uri,label) {
-			if (confirm('Remove \"' + label + '\"?')) {
+			if (confirm('Really remove \"' + label + '\"? This will remove ALL properties of the resource as well as _ALL REFERENCES TO THE RESOURCE_ from all other resources in the project!')) {
 				document.body.style.cursor="progress";
 				ResourceEditService.removeResource(model,uri, {
 					callback:function(dataFromServer) {
@@ -337,7 +337,7 @@
 
 [#macro objectPropertyEditor id model resourceUri property]
 	<div style="color:#888;">select reference 
-		[#if property.range?size == 0]<span style="color:forestgreen">(range unknown)</span>[/#if]
+		[#if property.range?size == 0 && !property.config.denyLocalReferences]<span style="color:forestgreen">(range unknown)</span>[/#if]
 	</div>
 	<div id="select_${id}"></div>
 	<div id="editor_${id}"></div>

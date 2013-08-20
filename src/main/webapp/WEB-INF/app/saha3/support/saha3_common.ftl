@@ -357,6 +357,26 @@
 	</table>
 [/#macro]
 
+[#macro renderStaticMap propertyMapEntrySet]
+	[#assign googleMapsKey = "ABQIAAAAOVuTVW1aChPiS8ukar-AChRkY9KrTsc54SNfat8hJ7dc0OtNkRRuDC5nOgkBT53gdVJJH7oIXf0z-g"]
+	[#assign latPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#lat"]
+	[#assign longPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#long"]
+	[#assign latValue = ""]
+	[#assign longValue = ""]
+	[#list propertyMapEntrySet as entry]
+		[#if entry.key.uri == latPropertyUri && entry.value?size > 0]
+			[#assign latValue = entry.value?first.valueLabel]
+		[#elseif entry.key.uri == longPropertyUri && entry.value?size > 0]
+			[#assign longValue = entry.value?first.valueLabel]
+		[/#if]
+	[/#list]
+	[#if latValue!="" && longValue!=""]
+	<div id="map_id">
+	  <img src="http://maps.google.com/maps/api/staticmap?markers=${latValue},${longValue}&zoom=11&size=420x300&sensor=false&key=${googleMapsKey}"/>
+	</div>
+	[/#if]
+[/#macro]
+
 [#macro renderMap propertyMapEntrySet resourceUri allowEdit]	
 	[#-- key for wrk-4.seco.hut.fi --]
 	[#-- [#assign googleMapsKey = "ABQIAAAAbGh0INmRoyUSEYiw64wuMBQtMqU-qUFb9rtyXClbMJ0ruKndGRRicrYrFWb4nC7pWExSj7_BO7spSQ"] --]
@@ -421,7 +441,7 @@
 		}
 	
 		function setNewCoordinates(coordinates, fc) {
-			ResourceEditService.setMapProperty('${model}', '${instance.uri}', fc, coordinates)
+			ResourceEditService.setMapProperty('${model}', '${resourceUri}', fc, coordinates)
 				
 			if (fc == 'singlepoint') {
 				var x, y;
@@ -460,7 +480,7 @@
 					
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=singlepoint\', \'map_popup\', \'\'); return false;">[set place]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;			
@@ -491,7 +511,7 @@
 					html += '<span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'polygon\');">[remove area]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=polygon\', \'map_popup\', \'\'); return false;">[set area]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					
@@ -524,7 +544,7 @@
 					html += ' <span style="cursor:pointer;" onclick="javascript: setNewCoordinates(null, \'route\');">[remove route]</span>';
 				}
 			} else if (allowEdit) {
-				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${instance.uri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
+				html += '<span style="cursor:pointer;" onclick="javascript:window.open(\'map.shtml?model=${model?url}&uri=\' + encodeURIComponent(\'${resourceUri}\') + \'&fc=route\', \'map_popup\', \'\'); return false;">[set route]</span>';
 			}
 			
 			document.getElementById("map_id").innerHTML = html;					
@@ -556,7 +576,7 @@
 		[#assign mapExists = true /]				
 	[/#if]
 			
-	[#if !mapExists]
+	[#if !mapExists && allowEdit] 
 			[#list instance.properties as property]
 				[#assign latPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#lat" /]
 				[#assign longPropertyUri = "http://www.w3.org/2003/01/geo/wgs84_pos#long" /]

@@ -20,8 +20,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import fi.seco.saha3.infrastructure.OnkiWebService;
-import fi.seco.saha3.infrastructure.OnkiWebService.OnkiRepository;
+import fi.seco.saha3.infrastructure.IExternalRepository;
+import fi.seco.saha3.infrastructure.ExternalRepositoryService;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.model.IModelReader;
 import fi.seco.saha3.model.IResults;
@@ -40,7 +40,7 @@ public class ResourceSearchService implements Controller {
 	private static final Logger log = LoggerFactory.getLogger(ResourceSearchService.class);
 
 	private SahaProjectRegistry sahaProjectRegistry;
-	private OnkiWebService onkiWebService;
+	private ExternalRepositoryService onkiWebService;
 	private final static int DEFAULT_MAX_RESULTS = 15;
 
 	@Required
@@ -48,7 +48,7 @@ public class ResourceSearchService implements Controller {
 		this.sahaProjectRegistry = sahaProjectRegistry;
 	}
 
-	public void setOnkiWebService(OnkiWebService onkiWebService) {
+	public void setOnkiWebService(ExternalRepositoryService onkiWebService) {
 		this.onkiWebService = onkiWebService;
 	}
 
@@ -92,7 +92,7 @@ public class ResourceSearchService implements Controller {
 			Set<String> usedKeys = new HashSet<String>();
 			// local search
 			if (!(propertyConfig != null && propertyConfig.isDenyLocalReferences())) {
-				IResults results = project.search(query, null, range, locale, maxResults);
+				IResults results = project.inlineSearch(query, range, locale, maxResults);
 				parseResult(resultItems, results, usedKeys, maxResults);
 			}
 
@@ -100,8 +100,9 @@ public class ResourceSearchService implements Controller {
 			if (propertyConfig != null)
 				for (RepositoryConfig config : propertyConfig.getRepositoryConfigs()) {
 					String ontologyName = config.getSourceName();
-					OnkiRepository repository = onkiWebService.getOnkiRepository(ontologyName);
-					IResults results = repository.search(query, config.getParentRestrictions(), config.getTypeRestrictions(), locale, maxResults);
+					IResults results;
+					IExternalRepository repository = onkiWebService.getExternalRepository(ontologyName);
+					results = repository.search(query, config.getParentRestrictions(), config.getTypeRestrictions(), locale, maxResults);
 					parseResult(ontologyName, resultItems, results, usedKeys, maxResults);
 				}
 

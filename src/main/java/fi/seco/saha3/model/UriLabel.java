@@ -15,28 +15,33 @@ public class UriLabel implements Comparable<UriLabel> {
 	private final String uri;
 	private final String lang;
 	private final String label;
+	private final String datatype;
 
 	public UriLabel() {
 		this.uri = "";
 		this.lang = "";
 		this.label = "";
+		this.datatype = "";
 	}
 
 	public UriLabel(String uri, String label) {
 		this.uri = uri;
 		this.lang = "";
+		this.datatype = "";
 		this.label = label;
 	}
 
 	public UriLabel(String uri, Locale locale, String label) {
 		this.uri = uri;
 		this.lang = (locale != null) ? locale.getLanguage() : "";
+		this.datatype = "";
 		this.label = label;
 	}
 
 	public UriLabel(String uri, String lang, String label) {
 		this.uri = uri;
 		this.lang = lang;
+		this.datatype = "";
 		this.label = label;
 	}
 
@@ -44,6 +49,7 @@ public class UriLabel implements Comparable<UriLabel> {
 		this.uri = "";
 		this.lang = literal.getLanguage();
 		this.label = literal.getString();
+		this.datatype = literal.getDatatypeURI() != null ? literal.getDatatypeURI() : "";
 	}
 
 	public String getUri() {
@@ -58,8 +64,12 @@ public class UriLabel implements Comparable<UriLabel> {
 		return label;
 	}
 
-	public String getLabelShaHex() {
-		return DigestUtils.sha1Hex(getLabel());
+	public String getDatatype() {
+		return datatype;
+	}
+
+	public String getShaHex() {
+		return DigestUtils.sha1Hex('"' + getLabel() + "\"@" + getLang() + "^^" + getDatatype());
 	}
 
 	@Override
@@ -77,6 +87,11 @@ public class UriLabel implements Comparable<UriLabel> {
 	@Override
 	public int hashCode() {
 		return getUri().hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return label;
 	}
 
 }

@@ -5,9 +5,9 @@ package fi.seco.saha3.model;
 
 import java.util.Locale;
 
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Required;
 
+import com.hp.hpl.jena.datatypes.TypeMapper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -15,11 +15,14 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateFactory;
+import com.hp.hpl.jena.update.UpdateRequest;
 import com.hp.hpl.jena.vocabulary.RDF;
 
+import fi.seco.saha3.infrastructure.ExternalRepositoryService;
+import fi.seco.saha3.infrastructure.IExternalRepository;
 import fi.seco.saha3.model.configuration.IConfigService;
 import fi.seco.saha3.model.configuration.ISPARQLConfigService;
+import fi.seco.saha3.model.configuration.RepositoryConfig;
 import fi.seco.saha3.util.SAHA3;
 
 /**
@@ -29,6 +32,13 @@ import fi.seco.saha3.util.SAHA3;
 public class RemoteSPARULModelEditor implements IModelEditor {
 
 	private IConfigService config;
+
+	private ExternalRepositoryService externalRepositoryService;
+
+	@Required
+	public void setExternalRepositoryService(ExternalRepositoryService externalRepositoryService) {
+		this.externalRepositoryService = externalRepositoryService;
+	}
 
 	@Required
 	public void setConfigService(IConfigService config) {
@@ -42,32 +52,53 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		this.sparqlConfigService = sparqlConfigService;
 	}
 
+	private boolean execAsk(Query query) {
+		if (sparqlConfigService.getGraphURI() != null)
+			return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query, sparqlConfigService.getGraphURI()).execAsk();
+		return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query).execAsk();
+	}
+
 	private ResultSet execSelect(Query query) {
 		if (sparqlConfigService.getGraphURI() != null)
 			return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query, sparqlConfigService.getGraphURI()).execSelect();
 		return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query).execSelect();
 	}
 
+	private String checkAndAddExternalResources(String propertyUri, String objectUri, Locale locale,
+			ParameterizedSparqlString u) {
+		String label = null;
+		for (RepositoryConfig repositoryConfig : config.getPropertyConfig(propertyUri).getRepositoryConfigs()) {
+			IExternalRepository externalRepository = externalRepositoryService.getExternalRepository(repositoryConfig.getSourceName());
+			for (ISahaProperty property : externalRepository.getProperties(objectUri, locale))
+				if (property.isLiteral()) {
+					u.append(' ');
+					u.appendIri(objectUri);
+					u.append(' ');
+					u.appendIri(property.getUri());
+					u.append(' ');
+					if ("".equals(property.getValueLang())) {
+						if ("".equals(property.getValueDatatypeUri()))
+							u.appendLiteral(property.getValueLabel());
+						else u.appendLiteral(property.getValueLabel(), TypeMapper.getInstance().getSafeTypeByName(property.getValueDatatypeUri()));
+					} else u.appendLiteral(property.getValueLabel(), property.getValueLang());
+					u.append(" .");
+				}
+			String potLabel = externalRepository.getLabel(objectUri, locale.toString());
+			if (potLabel != null && !"".equals(potLabel)) label = potLabel;
+		}
+		if (label == null) label = objectUri;
+		return label;
+	}
+
 	@Override
 	public UriLabel addObjectProperty(String s, String p, String o, Locale locale) {
-		ParameterizedSparqlString u;
-		if (sparqlConfigService.getGraphURI() != null) {
-			u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s ?p ?o }");
-			u.setIri("g", sparqlConfigService.getGraphURI());
-		} else u = new ParameterizedSparqlString("INSERT DATA { ?s ?p ?o }");
-		u.setIri("s", s);
-		u.setIri("p", p);
-		u.setIri("o", o);
-		execUpdate(u.toString());
 		ParameterizedSparqlString q = new ParameterizedSparqlString(sparqlConfigService.getLabelQuery(), RemoteSPARQLModelReader.pm);
 		q.setIri("uri", o);
 		String lstring = locale.toString();
 		q.setLiteral("lang", lstring);
 		ResultSet rs = execSelect(q.asQuery());
 		String label = null;
-		if (!rs.hasNext())
-			label = o;
-		else while (rs.hasNext()) {
+		while (rs.hasNext()) {
 			Literal l = rs.next().get("label").asLiteral();
 			if (lstring.equals(l.getLanguage())) {
 				label = l.getString();
@@ -76,6 +107,17 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 				label = l.getString();
 			else if (label == null) label = l.getString();
 		}
+		ParameterizedSparqlString u;
+		if (sparqlConfigService.getGraphURI() != null) {
+			u = new ParameterizedSparqlString("INSERT DATA INTO ?g { ?s ?p ?o .");
+			u.setIri("g", sparqlConfigService.getGraphURI());
+		} else u = new ParameterizedSparqlString("INSERT DATA { ?s ?p ?o .");
+		u.setIri("s", s);
+		u.setIri("p", p);
+		u.setIri("o", o);
+		if (label == null) label = checkAndAddExternalResources(p, o, locale, u);
+		u.append(" }");
+		execUpdate(u.asUpdate());
 		return new UriLabel(o, label);
 	}
 
@@ -89,7 +131,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		u.setIri("s", s);
 		u.setIri("p", p);
 		u.setIri("o", o);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 	}
 
 	@Override
@@ -102,7 +144,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		u.setIri("s", s);
 		u.setIri("p", p);
 		u.setLiteral("o", l);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 		return new UriLabel("", "", l);
 	}
 
@@ -116,21 +158,21 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		u.setIri("s", s);
 		u.setIri("p", p);
 		u.setLiteral("o", l, lang);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 		return new UriLabel("", lang, l);
 	}
 
 	private static final String getLiteralPropertiesQuery = "SELECT ?value WHERE { ?uri ?propertyURI ?value . FILTER isLITERAL(?value) }";
 
 	@Override
-	public void removeLiteralProperty(String s, String p, String valueShaHex) {
+	public UriLabel removeLiteralProperty(String s, String p, String valueShaHex) {
 		ParameterizedSparqlString q = new ParameterizedSparqlString(getLiteralPropertiesQuery, RemoteSPARQLModelReader.pm);
 		q.setIri("uri", s);
 		q.setIri("propertyURI", p);
 		ResultSet rs = execSelect(q.asQuery());
 		while (rs.hasNext()) {
 			QuerySolution qs = rs.next();
-			if (DigestUtils.sha1Hex(qs.get("value").toString()).equals(valueShaHex)) {
+			if (new UriLabel(qs.get("value").asLiteral()).getShaHex().equals(valueShaHex)) {
 				Literal l = qs.get("value").asLiteral();
 				ParameterizedSparqlString u;
 				if (sparqlConfigService.getGraphURI() != null) {
@@ -140,10 +182,11 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 				u.setIri("s", s);
 				u.setIri("p", p);
 				u.setLiteral("o", l);
-				execUpdate(u.toString());
-				break;
+				execUpdate(u.asUpdate());
+				return new UriLabel(l);
 			}
 		}
+		throw new IllegalArgumentException("Tried to remove nonexistant literal");
 	}
 
 	@Override
@@ -155,7 +198,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
 		u.setIri("s", s);
 		u.setIri("p", p);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 	}
 
 	@Override
@@ -180,7 +223,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		} else u = new ParameterizedSparqlString("INSERT DATA { ?s <" + RDF.type.getURI() + "> ?type }");
 		u.setIri("s", uri);
 		u.setIri("type", type);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 		return uri;
 	}
 
@@ -188,11 +231,11 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 	public void removeResource(String uri) {
 		ParameterizedSparqlString u;
 		if (sparqlConfigService.getGraphURI() != null) {
-			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { { ?s ?p ?o } UNION { ?o ?p ?s } }");
+			u = new ParameterizedSparqlString("DELETE FROM ?g { ?s ?p ?o . ?s2 ?p2 ?s . } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
 			u.setIri("g", sparqlConfigService.getGraphURI());
-		} else u = new ParameterizedSparqlString("DELETE DATA { { ?s ?p ?o } UNION { ?o ?p ?s } }");
+		} else u = new ParameterizedSparqlString("DELETE { ?s ?p ?o . ?s2 ?p2 ?s . } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
 		u.setIri("s", uri);
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 	}
 
 	@Override
@@ -202,7 +245,7 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 			u = new ParameterizedSparqlString("CLEAR GRAPH ?g");
 			u.setIri("g", sparqlConfigService.getGraphURI());
 		} else u = new ParameterizedSparqlString("CLEAR");
-		execUpdate(u.toString());
+		execUpdate(u.asUpdate());
 	}
 
 	@Override
@@ -224,8 +267,8 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 		else if (fc.equals("route")) addLiteralProperty(s, SAHA3.ROUTE_URI, value);
 	}
 
-	private void execUpdate(String update) {
-		UpdateExecutionFactory.createRemote(UpdateFactory.create(update), sparqlConfigService.getSparulURL()).execute();
+	private void execUpdate(UpdateRequest update) {
+		UpdateExecutionFactory.createRemote(update, sparqlConfigService.getSparulURL()).execute();
 	}
 
 }

@@ -27,16 +27,15 @@ public class SahaController extends ASahaController {
 		mav.addObject("rootClasses", reader.getClassTree(locale));
 
 		String type = request.getParameter("type");
-		String query = request.getParameter("query");
 
-		if ((type != null && !type.isEmpty()) || (query != null && !query.isEmpty())) {
+		if ((type != null && !type.isEmpty())) {
 			int from = parseInt(request.getParameter("from"));
 			if (from < 0) from = 0;
 
 			int to = parseInt(request.getParameter("to"));
 			if (to < from) to = from + 500;
 
-			mav.addObject("result", reader.getSortedInstances(query, type, locale, from, to));
+			mav.addObject("result", reader.getSortedInstances(type, locale, from, to));
 			mav.addObject("typeResource", reader.getResource(type, locale));
 
 			mav.addObject("from", from);
@@ -44,7 +43,6 @@ public class SahaController extends ASahaController {
 		}
 
 		mav.addObject("type", type != null ? type : "");
-		mav.addObject("query", query != null ? query : "");
 
 		return mav;
 	}

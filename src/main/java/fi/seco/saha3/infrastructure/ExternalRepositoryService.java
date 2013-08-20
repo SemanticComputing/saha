@@ -1,28 +1,34 @@
 package fi.seco.saha3.infrastructure;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
 
-import org.apache.commons.codec.digest.DigestUtils;
+import org.geonames.Toponym;
+import org.geonames.ToponymSearchCriteria;
+import org.geonames.ToponymSearchResult;
+import org.geonames.WebService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Required;
+
+import com.hp.hpl.jena.vocabulary.RDFS;
 
 import fi.helsinki.cs.seco.onki.service.ArrayOfStatement;
 import fi.helsinki.cs.seco.onki.service.ArrayOfString;
@@ -32,10 +38,14 @@ import fi.helsinki.cs.seco.onki.service.OnkiQueryResult;
 import fi.helsinki.cs.seco.onki.service.OnkiQueryResults;
 import fi.helsinki.cs.seco.onki.service.Statement;
 import fi.seco.saha3.model.IResults;
+import fi.seco.saha3.model.IResults.IResult;
+import fi.seco.saha3.model.IResults.Result;
+import fi.seco.saha3.model.IResults.Results;
 import fi.seco.saha3.model.ISahaProperty;
 import fi.seco.saha3.model.UITreeNode;
 import fi.seco.saha3.model.UriLabel;
 import fi.seco.saha3.model.configuration.PropertyConfig;
+import fi.seco.saha3.util.SAHA3;
 
 /**
  * Mediator class between ONKI and SAHA ontology searches. Encodes and decodes
@@ -43,68 +53,63 @@ import fi.seco.saha3.model.configuration.PropertyConfig;
  * remote queries.
  * 
  */
-public class OnkiWebService {
+public class ExternalRepositoryService {
 
-	public class OnkiProperty implements ISahaProperty {
-		private final Statement s;
-		private boolean literal;
-		private String label;
+	private static class ExternalProperty implements ISahaProperty {
 
-		public OnkiProperty(Statement s) {
-			this.s = s;
-			this.label = getString(s.getLabel());
-			if (label.isEmpty()) {
-				label = getString(s.getValue());
-				literal = true;
-			}
+		private final String predicateURI;
+		private final String predicateLabel;
+		private final String valueTypeURI;
+		private final String valueTypeLabel;
+		private final UriLabel value;
+
+		public ExternalProperty(String predicateURI, String predicateLabel, UriLabel value, String valueTypeURI,
+				String valueTypeLabel) {
+			this.predicateURI = predicateURI;
+			this.predicateLabel = predicateLabel;
+			this.value = value;
+			this.valueTypeURI = valueTypeURI;
+			this.valueTypeLabel = valueTypeLabel;
 		}
 
 		@Override
 		public String getLabel() {
-			return getString(s.getPredicateLabel());
+			return predicateLabel;
 		}
 
 		@Override
 		public String getUri() {
-			return getString(s.getPredicateUri());
+			return predicateURI;
 		}
 
 		@Override
 		public String getValueLabel() {
-			return label;
+			return value.getLabel();
 		}
 
 		@Override
 		public String getValueLang() {
-			return getString(s.getLabel());
+			return value.getLang();
 		}
 
 		@Override
 		public String getValueShaHex() {
-			return DigestUtils.sha1Hex(getValueLabel());
+			return value.getShaHex();
 		}
 
 		@Override
 		public String getValueUri() {
-			return getString(s.getUri());
+			return value.getUri();
 		}
 
 		@Override
 		public String getValueDatatypeUri() {
-			return "";
-		}
-
-		private String getString(JAXBElement<String> e) {
-			if (e != null) {
-				String s = e.getValue();
-				if (s != null) return s;
-			}
-			return "";
+			return value.getDatatype();
 		}
 
 		@Override
 		public boolean isLiteral() {
-			return literal;
+			return "".equals(value.getUri());
 		}
 
 		@Override
@@ -115,12 +120,12 @@ public class OnkiWebService {
 
 		@Override
 		public String getValueTypeLabel() {
-			return "";
+			return valueTypeLabel;
 		}
 
 		@Override
 		public String getValueTypeUri() {
-			return "";
+			return valueTypeURI;
 		}
 
 		@Override
@@ -149,6 +154,14 @@ public class OnkiWebService {
 		}
 	}
 
+	private static String getString(JAXBElement<String> e) {
+		if (e != null) {
+			String s = e.getValue();
+			if (s != null) return s;
+		}
+		return "";
+	}
+
 	public class OnkiResults implements IResults {
 		private final Set<IResults.IResult> results = new LinkedHashSet<IResults.IResult>();
 		private final int size;
@@ -170,7 +183,7 @@ public class OnkiWebService {
 		}
 	}
 
-	public class OnkiRepository {
+	public class OnkiRepository implements IExternalRepository {
 		private final IOnkiQueryPortType port;
 		private final String ontology;
 
@@ -194,6 +207,7 @@ public class OnkiWebService {
 			port = tport;
 		}
 
+		@Override
 		public IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris,
 				Locale locale, int maxResults) {
 			try {
@@ -217,6 +231,7 @@ public class OnkiWebService {
 			return getLabel(uri, locale.getLanguage());
 		}
 
+		@Override
 		public String getLabel(String uri, String lang) {
 			try {
 				OnkiQueryResult r = port.getLabel(uri, lang);
@@ -228,6 +243,7 @@ public class OnkiWebService {
 			}
 		}
 
+		@Override
 		public Set<ISahaProperty> getProperties(String uri, Locale locale) {
 			Set<ISahaProperty> properties = new TreeSet<ISahaProperty>();
 			ArrayOfStatement statements = null;
@@ -238,25 +254,18 @@ public class OnkiWebService {
 				return properties;
 			}
 			for (Statement s : statements.getStatement()) {
-				OnkiProperty property = new OnkiProperty(s);
-				if (!property.getValueLabel().isEmpty()) properties.add(property);
+				String label = getString(s.getLabel());
+				String predicateURI = getString(s.getPredicateUri());
+				String predicateLabel = getString(s.getPredicateLabel());
+				String lang = getString(s.getLang());
+				String suri = getString(s.getUri());
+				if (label.isEmpty()) label = suri;
+				ExternalProperty property = new ExternalProperty(predicateURI, predicateLabel, new UriLabel(suri, lang, label), "", "");
+				properties.add(property);
 			}
 			return properties;
 		}
 
-		public Map<UriLabel, Set<ISahaProperty>> getPropertyMap(String uri, Locale locale) {
-			Map<UriLabel, Set<ISahaProperty>> map = new TreeMap<UriLabel, Set<ISahaProperty>>();
-			for (ISahaProperty property : getProperties(uri, locale)) {
-				UriLabel p = new UriLabel(property.getUri(), property.getLabel());
-				if (!map.containsKey(p)) map.put(p, new TreeSet<ISahaProperty>());
-				map.get(p).add(property);
-			}
-			return map;
-		}
-
-		public Set<Entry<UriLabel, Set<ISahaProperty>>> getPropertyMapEntrySet(String uri, Locale locale) {
-			return getPropertyMap(uri, locale).entrySet();
-		}
 	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
@@ -264,7 +273,7 @@ public class OnkiWebService {
 
 	private final Map<String, OnkiRepository> onkiCache = new HashMap<String, OnkiRepository>();
 
-	public OnkiWebService() {
+	public ExternalRepositoryService() {
 
 	}
 
@@ -273,7 +282,68 @@ public class OnkiWebService {
 		this.accessKey = accessKey;
 	}
 
-	public OnkiRepository getOnkiRepository(String ontology) {
+	private final IExternalRepository geonamesRepository = new IExternalRepository() {
+
+		@Override
+		public IResults search(String queryTerm, Collection<String> parentUris, Collection<String> typeUris,
+				Locale locale, int maxResults) {
+			final List<IResult> ret = new ArrayList<IResult>();
+			WebService.setUserName("jiemakel");
+			ToponymSearchCriteria tsc = new ToponymSearchCriteria();
+			tsc.setNameStartsWith(queryTerm);
+			ToponymSearchResult tsr;
+			try {
+				tsr = WebService.search(tsc);
+				for (Toponym t : tsr.getToponyms())
+					ret.add(new Result(toUri(t.getGeoNameId()), t.getName() + ", " + t.getCountryName()));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			return new Results(ret, tsr.getTotalResultsCount());
+		}
+
+		private String toUri(int id) {
+			return "http://sws.geonames.org/" + id + "/";
+		}
+
+		private int toId(String uri) {
+			return Integer.valueOf(uri.substring("http://sws.geonames.org/".length(), uri.length() - 1));
+		}
+
+		@Override
+		public Set<ISahaProperty> getProperties(String uri, Locale locale) {
+			try {
+				String lstring = locale.toString();
+				Toponym t = WebService.get(toId(uri), lstring, "medium");
+				Set<ISahaProperty> ret = new HashSet<ISahaProperty>();
+				ret.add(new ExternalProperty(RDFS.label.getURI(), lstring.equals("fi") ? "nimi" : lstring.equals("sv") ? "namn" : "name", new UriLabel("", lstring, t.getName()), "", ""));
+				ret.add(new ExternalProperty(SAHA3.WGS84_LAT, "lat", new UriLabel("", lstring, "" + t.getLatitude()), "", ""));
+				ret.add(new ExternalProperty(SAHA3.WGS84_LONG, "lon", new UriLabel("", lstring, "" + t.getLongitude()), "", ""));
+				return ret;
+			} catch (NumberFormatException e) {
+				throw new RuntimeException(e);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public String getLabel(String uri, String lang) {
+			try {
+				Toponym t = WebService.get(toId(uri), lang, "medium");
+				return t.getName();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+	};
+
+	public IExternalRepository getExternalRepository(String ontology) {
+		if (ontology.equals("geonames")) return geonamesRepository;
 		if (!onkiCache.containsKey(ontology)) onkiCache.put(ontology, new OnkiRepository(ontology));
 		return onkiCache.get(ontology);
 	}

@@ -17,7 +17,6 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.vocabulary.RDF;
-import com.hp.hpl.jena.vocabulary.RDFS;
 
 /**
  * @author jiemakel
@@ -43,7 +42,8 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 				if (r.hasProperty(ResourceFactory.createProperty(ns + "graphURI")))
 					graphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "graphURI")).getString();
 				wholeModelQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "wholeModelQuery")).getString();
-				stringMatchesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "stringMatchesQuery")).getString();
+				topStringMatchesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "topStringMatchesQuery")).getString();
+				inlineStringMatchesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "inlineStringMatchesQuery")).getString();
 				instanceQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "instanceQuery")).getString();
 				labelQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "labelQuery")).getString();
 				typesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "typesQuery")).getString();
@@ -56,20 +56,6 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 			} catch (FileNotFoundException e) {
 				throw new IOError(e);
 			}
-		else {
-			log.info("Using a new default SPARQL configuration.");
-			wholeModelQuery = "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }";
-			stringMatchesQuery = "SELECT ?item ?itemLabel ?property ?propertyLabel ?object WHERE {\n  ?item ?property ?object .\n  FILTER (REGEX(?object,?query))\n  OPTIONAL {\n    ?item rdfs:label|skos:prefLabel ?itemLabel .\n  }\n  OPTIONAL {\\n    ?item a ?itemType.\n    ?itemType rdfs:label|skos:prefLabel ?itemTypeLabel .\\n  }\\n  OPTIONAL {\n    ?property rdfs:label|skos:prefLabel ?propertyLabel .\n  }\n}";
-			instanceQuery = "SELECT ?item ?label WHERE {\n  ?item rdf:type ?type .\n  OPTIONAL {\n    ?item rdfs:label|skos:prefLabel ?label\n  }\n}\nORDER BY ?label";
-			labelQuery = "SELECT ?label WHERE {\n  ?uri rdfs:label|skos:prefLabel ?label .\n}";
-			typesQuery = "SELECT ?type ?label WHERE {\n  ?uri rdf:type ?type .\n  OPTIONAL {\n    ?type rdfs:label|skos:prefLabel ?label .\n  }\n}";
-			propertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel WHERE {\n  ?uri ?propertyURI ?object .\n  OPTIONAL {\n    ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . \n  }\n  OPTIONAL {\n    ?object rdfs:label|skos:prefLabel ?objectLabel .\n  }\n}";
-			inversePropertiesQuery = "SELECT ?propertyURI ?propertyLabel ?object ?objectLabel ?objectType ?objectTypeLabel WHERE {\n  ?object ?propertyURI ?uri .\n  OPTIONAL {\n    ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel . \n  }\n  OPTIONAL {\n    ?object rdfs:label|skos:prefLabel ?objectLabel .\n  }\n   OPTIONAL {\n    ?object rdf:type ?objectType .\n    OPTIONAL {\n      ?objectType rdfs:label|skos:prefLabel ?objectTypeLabel .\n    }\n  }\n}";
-			editorPropertiesQuery = "SELECT ?propertyURI ?propertyComment ?propertyLabel ?propertyType ?propertyRangeURI ?propertyRangeLabel ?object ?objectLabel WHERE {\n" + "  { \n" + "    ?uri ?propertyURI ?object \n" + "    OPTIONAL { \n" + "      ?object rdfs:label|skos:prefLabel ?objectLabel . \n" + "    } \n" + "  } UNION { \n" + "    ?uri a/rdfs:subClassOf* ?typeURI .  \n" + "    ?propertyURI rdfs:domain ?typeURI .\n" + "    OPTIONAL { \n" + "      ?propertyURI rdfs:range ?propertyRangeURI \n" + "      OPTIONAL { \n" + "       ?propertyRangeURI rdfs:label|skos:prefLabel ?propertyRangeLabel .\n" + "      }\n" + "    }\n" + "  } \n" + "  OPTIONAL { \n" + "    ?propertyURI rdfs:label|skos:prefLabel ?propertyLabel .\n" + "  } \n" + "  OPTIONAL { \n" + "   ?propertyURI a ?propertyType .\n" + "  }\n" + "  OPTIONAL { \n" + "    ?propertyURI rdfs:comment ?propertyComment . \n" + "  }\n" + "}";
-			propertyTreeQuery = "CONSTRUCT { \n" + "  ?propertyURI rdfs:range ?s . \n" + "  ?s rdfs:subClassOf ?oc . \n" + "  ?sc rdfs:subClassOf ?s . \n" + "  ?s rdfs:label ?label . \n" + "} WHERE { \n" + "  { \n" + "    ?propertyURI rdfs:range ?s \n" + "  } UNION { \n" + "    ?s rdfs:subClassOf ?oc\n" + "  } UNION { \n" + "    ?sc rdfs:subClassOf ?s \n" + "  } OPTIONAL { \n" + "    ?s rdfs:label|skos:prefLabel ?label .\n" + "  }\n" + "}";
-			classTreeQuery = "CONSTRUCT { \n" + "  ?s rdfs:subClassOf ?oc . \n" + "  ?sc rdfs:subClassOf ?s . \n" + "  ?s rdfs:label ?label . \n" + "  ?s rdf:count ?count . \n" + "} WHERE { \n" + "  { \n" + "    SELECT (count(?foo) as ?count) ?s WHERE { \n" + "      ?foo rdf:type ?s \n" + "    } \n" + "    GROUP BY ?s \n" + "  } UNION { \n" + "    ?s rdf:type owl:Class \n" + "  } UNION { \n" + "    ?s rdf:type rdfs:Class \n" + "  } UNION { \n" + "    ?s rdfs:subClassOf ?oc\n" + "  } UNION { \n" + "    ?sc rdfs:subClassOf ?s\n" + "  } OPTIONAL { \n" + "    ?s rdfs:label|skos:prefLabel ?label . \n" + "  } \n" + "}";
-			labelURI = RDFS.label.getURI();
-		}
 	}
 
 	private String labelURI;
@@ -77,7 +63,8 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 	private String sparulURL;
 	private String graphURI;
 	private String wholeModelQuery;
-	private String stringMatchesQuery;
+	private String topStringMatchesQuery;
+	private String inlineStringMatchesQuery;
 	private String instanceQuery;
 	private String labelQuery;
 	private String typesQuery;
@@ -91,15 +78,16 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 
 	@Override
 	public void setConfiguration(String sparqlURL, String sparulURL, String graphURI, String labelURI,
-			String wholeModelQuery, String stringMatchesQuery, String instanceQuery, String labelQuery,
-			String typesQuery, String propertiesQuery, String inversePropertiesQuery, String editorPropertiesQuery,
-			String propertyTreeQuery, String classTreeQuery) {
+			String wholeModelQuery, String topStringMatchesQuery, String inlineStringMatchesQuery,
+			String instanceQuery, String labelQuery, String typesQuery, String propertiesQuery,
+			String inversePropertiesQuery, String editorPropertiesQuery, String propertyTreeQuery, String classTreeQuery) {
 		this.sparqlURL = sparqlURL;
 		this.sparulURL = sparulURL;
 		this.graphURI = graphURI;
 		this.labelURI = labelURI;
 		this.wholeModelQuery = wholeModelQuery;
-		this.stringMatchesQuery = stringMatchesQuery;
+		this.topStringMatchesQuery = topStringMatchesQuery;
+		this.inlineStringMatchesQuery = inlineStringMatchesQuery;
 		this.instanceQuery = instanceQuery;
 		this.labelQuery = labelQuery;
 		this.typesQuery = typesQuery;
@@ -109,13 +97,15 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 		this.editorPropertiesQuery = editorPropertiesQuery;
 		this.classTreeQuery = classTreeQuery;
 		Model m = ModelFactory.createDefaultModel();
+		m.setNsPrefix("sparql-conf", ns);
 		Resource r = m.createResource();
 		r.addProperty(RDF.type, ResourceFactory.createResource(ns + "SPARQLConfiguration"));
 		r.addProperty(ResourceFactory.createProperty(ns + "sparqlURL"), sparqlURL);
 		r.addProperty(ResourceFactory.createProperty(ns + "sparulURL"), sparulURL);
 		if (graphURI != null) r.addProperty(ResourceFactory.createProperty(ns + "graphURI"), graphURI);
 		r.addProperty(ResourceFactory.createProperty(ns + "wholeModelQuery"), wholeModelQuery);
-		r.addProperty(ResourceFactory.createProperty(ns + "stringMatchesQuery"), stringMatchesQuery);
+		r.addProperty(ResourceFactory.createProperty(ns + "topStringMatchesQuery"), topStringMatchesQuery);
+		r.addProperty(ResourceFactory.createProperty(ns + "inlineStringMatchesQuery"), inlineStringMatchesQuery);
 		r.addProperty(ResourceFactory.createProperty(ns + "instanceQuery"), instanceQuery);
 		r.addProperty(ResourceFactory.createProperty(ns + "labelQuery"), labelQuery);
 		r.addProperty(ResourceFactory.createProperty(ns + "typesQuery"), typesQuery);
@@ -153,8 +143,13 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 	}
 
 	@Override
-	public String getStringMatchesQuery() {
-		return stringMatchesQuery;
+	public String getInlineStringMatchesQuery() {
+		return inlineStringMatchesQuery;
+	}
+
+	@Override
+	public String getTopStringMatchesQuery() {
+		return topStringMatchesQuery;
 	}
 
 	@Override

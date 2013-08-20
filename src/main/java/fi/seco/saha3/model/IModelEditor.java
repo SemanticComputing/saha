@@ -12,7 +12,7 @@ public interface IModelEditor {
 
 	public UriLabel addLiteralProperty(String s, String p, String l, String lang);
 
-	public void removeLiteralProperty(String s, String p, String valueShaHex);
+	public UriLabel removeLiteralProperty(String s, String p, String valueShaHex);
 
 	public void removeProperty(String s, String p);
 
