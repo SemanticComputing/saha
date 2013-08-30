@@ -92,21 +92,24 @@
 					}
 					dwr.util.setValue("chatlog",chatlog,{escapeHtml:false});
 					if (chatIsRunning) timer = setTimeout("getMessages()",chatTimeout);
-				}
+				},
+				errorHandler:function(errorString, exception) { }	
 			});
 		}
 		function showResourceTooltip(domNode,uri) {
 			ResourceEditService.getPropertyTable('${model}',uri, {
 				callback:function(dataFromServer) {
 					if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip(dataFromServer,domNode);
-				}
+				},
+				errorHandler:function(errorString, exception) { }
 			});
 		}
 		function showExternalResourceTooltip(domNode,ontology,uri) {
 			ResourceEditService.getExternalPropertyTable(ontology,uri, {
 				callback:function(dataFromServer) {
 					if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip(dataFromServer,domNode);
-				}
+				},
+			errorHandler:function(errorString, exception) { }
 			});
 		}
 		function hideResourceTooltip(domNode) {

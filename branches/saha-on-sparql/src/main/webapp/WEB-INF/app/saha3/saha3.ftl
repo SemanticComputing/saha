@@ -17,7 +17,8 @@
 				callback:function(dataFromServer) {
 					document.body.style.cursor="";
 					location.href='editor.shtml?model=${model}&uri=' + encodeURIComponent(dataFromServer);
-				}
+				},
+				errorHandler:function(errorString, exception) { }
 			});
 		}
 		function show_create_new(element) {
