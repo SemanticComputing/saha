@@ -16,26 +16,11 @@
 	[@searchBar model lang/]
 	<div style="margin-left: 30px; margin-top: 30px;">
 	[#if message??]<h3 style="color:red">${message}</h3><br/>[/#if]
-	[#if authorized]
-	
-			<h2>Delete project:</h2><br/>
-			<form method="POST">
-				<input type="hidden" name="passhash" value="${passhash}" />
-				<input type="hidden" name="operation" value="delete" />
-				Yes, I'm sure: <input type="checkbox" name="confirm" value="true" /><br/>
-				<input type="submit" value="Delete" />
-			</form>		
-			
-			<h2>Change password:</h2><br/>
-			<form method="POST">
-				New password:<br/>			
-				<input type="password" name="newPass" /><br/>
-				New password again:<br/>			
-				<input type="password" name="newPass2" /><br/>
-				<input type="hidden" name="passhash" value="${passhash}" />
-				<input type="submit" value="Change password" />
-			</form>		
-			
+	<h2>Download project</h2>
+		<a href="export.shtml?model=${model?url}&l=ttl" style="color:deeppink">Download all triples from endpoint as text/turle</a></br>
+					<a href="export.shtml?model=${model?url}&l=ttl&schema" style="color:deeppink">Dowload schema as text/turtle</a></br>
+					<a href="export.shtml?model=${model?url}&l=ttl&config" style="color:deeppink">Download SAHA configuration as text/turtle</a> 
+        [#if authorized]				
 			<h2>Change SPARQL configuration</h2>
 			<form method="POST">
 				<input type="hidden" name="operation" value="changeSettings" />
@@ -260,6 +245,25 @@ CONSTRUCT {
   } 
 }
 [/#if]</textarea><br />
+
+                       <h2>Delete project:</h2><br/>
+                        <form method="POST">
+                                <input type="hidden" name="passhash" value="${passhash}" />
+                                <input type="hidden" name="operation" value="delete" />
+                                Yes, I'm sure: <input type="checkbox" name="confirm" value="true" /><br/>
+                                <input type="submit" value="Delete" />
+                        </form>
+
+                        <h2>Change password:</h2><br/>
+                        <form method="POST">
+                                New password:<br/>
+                                <input type="password" name="newPass" /><br/>
+                                New password again:<br/>
+                                <input type="password" name="newPass2" /><br/>
+                                <input type="hidden" name="passhash" value="${passhash}" />
+                                <input type="submit" value="Change password" />
+                        </form>
+
 				
 				<input type="submit" value="Change" />
 			</form>
@@ -273,3 +277,4 @@ CONSTRUCT {
 	[/#if]
 	</div>
 </body>
+</html>

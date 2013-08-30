@@ -248,26 +248,22 @@
 					document.getElementById('about_link_id').href = element.value;
 				}
 			</script>
-			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
+		<!--	[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
 			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
 			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] ||				 
-			<a href="hako.shtml?model=${model?url}" style="color:deeppink">HAKO</a> || 
+			<a href="hako.shtml?model=${model?url}" style="color:deeppink">HAKO</a> || -->
 			<div style="display: inline;">
-				<a href="${aboutLink!'#'}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
+		<!--		<a href="${aboutLink!'#'}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
 				<span onclick="javascript: var element = document.getElementById('about_link_box'); element.style.display = 'inline'; element.focus()" style="font-size: 50%">[edit]
 				</span>
 				<input style="display: none;" type="text" id="about_link_box" value="${aboutLink!'#'}" 
 					onBlur="javascript: setAboutLink(this);"
-					onKeyPress="javascript: if (event.keyCode==13) { setAboutLink(this) }"/>
-				<a style="color:black;" href="manage.shtml?model=${model?url}"><img title="Manage project" alt="Manage project" src="../app/images/saha3/saha3_manage_project.png" /></a>
+					onKeyPress="javascript: if (event.keyCode==13) { setAboutLink(this) }"/> -->
+				<a style="color:black;" href="manage.shtml?model=${model?url}">Settings</a>
 			</div>	
-			<a href="export.shtml?model=${model?url}&l=ttl" style="color:deeppink"><img title="Export data+schema" alt="Export data+schema" src="../app/images/saha3/saha3_export_all.png" /></a>
+		<!--	<a href="export.shtml?model=${model?url}&l=ttl" style="color:deeppink"><img title="Export data+schema" alt="Export data+schema" src="../app/images/saha3/saha3_export_all.png" /></a>
 			<a href="export.shtml?model=${model?url}&l=ttl&schema" style="color:deeppink"><img title="Export schema" alt="Export schema" src="../app/images/saha3/saha3_export_schema.png" /></a>
-			<a href="export.shtml?model=${model?url}&l=ttl&config" style="color:deeppink"><img title="Export configuration" alt="Export configuration" src="../app/images/saha3/saha3_export_config.png" /></a> 
-			<span 
-				onMouseOver="javascript: dijit.showTooltip('${helpText!''}',this);"
-				onMouseOut="javascript: dijit.hideTooltip(this);"
-			 	style="color:deeppink; margin-left: 20px; text-decoration: underline;"><img src="../app/images/saha3/saha3_help.png" /></span>
+			<a href="export.shtml?model=${model?url}&l=ttl&config" style="color:deeppink"><img title="Export configuration" alt="Export configuration" src="../app/images/saha3/saha3_export_config.png" /></a> -->
 			 
 		</div>
 		<div style="position:absolute;right:5px;top:48px;width:180px;font-size:8pt;">
