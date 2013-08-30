@@ -25,11 +25,16 @@ import fi.seco.saha3.model.configuration.ISPARQLConfigService;
 import fi.seco.saha3.model.configuration.RepositoryConfig;
 import fi.seco.saha3.util.SAHA3;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author jiemakel
  * 
  */
 public class RemoteSPARULModelEditor implements IModelEditor {
+
+        private static final Logger log = LoggerFactory.getLogger(RemoteSPARULModelEditor.class);
 
 	private IConfigService config;
 
@@ -125,7 +130,8 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 	public void removeObjectProperty(String s, String p, String o) {
 		ParameterizedSparqlString u;
 		if (sparqlConfigService.getGraphURI() != null) {
-			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+		        //Fuseki doesn't support FROM u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+			u = new ParameterizedSparqlString("DELETE WHERE { GRAPH ?g { ?s ?p ?o } }");
 			u.setIri("g", sparqlConfigService.getGraphURI());
 		} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
 		u.setIri("s", s);
@@ -176,7 +182,8 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 				Literal l = qs.get("value").asLiteral();
 				ParameterizedSparqlString u;
 				if (sparqlConfigService.getGraphURI() != null) {
-					u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+				        // Fuseki doesn't support FROM u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+					u = new ParameterizedSparqlString("DELETE WHERE { GRAPH ?g { ?s ?p ?o } }");
 					u.setIri("g", sparqlConfigService.getGraphURI());
 				} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
 				u.setIri("s", s);
@@ -193,7 +200,8 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 	public void removeProperty(String s, String p) {
 		ParameterizedSparqlString u;
 		if (sparqlConfigService.getGraphURI() != null) {
-			u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+		        // Fuseki doesn't support FROM u = new ParameterizedSparqlString("DELETE DATA FROM ?g { ?s ?p ?o }");
+		        u = new ParameterizedSparqlString("DELETE WHERE { GRAPH ?g { ?s ?p ?o } }");
 			u.setIri("g", sparqlConfigService.getGraphURI());
 		} else u = new ParameterizedSparqlString("DELETE DATA { ?s ?p ?o }");
 		u.setIri("s", s);
@@ -231,10 +239,14 @@ public class RemoteSPARULModelEditor implements IModelEditor {
 	public void removeResource(String uri) {
 		ParameterizedSparqlString u;
 		if (sparqlConfigService.getGraphURI() != null) {
-			u = new ParameterizedSparqlString("DELETE FROM ?g { ?s ?p ?o . ?s2 ?p2 ?s . } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
-			u.setIri("g", sparqlConfigService.getGraphURI());
+		    //u = new ParameterizedSparqlString("DELETE FROM ?g { ?s ?p ?o . ?s2 ?p2 ?s . } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
+			
+		    u = new ParameterizedSparqlString("DELETE { GRAPH ?g { ?s ?p ?o . ?s2 ?p2 ?s . } } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
+
+u.setIri("g", sparqlConfigService.getGraphURI());
 		} else u = new ParameterizedSparqlString("DELETE { ?s ?p ?o . ?s2 ?p2 ?s . } WHERE { { ?s ?p ?o } UNION { ?s2 ?p2 ?s } }");
 		u.setIri("s", uri);
+		log.info("Query string: " + u);
 		execUpdate(u.asUpdate());
 	}
 
