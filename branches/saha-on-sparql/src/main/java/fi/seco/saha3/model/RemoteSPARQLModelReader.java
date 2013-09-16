@@ -249,12 +249,14 @@ public class RemoteSPARQLModelReader implements IModelReader {
 				Result r = new Result(e.getKey().toString(), hlstring);
 				Collection<Pair<RDFNode, RDFNode>> col = propertyObjectMap.get(item);
 				for (Pair<RDFNode, RDFNode> po : col) {
+				    if( po.getRight().isLiteral() ) {
 					String lit = po.getRight().asLiteral().getString();
 					if (!lit.equals(itemLabel)) {
 						ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(lit)));
 						hlstring = h.getBestFragment(ts, lit);
 						r.getAltLabels().add(bestPropertyLabel.get(po.getLeft()).getString() + ": " + hlstring);
 					}
+			}
 				}
 				ret.add(r);
 			}
