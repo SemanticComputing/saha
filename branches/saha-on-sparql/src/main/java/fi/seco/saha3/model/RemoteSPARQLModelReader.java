@@ -248,16 +248,15 @@ public class RemoteSPARQLModelReader implements IModelReader {
 				}
 				Result r = new Result(e.getKey().toString(), hlstring);
 				Collection<Pair<RDFNode, RDFNode>> col = propertyObjectMap.get(item);
-				for (Pair<RDFNode, RDFNode> po : col) {
-				    if( po.getRight().isLiteral() ) {
-					String lit = po.getRight().asLiteral().getString();
-					if (!lit.equals(itemLabel)) {
-						ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(lit)));
-						hlstring = h.getBestFragment(ts, lit);
-						r.getAltLabels().add(bestPropertyLabel.get(po.getLeft()).getString() + ": " + hlstring);
+				for (Pair<RDFNode, RDFNode> po : col)
+					if (po.getRight().isLiteral()) {
+						String lit = po.getRight().asLiteral().getString();
+						if (!lit.equals(itemLabel)) {
+							ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(lit)));
+							hlstring = h.getBestFragment(ts, lit);
+							r.getAltLabels().add(bestPropertyLabel.get(po.getLeft()).getString() + ": " + hlstring);
+						}
 					}
-			}
-				}
 				ret.add(r);
 			}
 		} catch (ParseException e) {
@@ -717,7 +716,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 
 	private ResultSet execSelect(Query query) {
 		QueryEngineHTTP qe = QueryExecutionFactory.createServiceRequest(sparqlConfigService.getSparqlURL(), query);
-		qe.setSelectContentType(WebContent.contentTypeResultsJSON);
+		qe.setSelectContentType(WebContent.contentTypeTextTSV);
 		if (sparqlConfigService.getGraphURI() != null) qe.addDefaultGraph(sparqlConfigService.getGraphURI());
 		return qe.execSelect();
 	}
