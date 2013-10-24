@@ -13,12 +13,6 @@
 
 	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dojo/dojo.xd.js"></script>
 
-[#--		
-	<script type="text/javascript" src="../scripts/dojo-release-1.3.0/dojo/dojo.js"></script>
-	<link rel="stylesheet" type="text/css" href="../scripts/dojo-release-1.3.0/dijit/themes/tundra/tundra.css" />
-	<link rel="stylesheet" type="text/css" href="../scripts/dojo-release-1.3.0/dojo/resources/dojo.css" />
-	<link rel="stylesheet" type="text/css" href="../scripts/dojo-release-1.3.0/dijit/themes/dijit.css" />
---]	
 	<script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
@@ -251,10 +245,10 @@
 					document.getElementById('about_link_id').href = element.value;
 				}
 			</script>
-		<!--	[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
+			[#if lang!='fi']<a href="javascript:switchLang('fi')" style="color:black;">fi</a>[#else]<strong>fi</strong>[/#if] | 
 			[#if lang!='sv']<a href="javascript:switchLang('sv')" style="color:black;">sv</a>[#else]<strong>sv</strong>[/#if] |
 			[#if lang!='en']<a href="javascript:switchLang('en')" style="color:black;">en</a>[#else]<strong>en</strong>[/#if] ||				 
-			<a href="hako.shtml?model=${model?url}" style="color:deeppink">HAKO</a> || -->
+		<!--	<a href="hako.shtml?model=${model?url}" style="color:deeppink">HAKO</a> || -->
 			<div style="display: inline;">
 		<!--		<a href="${aboutLink!'#'}" id="about_link_id" style="color:black"><img title="About project" alt="About project" src="../app/images/saha3/saha3_about_project.png" /></a>
 				<span onclick="javascript: var element = document.getElementById('about_link_box'); element.style.display = 'inline'; element.focus()" style="font-size: 50%">[edit]
