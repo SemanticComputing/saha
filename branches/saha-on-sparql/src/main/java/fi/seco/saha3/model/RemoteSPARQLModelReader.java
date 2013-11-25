@@ -111,20 +111,27 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		return search(query, typeRestrictions, locale, maxResults);
 	}
 
-	private static void maybeUpdate(QuerySolution qs, String variable, RDFNode o, Map<RDFNode, Literal> map,
+	private static boolean maybeUpdate(QuerySolution qs, String variable, RDFNode o, Map<RDFNode, Literal> map,
 			String lstring, boolean fallback) {
 		Literal current = map.get(o);
 		if (qs.contains(variable)) {
 			Literal potential = qs.get(variable).asLiteral();
-			if (current == null || (o.isURIResource() && o.asResource().getURI().equals(current.getString())) || (o.isAnon() && o.asResource().getId().getLabelString().equals(current.getString())) || lstring.equals(potential.getLanguage()))
+			if (current == null || (o.isURIResource() && o.asResource().getURI().equals(current.getString())) || (o.isAnon() && o.asResource().getId().getLabelString().equals(current.getString())) || lstring.equals(potential.getLanguage())) {
 				map.put(o, potential);
-			else if ("".equals(potential.getLanguage()) && !lstring.equals(current.getLanguage()))
+				return true;
+			} else if ("".equals(potential.getLanguage()) && !lstring.equals(current.getLanguage())) {
 				map.put(o, potential);
-		} else if (fallback) if (current == null) if (o.isURIResource())
-			map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getURI()));
-		else if (o.isAnon())
-			map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getId().getLabelString()));
-		else map.put(o, o.asLiteral());
+				return true;
+			}
+		} else if (fallback) if (current == null) {
+			if (o.isURIResource())
+				map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getURI()));
+			else if (o.isAnon())
+				map.put(o, ResourceFactory.createPlainLiteral(o.asResource().getId().getLabelString()));
+			else map.put(o, o.asLiteral());
+			return true;
+		}
+		return false;
 	}
 
 	private IResults search(String query, Collection<String> typeRestrictions, Locale locale, int maxResults) {
@@ -198,10 +205,12 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		Map<RDFNode, Set<RDFNode>> itemTypes = new HashMap<RDFNode, Set<RDFNode>>();
 		Map<RDFNode, Literal> bestItemTypeLabel = new HashMap<RDFNode, Literal>();
 		Map<RDFNode, Literal> bestPropertyLabel = new HashMap<RDFNode, Literal>();
+		LinkedHashSet<RDFNode> itemOrder = new LinkedHashSet<RDFNode>();
 		Map<RDFNode, Set<Pair<RDFNode, RDFNode>>> propertyObjectMap = new HashMap<RDFNode, Set<Pair<RDFNode, RDFNode>>>();
 		while (rs.hasNext()) {
 			QuerySolution qs = rs.next();
 			RDFNode item = qs.get("item");
+			itemOrder.add(item);
 			maybeUpdate(qs, "itemLabel", item, bestItemLabel, lstring, true);
 			if (qs.contains("itemType")) {
 				RDFNode itemType = qs.get("itemType");
@@ -223,14 +232,12 @@ public class RemoteSPARQLModelReader implements IModelReader {
 			col.add(new Pair<RDFNode, RDFNode>(property, qs.get("object")));
 		}
 		if (bestItemLabel.size() < maxResults) maxResults = bestItemLabel.size();
-		Iterator<Entry<RDFNode, Literal>> itemIterator = bestItemLabel.entrySet().iterator();
+		Iterator<RDFNode> itemIterator = itemOrder.iterator();
 		try {
 			Highlighter h = new Highlighter(new QueryScorer(qp.parse(actualQuery)));
-
 			for (int i = 0; i < maxResults; i++) {
-				Entry<RDFNode, Literal> e = itemIterator.next();
-				RDFNode item = e.getKey();
-				String itemLabel = e.getValue().getString();
+				RDFNode item = itemIterator.next();
+				String itemLabel = bestItemLabel.get(item).getString();
 				TokenStream ts = new ASCIIFoldingFilterWithFinnishExceptions(analyzer.tokenStream("", new StringReader(itemLabel)));
 				String hlstring = h.getBestFragment(ts, itemLabel);
 				if (hlstring == null) hlstring = itemLabel;
@@ -246,7 +253,7 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					itemTypesSB.append(')');
 					hlstring = hlstring + itemTypesSB.toString();
 				}
-				Result r = new Result(e.getKey().toString(), hlstring);
+				Result r = new Result(item.toString(), hlstring);
 				Collection<Pair<RDFNode, RDFNode>> col = propertyObjectMap.get(item);
 				for (Pair<RDFNode, RDFNode> po : col)
 					if (po.getRight().isLiteral()) {
@@ -277,28 +284,46 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		q.setLiteral("lang", lstring);
 		ResultSet rs = execSelect(q.asQuery());
 		LinkedHashSet<Resource> rets = new LinkedHashSet<Resource>();
-		Map<Resource, Literal> rl = new HashMap<Resource, Literal>();
+		Map<Resource, Literal> bestResourceLabels = new HashMap<Resource, Literal>();
+		Map<Resource, Set<Resource>> types = new HashMap<Resource, Set<Resource>>();
 		List<IResult> ret = new ArrayList<IResult>();
 		while (rs.hasNext()) {
 			QuerySolution qs = rs.next();
 			Resource r = qs.get("item").asResource();
-			Literal cl = rl.get(r);
+			Literal cl = bestResourceLabels.get(r);
 			if (qs.contains("label")) {
 				Literal pl = qs.get("label").asLiteral();
 				if (cl == null || r.getURI().equals(cl.getString()) || lstring.equals(pl.getLanguage())) {
 					rets.remove(r);
 					rets.add(r);
-					rl.put(r, pl);
+					bestResourceLabels.put(r, pl);
 				} else if ("".equals(pl.getLanguage()) && !lstring.equals(cl.getLanguage())) {
 					rets.remove(r);
 					rets.add(r);
-					rl.put(r, pl);
+					bestResourceLabels.put(r, pl);
 				}
 			} else if (cl == null) {
 				rets.add(r);
 				if (r.isURIResource())
-					rl.put(r, ResourceFactory.createPlainLiteral(r.getURI()));
-				else rl.put(r, ResourceFactory.createPlainLiteral(r.getId().getLabelString()));
+					bestResourceLabels.put(r, ResourceFactory.createPlainLiteral(r.getURI()));
+				else bestResourceLabels.put(r, ResourceFactory.createPlainLiteral(r.getId().getLabelString()));
+			}
+			if (qs.contains("aType")) {
+				Resource tr = qs.get("aType").asResource();
+				Literal tl = bestResourceLabels.get(tr);
+				if (qs.contains("aTypeLabel")) {
+					Literal pl = qs.get("aTypeLabel").asLiteral();
+					if (tl == null || tr.getURI().equals(tl.getString()) || lstring.equals(pl.getLanguage()))
+						bestResourceLabels.put(tr, pl);
+					else if ("".equals(pl.getLanguage()) && !lstring.equals(tl.getLanguage()))
+						bestResourceLabels.put(tr, pl);
+				} else if (tl == null) bestResourceLabels.put(tr, ResourceFactory.createPlainLiteral(tr.getURI()));
+				Set<Resource> rl = types.get(r);
+				if (rl == null) {
+					rl = new HashSet<Resource>();
+					types.put(r, rl);
+				}
+				rl.add(tr);
 			}
 		}
 		Iterator<Resource> ti = rets.iterator();
@@ -307,7 +332,18 @@ public class RemoteSPARQLModelReader implements IModelReader {
 		for (int i = from; i < to; i++) {
 			if (!ti.hasNext()) return new Results(ret, i);
 			Resource r = ti.next();
-			ret.add(new Result(r.getURI(), rl.get(r).getString()));
+			StringBuilder label = new StringBuilder(bestResourceLabels.get(r).getString());
+			Set<Resource> typ = types.get(r);
+			if (typ != null) {
+				label.append(" (");
+				for (Resource tr : typ) {
+					label.append(bestResourceLabels.get(tr).getString());
+					label.append(", ");
+				}
+				label.setLength(label.length() - 2);
+				label.append(')');
+			}
+			ret.add(new Result(r.getURI(), label.toString()));
 		}
 		return new Results(ret, rets.size());
 	}
@@ -588,14 +624,15 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					Map<Resource, Resource> otype = new HashMap<Resource, Resource>();
 					Map<RDFNode, Literal> bestotl = new HashMap<RDFNode, Literal>();
 					Map<Resource, Boolean> pIsLiteral = new HashMap<Resource, Boolean>();
-					Set<Pair<Resource, Resource>> po = new HashSet<Pair<Resource, Resource>>();
+					LinkedHashSet<Pair<Resource, Resource>> po = new LinkedHashSet<Pair<Resource, Resource>>();
 					while (rs.hasNext()) {
 						QuerySolution qs = rs.next();
 						Resource objectNode = qs.get("object").asResource();
 						Resource property = qs.get("propertyURI").asResource();
-						po.add(new Pair<Resource, Resource>(property, objectNode));
 						maybeUpdate(qs, "propertyLabel", property, bestpl, lstring, true);
-						maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true);
+						Pair<Resource, Resource> tmp = new Pair<Resource, Resource>(property, objectNode);
+						if (maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true)) po.remove(tmp);
+						po.add(tmp);
 						pIsLiteral.put(property, objectNode.isLiteral());
 						if (qs.contains("objectType")) {
 							otype.put(objectNode, qs.get("objectType").asResource());
@@ -613,11 +650,6 @@ public class RemoteSPARQLModelReader implements IModelReader {
 					}
 				}
 				return inverseProperties;
-			}
-
-			@Override
-			public Iterator<ISahaProperty> getSortedInverseProperties() {
-				return new fi.seco.semweb.util.BinaryHeap<ISahaProperty>(getInverseProperties(), propertyComparator).iterator();
 			}
 
 			@Override
@@ -717,20 +749,20 @@ public class RemoteSPARQLModelReader implements IModelReader {
 	private ResultSet execSelect(Query query) {
 		QueryEngineHTTP qe = QueryExecutionFactory.createServiceRequest(sparqlConfigService.getSparqlURL(), query);
 		qe.setSelectContentType(WebContent.contentTypeTextTSV);
-		if (sparqlConfigService.getGraphURI() != null) qe.addDefaultGraph(sparqlConfigService.getGraphURI());
+		if (sparqlConfigService.getQueryGraphURI() != null) qe.addDefaultGraph(sparqlConfigService.getQueryGraphURI());
 		return qe.execSelect();
 	}
 
 	private Model execConstruct(Query query) {
 		QueryEngineHTTP qe = QueryExecutionFactory.createServiceRequest(sparqlConfigService.getSparqlURL(), query);
 		qe.setModelContentType("text/turtle");
-		if (sparqlConfigService.getGraphURI() != null) qe.addDefaultGraph(sparqlConfigService.getGraphURI());
+		if (sparqlConfigService.getQueryGraphURI() != null) qe.addDefaultGraph(sparqlConfigService.getQueryGraphURI());
 		return qe.execConstruct();
 	}
 
 	private Model execDescribe(Query query) {
-		if (sparqlConfigService.getGraphURI() != null)
-			return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query, sparqlConfigService.getGraphURI()).execDescribe();
+		if (sparqlConfigService.getQueryGraphURI() != null)
+			return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query, sparqlConfigService.getQueryGraphURI()).execDescribe();
 		return QueryExecutionFactory.sparqlService(sparqlConfigService.getSparqlURL(), query).execDescribe();
 	}
 

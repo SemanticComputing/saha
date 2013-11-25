@@ -9,16 +9,21 @@ package fi.seco.saha3.model.configuration;
  */
 public interface ISPARQLConfigService {
 
-	public void setConfiguration(String sparqlURL, String sparulURL, String graphURI, String labelURI,
-			String wholeModelQuery, String topStringMatchesQuery, String inlineStringMatchesQuery,
-			String instanceQuery, String labelQuery, String typesQuery, String propertiesQuery,
-			String inversePropertiesQuery, String editorPropertiesQuery, String propertyTreeQuery, String classTreeQuery);
+	public void setConfiguration(String sparqlURL, String sparulURL, String queryGraphURI, String updateGraphURI,
+			String referenceGraphURI, String labelURI, String wholeModelQuery, String topStringMatchesQuery,
+			String inlineStringMatchesQuery, String instanceQuery, String labelQuery, String typesQuery,
+			String propertiesQuery, String inversePropertiesQuery, String editorPropertiesQuery,
+			String propertyTreeQuery, String classTreeQuery);
 
 	public String getSparqlURL();
 
 	public String getSparulURL();
 
-	public String getGraphURI();
+	public String getQueryGraphURI();
+
+	public String getUpdateGraphURI();
+
+	public String getReferenceGraphURI();
 
 	public String getWholeModelQuery();
 

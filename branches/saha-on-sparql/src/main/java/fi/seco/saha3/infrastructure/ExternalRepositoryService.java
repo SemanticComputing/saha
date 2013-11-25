@@ -20,6 +20,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.ws.BindingProvider;
 
+import org.geonames.Style;
 import org.geonames.Toponym;
 import org.geonames.ToponymSearchCriteria;
 import org.geonames.ToponymSearchResult;
@@ -290,12 +291,13 @@ public class ExternalRepositoryService {
 			final List<IResult> ret = new ArrayList<IResult>();
 			WebService.setUserName("jiemakel");
 			ToponymSearchCriteria tsc = new ToponymSearchCriteria();
+			tsc.setStyle(Style.FULL);
 			tsc.setNameStartsWith(queryTerm);
 			ToponymSearchResult tsr;
 			try {
 				tsr = WebService.search(tsc);
 				for (Toponym t : tsr.getToponyms())
-					ret.add(new Result(toUri(t.getGeoNameId()), t.getName() + ", " + t.getCountryName()));
+					ret.add(new Result(toUri(t.getGeoNameId()), t.getName() + ", " + t.getAdminName2() + ", " + t.getAdminName1() + ", " + t.getCountryName() + " (" + t.getFeatureClassName() + "/" + t.getFeatureCodeName() + ")"));
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -317,8 +319,8 @@ public class ExternalRepositoryService {
 				Toponym t = WebService.get(toId(uri), lstring, "medium");
 				Set<ISahaProperty> ret = new HashSet<ISahaProperty>();
 				ret.add(new ExternalProperty(RDFS.label.getURI(), lstring.equals("fi") ? "nimi" : lstring.equals("sv") ? "namn" : "name", new UriLabel("", lstring, t.getName()), "", ""));
-				ret.add(new ExternalProperty(SAHA3.WGS84_LAT, "lat", new UriLabel("", lstring, "" + t.getLatitude()), "", ""));
-				ret.add(new ExternalProperty(SAHA3.WGS84_LONG, "lon", new UriLabel("", lstring, "" + t.getLongitude()), "", ""));
+				ret.add(new ExternalProperty(SAHA3.WGS84_LAT, "lat", new UriLabel("", "", "" + t.getLatitude()), "", ""));
+				ret.add(new ExternalProperty(SAHA3.WGS84_LONG, "lon", new UriLabel("", "", "" + t.getLongitude()), "", ""));
 				return ret;
 			} catch (NumberFormatException e) {
 				throw new RuntimeException(e);

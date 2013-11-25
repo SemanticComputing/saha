@@ -11,18 +11,16 @@
 	</script>
 
 
-	<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dojo/dojo.xd.js"></script>
-
 	<script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
 	<script type='text/javascript' src='../dwr/engine.js'></script> 
 	<script type='text/javascript' src='../app/scripts/dwr_resources/util.js'></script> 
+	<script type='text/javascript' src='../app/scripts/dojo.js'></script>
 
 
-	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dojo/resources/dojo.css" />
-	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dijit/themes/dijit.css" />
-	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/dojo/1.5.0/dijit/themes/tundra/tundra.css" />
+	<link rel="stylesheet" type="text/css" href="../app/css/dojo.css" />
+	<link rel="stylesheet" type="text/css" href="../app/css/tundra.css" />
 	
 	<script type='text/javascript'>
 	    dojo.require("dojo.parser");
@@ -49,6 +47,7 @@
 		var timer;
 		var chatIsRunning = false;
 		var chatTimeout = 12000;
+		var idleChatTimeout = 60000;
 		
 		function initChat() {
 			var cookies = document.cookie.split(";");
@@ -85,7 +84,10 @@
 							"</div>";
 					}
 					dwr.util.setValue("chatlog",chatlog,{escapeHtml:false});
-					if (chatIsRunning) timer = setTimeout("getMessages()",chatTimeout);
+					if (chatIsRunning) {
+					  if (messages.length==0) timer = setTimeout("getMessages()",idleChatTimeout);					
+					  else timer = setTimeout("getMessages()",chatTimeout);
+					}
 				},
 				errorHandler:function(errorString, exception) { }	
 			});
@@ -99,7 +101,7 @@
 			});
 		}
 		function showExternalResourceTooltip(domNode,ontology,uri) {
-			ResourceEditService.getExternalPropertyTable(ontology,uri, {
+			ResourceEditService.getExternalPropertyTable('${model}',ontology,uri, {
 				callback:function(dataFromServer) {
 					if (typeof(dijit)!="undefined" && typeof(dijit.showTooltip)!='undefined') dijit.showTooltip(dataFromServer,domNode);
 				},
@@ -282,7 +284,6 @@
 				onChange:openInstance,
 				searchDelay:1000,
 				labelType:"html",
-				labelFunc:function() {return "loading...";},
 				hasDownArrow:false
 			},dojo.byId("uber_search"));});
 		</script>
@@ -305,7 +306,7 @@
 					[#list entry.value as property]
 						[#if property.literal]
 							[#assign label = property.valueLabel]
-							[#if label?ends_with(".jpg") || label?ends_with(".jpeg") || label?ends_with(".png") || label?ends_with(".gif")]
+							[#if property.config.pictureProperty || label?ends_with(".jpg") || label?ends_with(".jpeg") || label?ends_with(".png") || label?ends_with(".gif")]
 								<div style="margin:5px;">
 								[#if label?starts_with("http://") && !label?starts_with("http://demo.seco.tkk.fi/")]
 									<a href="${label}" style="color:darkblue">
@@ -316,11 +317,6 @@
 									<img src="../service/pics/?name=${label}&model=${model}" 
 										style="max-width:60px;max-height:60px;margin-right:5px;border:thin solid black;"/>${label}</a>
 								[/#if]
-								</div>
-							[#elseif property.config.pictureProperty]
-								<div style="margin:5px;">
-									<a href="../service/pics/?name=${label}&model=${model}" style="color:darkblue">
-									${label}</a>
 								</div>
 							[#elseif label?starts_with("http://")]
 								[#if property.config.localized && property.valueLang?length > 0]

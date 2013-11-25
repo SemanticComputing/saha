@@ -40,7 +40,7 @@
 				References (${refCount})
 			</div>
 			<div id="references">
-			[#list instance.sortedInverseProperties as p]
+			[#list instance.inverseProperties as p]
 				<div>
 					<a href="resource.shtml?uri=${p.valueUri?url}&model=${model?url}" 
 					 onMouseOver="showResourceTooltip(this,'${p.valueUri}')" 

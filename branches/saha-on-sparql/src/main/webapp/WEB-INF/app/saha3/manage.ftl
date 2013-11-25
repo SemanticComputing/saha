@@ -31,8 +31,14 @@
 				SPARUL endpoint URL:<br />
 				<input type="text" size="80" name="sparulURL" value="${sparqlConfiguration.sparulURL!''}" /><br />
 
-				Graph URI:<br />
-				<input type="text" size="80" name="graphURI" value="${sparqlConfiguration.graphURI!''}" /><br />
+				Query Graph URI:<br />
+				<input type="text" size="80" name="queryGraphURI" value="${sparqlConfiguration.queryGraphURI!''}" /><br />
+
+				Update Graph URI:<br />
+				<input type="text" size="80" name="updateGraphURI" value="${sparqlConfiguration.updateGraphURI!''}" /><br />
+
+				Reference Graph URI:<br />
+				<input type="text" size="80" name="referenceGraphURI" value="${sparqlConfiguration.referenceGraphURI!''}" /><br />
 
 				Label property URI:<br />
 				<input type="text" size="80" name="labelURI" value="${sparqlConfiguration.labelURI!'http://www.w3.org/2000/01/rdf-schema#label'}" /><br />
@@ -44,6 +50,8 @@ CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }
 				
 				SPARQL query for getting string matches for the top query bar:<br />
 				<textarea name="topStringMatchesQuery" rows="18" cols="90">[#if sparqlConfiguration.topStringMatchesQuery??]${sparqlConfiguration.topStringMatchesQuery}[#else]
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX text: <http://jena.apache.org/text#>
 CONSTRUCT {
   ?item saha:itemLabel ?itemLabel .
@@ -74,6 +82,8 @@ SELECT ?item ?itemLabel ?itemType ?itemTypeLabel ?property ?propertyLabel ?objec
 
 				SPARQL query for getting string matches for the inline editor:<br />
 				<textarea name="inlineStringMatchesQuery" rows="18" cols="90">[#if sparqlConfiguration.inlineStringMatchesQuery??]${sparqlConfiguration.inlineStringMatchesQuery}[#else]
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX text: <http://jena.apache.org/text#>
 SELECT ?item ?itemLabel ?itemType ?itemTypeLabel ?property ?propertyLabel ?object WHERE {
   {
@@ -87,24 +97,28 @@ SELECT ?item ?itemLabel ?itemType ?itemTypeLabel ?property ?propertyLabel ?objec
     LIMIT ?limit
   }
   OPTIONAL {
-    ?item rdfs:label|skos:prefLabel ?itemLabel .
+    ?item skos:prefLabel ?itemLabel .
   }
   OPTIONAL {
     ?item a ?itemType .
-    ?itemType rdfs:label|skos:prefLabel ?itemTypeLabel .
+    ?itemType skos:prefLabel ?itemTypeLabel .
   }
   OPTIONAL {
-    ?property rdfs:label|skos:prefLabel ?propertyLabel .
+    ?property skos:prefLabel ?propertyLabel .
   }
 }				
 [/#if]</textarea><br />
 				
 				SPARQL query for getting instances matching a specified type:<br />
 				<textarea name="instanceQuery" rows="8" cols="90">[#if sparqlConfiguration.instanceQuery??]${sparqlConfiguration.instanceQuery}[#else]
-SELECT ?item ?label WHERE {
+SELECT ?item ?label ?aType ?aTypeLabel WHERE {
   ?item rdf:type ?type .
+  ?item rdf:type ?aType .
   OPTIONAL {
     ?item rdfs:label|skos:prefLabel ?label
+  }
+  OPTIONAL {
+    ?aType rdfs:label|skos:prefLabel ?aTypeLabel
   }
 }
 ORDER BY ?label
