@@ -1,6 +1,5 @@
 package fi.seco.saha3.model;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -20,8 +19,6 @@ public interface ISahaResource {
 	public List<ISahaProperty> getProperties();
 
 	public List<ISahaProperty> getInverseProperties();
-
-	public Iterator<ISahaProperty> getSortedInverseProperties();
 
 	public Map<UriLabel, Set<ISahaProperty>> getPropertyMap();
 

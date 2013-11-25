@@ -20,8 +20,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.Controller;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
-import fi.seco.saha3.infrastructure.IExternalRepository;
 import fi.seco.saha3.infrastructure.ExternalRepositoryService;
+import fi.seco.saha3.infrastructure.IExternalRepository;
 import fi.seco.saha3.infrastructure.SahaProjectRegistry;
 import fi.seco.saha3.model.IModelReader;
 import fi.seco.saha3.model.IResults;
@@ -41,7 +41,7 @@ public class ResourceSearchService implements Controller {
 
 	private SahaProjectRegistry sahaProjectRegistry;
 	private ExternalRepositoryService onkiWebService;
-	private final static int DEFAULT_MAX_RESULTS = 15;
+	private final static int DEFAULT_MAX_RESULTS = 20;
 
 	@Required
 	public void setSahaProjectRegistry(SahaProjectRegistry sahaProjectRegistry) {
@@ -90,8 +90,11 @@ public class ResourceSearchService implements Controller {
 			}
 
 			Set<String> usedKeys = new HashSet<String>();
-			// local search
-			if (!(propertyConfig != null && propertyConfig.isDenyLocalReferences())) {
+			//no property, global search
+			if (propertyUri == null && range.isEmpty()) {
+				IResults results = project.topSearch(query, locale, maxResults);
+				parseResult(resultItems, results, usedKeys, maxResults);
+			} else if (!(propertyConfig != null && propertyConfig.isDenyLocalReferences())) { // local search
 				IResults results = project.inlineSearch(query, range, locale, maxResults);
 				parseResult(resultItems, results, usedKeys, maxResults);
 			}

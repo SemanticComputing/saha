@@ -39,8 +39,17 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 				Resource r = m.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(ns + "SPARQLConfiguration")).next();
 				sparqlURL = r.getRequiredProperty(ResourceFactory.createProperty(ns + "sparqlURL")).getString();
 				sparulURL = r.getRequiredProperty(ResourceFactory.createProperty(ns + "sparulURL")).getString();
-				if (r.hasProperty(ResourceFactory.createProperty(ns + "graphURI")))
-					graphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "graphURI")).getString();
+				if (r.hasProperty(ResourceFactory.createProperty(ns + "querygraphURI"))) { //LEGACY SUPPORT
+					queryGraphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "graphURI")).getString();
+					updateGraphURI = queryGraphURI;
+					referenceGraphURI = queryGraphURI;
+				}
+				if (r.hasProperty(ResourceFactory.createProperty(ns + "queryGraphURI")))
+					queryGraphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "queryGraphURI")).getString();
+				if (r.hasProperty(ResourceFactory.createProperty(ns + "updateGraphURI")))
+					updateGraphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "updateGraphURI")).getString();
+				if (r.hasProperty(ResourceFactory.createProperty(ns + "referenceGraphURI")))
+					referenceGraphURI = r.getRequiredProperty(ResourceFactory.createProperty(ns + "referenceGraphURI")).getString();
 				wholeModelQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "wholeModelQuery")).getString();
 				topStringMatchesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "topStringMatchesQuery")).getString();
 				inlineStringMatchesQuery = r.getRequiredProperty(ResourceFactory.createProperty(ns + "inlineStringMatchesQuery")).getString();
@@ -61,7 +70,9 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 	private String labelURI;
 	private String sparqlURL;
 	private String sparulURL;
-	private String graphURI;
+	private String queryGraphURI;
+	private String updateGraphURI;
+	private String referenceGraphURI;
 	private String wholeModelQuery;
 	private String topStringMatchesQuery;
 	private String inlineStringMatchesQuery;
@@ -77,13 +88,16 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 	private static final String ns = "http://www.seco.tkk.fi/onto/sparqlconfiguration/";
 
 	@Override
-	public void setConfiguration(String sparqlURL, String sparulURL, String graphURI, String labelURI,
-			String wholeModelQuery, String topStringMatchesQuery, String inlineStringMatchesQuery,
-			String instanceQuery, String labelQuery, String typesQuery, String propertiesQuery,
-			String inversePropertiesQuery, String editorPropertiesQuery, String propertyTreeQuery, String classTreeQuery) {
+	public void setConfiguration(String sparqlURL, String sparulURL, String queryGraphURI, String updateGraphURI,
+			String referenceGraphURI, String labelURI, String wholeModelQuery, String topStringMatchesQuery,
+			String inlineStringMatchesQuery, String instanceQuery, String labelQuery, String typesQuery,
+			String propertiesQuery, String inversePropertiesQuery, String editorPropertiesQuery,
+			String propertyTreeQuery, String classTreeQuery) {
 		this.sparqlURL = sparqlURL;
 		this.sparulURL = sparulURL;
-		this.graphURI = graphURI;
+		this.queryGraphURI = queryGraphURI;
+		this.updateGraphURI = updateGraphURI;
+		this.referenceGraphURI = referenceGraphURI;
 		this.labelURI = labelURI;
 		this.wholeModelQuery = wholeModelQuery;
 		this.topStringMatchesQuery = topStringMatchesQuery;
@@ -102,7 +116,11 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 		r.addProperty(RDF.type, ResourceFactory.createResource(ns + "SPARQLConfiguration"));
 		r.addProperty(ResourceFactory.createProperty(ns + "sparqlURL"), sparqlURL);
 		r.addProperty(ResourceFactory.createProperty(ns + "sparulURL"), sparulURL);
-		if (graphURI != null) r.addProperty(ResourceFactory.createProperty(ns + "graphURI"), graphURI);
+		if (queryGraphURI != null) r.addProperty(ResourceFactory.createProperty(ns + "queryGraphURI"), queryGraphURI);
+		if (updateGraphURI != null)
+			r.addProperty(ResourceFactory.createProperty(ns + "updateGraphURI"), updateGraphURI);
+		if (referenceGraphURI != null)
+			r.addProperty(ResourceFactory.createProperty(ns + "referenceGraphURI"), referenceGraphURI);
 		r.addProperty(ResourceFactory.createProperty(ns + "wholeModelQuery"), wholeModelQuery);
 		r.addProperty(ResourceFactory.createProperty(ns + "topStringMatchesQuery"), topStringMatchesQuery);
 		r.addProperty(ResourceFactory.createProperty(ns + "inlineStringMatchesQuery"), inlineStringMatchesQuery);
@@ -193,8 +211,18 @@ public class SPARQLConfigService implements ISPARQLConfigService {
 	}
 
 	@Override
-	public String getGraphURI() {
-		return graphURI;
+	public String getQueryGraphURI() {
+		return queryGraphURI;
+	}
+
+	@Override
+	public String getUpdateGraphURI() {
+		return updateGraphURI;
+	}
+
+	@Override
+	public String getReferenceGraphURI() {
+		return referenceGraphURI;
 	}
 
 	@Override

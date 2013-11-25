@@ -6,7 +6,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -356,20 +355,19 @@ public class ResourceEditService {
 		return result.toString();
 	}
 
-	private static Map<UriLabel, Set<ISahaProperty>> getPropertyMap(Collection<ISahaProperty> properties) {
-		Map<UriLabel, Set<ISahaProperty>> map = new TreeMap<UriLabel, Set<ISahaProperty>>();
+	private static void addToPropertyMap(Map<UriLabel, Set<ISahaProperty>> map, Collection<ISahaProperty> properties) {
 		for (ISahaProperty property : properties) {
 			UriLabel p = new UriLabel(property.getUri(), property.getLabel());
 			if (!map.containsKey(p)) map.put(p, new TreeSet<ISahaProperty>());
 			map.get(p).add(property);
 		}
-		return map;
 	}
 
-	public String getExternalPropertyTable(String ontology, String resourceUri, HttpServletRequest request) {
+	public String getExternalPropertyTable(String model, String ontology, String resourceUri, HttpServletRequest request) {
 
 		Locale locale = RequestContextUtils.getLocale(request);
-
+		IModelReader project = sahaProjectRegistry.getModelReader(model);
+		Map<UriLabel, Set<ISahaProperty>> omap = project.getResource(resourceUri, locale).getPropertyMap();
 		Map<String, Object> modelMap = new HashMap<String, Object>();
 		modelMap.put("model", ontology);
 		modelMap.put("resourceUri", resourceUri);
@@ -378,7 +376,8 @@ public class ResourceEditService {
 		} catch (TemplateModelException e) {
 			e.printStackTrace();
 		}
-		modelMap.put("propertyMapEntrySet", getPropertyMap(externalRepositoryService.getExternalRepository(ontology).getProperties(resourceUri, locale)).entrySet());
+		addToPropertyMap(omap, externalRepositoryService.getExternalRepository(ontology).getProperties(resourceUri, locale));
+		modelMap.put("propertyMapEntrySet", omap.entrySet());
 
 		return FreeMarkerUtil.process(configuration, PROPERTY_TABLE_TEMPLATE, modelMap);
 	}
