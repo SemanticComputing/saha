@@ -26,6 +26,7 @@ public class RequestLogController extends ASahaController {
 			IModelEditor editor, IConfigService config, Locale locale, ModelAndView mav) throws Exception {
 		String model = parseModelName(request);
 		IRequestLogger logger = getSahaProjectRegistry().getRequestLogger(model);
+		response.setContentType("text/html;charset=UTF-8");
 		response.getWriter().write(logger.getLastLog(5000).replaceAll("\\|MODEL\\|", model));
 		return null;
 	}
