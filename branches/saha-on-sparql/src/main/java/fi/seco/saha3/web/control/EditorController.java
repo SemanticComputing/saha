@@ -38,7 +38,7 @@ public class EditorController extends ASahaController {
 			String url = request.getParameter("image_url");
 			editor.addLiteralProperty(target, property, url);
 		}
-		String sessionId = request.getSession().getId();
+		String ip = request.getRemoteHost();
 
 		if (uri == null) {
 			response.getWriter().write("URI parameter is not set.");
@@ -50,7 +50,7 @@ public class EditorController extends ASahaController {
 
 		mav.addObject("uri", uri);
 		mav.addObject("instance", reader.getResource(uri, locale));
-		mav.addObject("locked", !lockManager.acquireLock(uri, sessionId));
+		mav.addObject("locked", !lockManager.acquireLock(uri, ip));
 		mav.addObject("literalFormatter", new LiteralFormatter());
 		return mav;
 	}
