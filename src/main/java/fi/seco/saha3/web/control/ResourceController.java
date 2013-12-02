@@ -33,19 +33,18 @@ public class ResourceController extends ASahaController {
 			IModelEditor editor, IConfigService config, Locale locale, ModelAndView mav) throws Exception {
 
 		String uri = request.getParameter("uri");
-		String sessionId = request.getSession().getId();
+		String ip = request.getRemoteHost();
 
 		if (uri == null) {
 			response.getWriter().write("URI parameter is not set.");
 			return null;
 		}
-		if( !request.getHeader("Accept").contains("html") ) 
-		    mav.setViewName( "forward:/project/export.shtml" );
+		if (!request.getHeader("Accept").contains("html")) mav.setViewName("forward:/project/export.shtml");
 
 		mav.addObject("uri", uri);
 		mav.addObject("gmaputil", BeansWrapper.getDefaultInstance().getStaticModels().get("fi.seco.semweb.util.GoogleMapsUtil"));
 		mav.addObject("instance", reader.getResource(uri, locale));
-		mav.addObject("locked", lockManager.isLocked(uri) && !lockManager.releaseLock(uri, sessionId));
+		mav.addObject("locked", lockManager.isLocked(uri) && !lockManager.releaseLock(uri, ip));
 
 		mav.addObject("limitInverseProperties", request.getParameter("all") == null);
 
