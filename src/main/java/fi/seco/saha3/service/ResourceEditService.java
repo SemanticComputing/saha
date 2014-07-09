@@ -72,9 +72,10 @@ public class ResourceEditService {
 			Locale locale = RequestContextUtils.getLocale(request);
 			IRequestLogger logger = sahaProjectRegistry.getRequestLogger(model);
 			IModelEditor project = sahaProjectRegistry.getModelEditor(model);
+			boolean isPictureProperty = sahaProjectRegistry.getConfig(model).getPropertyConfig(p).isPictureProperty();
 			UriLabel object = project.addObjectProperty(s, p, o, locale);
 			logger.setObjectProperty(request.getRemoteHost(), s, p, object);
-			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+			Map<String, Object> modelMap = buildMap(id, model, s, p, isPictureProperty, object);
 			return FreeMarkerUtil.process(configuration, OBJECT_PROPERTY_TEMPLATE, modelMap);
 		} finally {
 			this.sahaProjectRegistry.getLockForProject(model).writeLock().unlock();
@@ -102,10 +103,11 @@ public class ResourceEditService {
 
 			IModelEditor project = sahaProjectRegistry.getModelEditor(model);
 			IRequestLogger logger = sahaProjectRegistry.getRequestLogger(model);
+			boolean isPictureProperty = sahaProjectRegistry.getConfig(model).getPropertyConfig(p).isPictureProperty();
 
 			UriLabel object = (lang == null) ? project.addLiteralProperty(s, p, l) : project.addLiteralProperty(s, p, l, lang);
 			logger.setLiteralProperty(request.getRemoteHost(), s, p, object);
-			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+			Map<String, Object> modelMap = buildMap(id, model, s, p, isPictureProperty, object);
 
 			return FreeMarkerUtil.process(configuration, LITERAL_PROPERTY_TEMPLATE, modelMap);
 		} finally {
@@ -121,10 +123,11 @@ public class ResourceEditService {
 
 			IModelEditor project = sahaProjectRegistry.getModelEditor(model);
 			IRequestLogger logger = sahaProjectRegistry.getRequestLogger(model);
+			boolean isPictureProperty = sahaProjectRegistry.getConfig(model).getPropertyConfig(p).isPictureProperty();
 			UriLabel removed = project.removeLiteralProperty(s, p, oldValueShaHex);
 			UriLabel object = (lang == null) ? project.addLiteralProperty(s, p, l) : project.addLiteralProperty(s, p, l, lang);
 			logger.updateLiteralProperty(request.getRemoteHost(), s, p, removed, object);
-			Map<String, Object> modelMap = buildMap(id, model, s, p, object);
+			Map<String, Object> modelMap = buildMap(id, model, s, p, isPictureProperty, object);
 
 			return FreeMarkerUtil.process(configuration, LITERAL_PROPERTY_TEMPLATE, modelMap);
 		} finally {
@@ -217,7 +220,7 @@ public class ResourceEditService {
 		}
 	}
 
-	private Map<String, Object> buildMap(String id, String model, String resourceUri, String propertyUri,
+	private Map<String, Object> buildMap(String id, String model, String resourceUri, String propertyUri, boolean isPictureProperty,
 			UriLabel object) {
 		Map<String, Object> modelMap = new HashMap<String, Object>();
 		modelMap.put("id", id);
@@ -228,6 +231,7 @@ public class ResourceEditService {
 		modelMap.put("propertyValueLang", object.getLang());
 		modelMap.put("propertyValueLabel", object.getLabel());
 		modelMap.put("propertyValueShaHex", object.getShaHex());
+		modelMap.put("isPictureProperty",isPictureProperty);
 		return modelMap;
 	}
 

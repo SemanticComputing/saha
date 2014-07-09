@@ -3,4 +3,4 @@
 
 [#include "../support/editor_common.ftl"]
 
-[@literalPropertyValue id model resourceUri propertyUri propertyValueLang propertyValueLabel propertyValueShaHex/]
+[@literalPropertyValue id model resourceUri propertyUri propertyValueLang propertyValueLabel propertyValueShaHex isPictureProperty/]

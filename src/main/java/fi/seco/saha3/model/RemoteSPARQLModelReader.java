@@ -689,9 +689,12 @@ public class RemoteSPARQLModelReader implements IModelReader {
 						if (objectNode != null) {
 							maybeUpdate(qs, "objectLabel", objectNode, bestol, lstring, true);
 							pIsLiteral.put(property, objectNode.isLiteral());
-						} else if (qs.contains("propertyType"))
-							pIsLiteral.put(property, qs.get("propertyType").equals(OWL.DatatypeProperty));
-						else if (!pIsLiteral.containsKey(property)) pIsLiteral.put(property, false);
+						} else if (qs.contains("propertyType")) {
+							RDFNode ptype = qs.get("propertyType");
+							if (ptype.equals(OWL.DatatypeProperty) || ptype.equals(OWL.AnnotationProperty))
+								pIsLiteral.put(property, true);
+							else pIsLiteral.put(property, false);
+						} else if (!pIsLiteral.containsKey(property)) pIsLiteral.put(property, false);
 						if (qs.contains("propertyComment"))
 							maybeUpdate(qs, "propertyComment", property, bestpcomment, lstring, false);
 						if (qs.contains("propertyRangeURI") && qs.get("propertyRangeURI").isResource()) {

@@ -80,9 +80,12 @@ public class ResourceSearchService implements Controller {
 		JSONArray resultItems = new JSONArray();
 
 		int maxResults = DEFAULT_MAX_RESULTS;
-
+		
 		if (query.endsWith("*")) {
-			if (query.length() > 1) query = query.substring(0, query.length() - 1);
+			if (query.length() > 1) {
+				query = query.substring(0, query.length() - 1);
+				if (query.length()<3 && !query.endsWith(";")) query+=";";
+			}
 
 			if (query.endsWith("+")) {
 				query = query.substring(0, query.length() - 1);
