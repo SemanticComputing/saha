@@ -145,7 +145,7 @@
 	p:onkiWebService-ref="ExternalRepositoryService" />
 	
 	<bean id="ExternalRepositoryService" class="fi.seco.saha3.infrastructure.ExternalRepositoryService"
-	p:accessKey="51d3cdaa81331c9117d77f443a2c5404" />
+	p:accessKey="cfdd8469cefd13cdd0d932f0a723727a" />
 	
 	<bean id="Saha3LockManager" class="fi.seco.saha3.infrastructure.ResourceLockManager" />
 	

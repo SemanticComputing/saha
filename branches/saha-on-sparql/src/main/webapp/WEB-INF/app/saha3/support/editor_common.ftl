@@ -199,7 +199,8 @@
 				ResourceEditService.removeResource(model,uri, {
 					callback:function(dataFromServer) {
 						document.body.style.cursor="";
-						location.href='index.shtml?model=${model?url}';
+						window.history.back();
+						//location.href='index.shtml?model=${model?url}';
 					}
 				});
 			} else {
@@ -243,7 +244,8 @@
 								propertyUri=property.uri 
 								propertyValueLang=property.valueLang
 								propertyValueLabel=propertyValueLabel 
-								propertyValueShaHex=property.valueShaHex/]
+								propertyValueShaHex=property.valueShaHex
+								isPictureProperty=property.config.pictureProperty /]
 						[#else]
 							[@objectPropertyValue id=editorId+"_"+entry_index+"_"+property_index model=model 
 								resourceUri=instance.uri 
@@ -365,6 +367,7 @@
 				,dijit.byId("combo_${id}").domNode);
 			[#else]
 				[#assign type='']
+				${property.range?first!'foo'}
 				[#if property.range?size==1][#assign type=property.range?first][/#if]
 				dijit.showTooltip('create a new instance ' + 
 					'<a href="javascript:create_${id}(false,\'${type}\')" style="color:green">quick</a> | ' + 
@@ -414,11 +417,11 @@
 	[/#if]
 [/#macro]
 
-[#macro literalPropertyValue id model resourceUri propertyUri propertyValueLang propertyValueLabel propertyValueShaHex]
+[#macro literalPropertyValue id model resourceUri propertyUri propertyValueLang propertyValueLabel propertyValueShaHex isPictureProperty]
 	[#if propertyValueLabel?length > 0]
 		<div id="value_${id}">
 			[#assign label=propertyValueLabel]
-			[#if label?ends_with(".jpg") || label?ends_with(".jpeg") || label?ends_with(".png") || label?ends_with(".gif")]
+			[#if isPictureProperty || label?ends_with(".jpg") || label?ends_with(".jpeg") || label?ends_with(".png") || label?ends_with(".gif")]
 				<div style="margin:5px;">
 				[#if label?starts_with("http://") && !label?starts_with("http://demo.seco.tkk.fi/")]
 					<a href="${label}" style="color:darkblue">

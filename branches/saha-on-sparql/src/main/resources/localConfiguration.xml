@@ -14,11 +14,11 @@
 	<description>Local override definitions</description>
 	
 	<bean id="ProjectBaseDirectory" class="java.lang.String">
-		<constructor-arg value="projects/"/>
+		<constructor-arg value="/srv/saha/projects/"/>
 	</bean>
 	
 	<bean id="BackupDirectory" class="java.lang.String">
-		<constructor-arg value="backups/"/>
+		<constructor-arg value="/srv/saha/backups/"/>
 	</bean>
 
 </beans>
