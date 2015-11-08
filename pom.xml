@@ -76,8 +76,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.directwebremoting</groupId>
-			<artifactId>dwr-core</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
+			<artifactId>dwr</artifactId>
+			<version>3.0.0-RELEASE</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-logging</artifactId>
@@ -89,23 +89,6 @@
 			<groupId>net.sourceforge.collections</groupId>
 			<artifactId>collections-generic</artifactId>
 			<version>4.01</version>
-		</dependency>
-		<dependency>
-			<groupId>org.directwebremoting</groupId>
-			<artifactId>dwr-spring</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
-
-		</dependency>
-		<dependency>
-			<groupId>org.directwebremoting</groupId>
-			<artifactId>dwr-protocol-dwrp</artifactId>
-			<version>3.0.0-rc2-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
