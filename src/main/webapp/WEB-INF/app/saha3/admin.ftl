@@ -3,10 +3,10 @@
 <html>
 <head>
 <title>SAHA3 Admin Screen</title>
-<script type='text/javascript' src='../dwr/interface/SahaProjectRegistry.js'></script>
-<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
 <script type='text/javascript' src='../dwr/engine.js'></script>
 <script type='text/javascript' src='../dwr/util.js'></script>
+<script type='text/javascript' src='../dwr/interface/SahaProjectRegistry.js'></script>
+<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
 <script>
 function close_project(model) {
 	document.body.style.cursor="progress";
