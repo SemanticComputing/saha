@@ -11,10 +11,10 @@
 	</script>
 
 
+	<script type='text/javascript' src='../dwr/engine.js'></script> 
 	<script type='text/javascript' src='../dwr/interface/ResourceEditService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/ResourceConfigService.js'></script>
 	<script type='text/javascript' src='../dwr/interface/SahaChat.js'></script>
-	<script type='text/javascript' src='../dwr/engine.js'></script> 
 	<script type='text/javascript' src='../app/scripts/dwr_resources/util.js'></script> 
 	<script type='text/javascript' src='../app/scripts/dojo.js'></script>
 
