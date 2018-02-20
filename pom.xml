@@ -169,7 +169,7 @@
 		<dependency>
 			<groupId>org.geonames</groupId>
 			<artifactId>geonames-ws-client</artifactId>
-			<version>1.1.10-2</version>
+			<version>1.1.9</version>
 		</dependency>
 		<dependency>
 		  <groupId>xml-apis</groupId>
@@ -230,10 +230,10 @@
 			<layout>default</layout> <snapshots> <enabled>false</enabled> </snapshots>
 			</repository> -->
 		<repository>
-			<id>codehaus</id>
-			<name>Codehaus</name>
+			<id>mvnrepository</id>
+			<name>MVNrepository</name>
 			<layout>default</layout>
-			<url>http://repository.codehaus.org</url>
+			<url>https://mvnrepository.com</url>
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
