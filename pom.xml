@@ -199,6 +199,14 @@
 			</snapshots>
 		</repository>
 		<repository>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<id>central</id>
+			<name>Maven Repository Switchboard</name>
+			<url>http://repo1.maven.org/maven2</url>
+		</repository>
+		<repository>
 			<id>oracleReleases</id>
 			<name>Oracle Released Java Packages</name>
 			<url>http://download.oracle.com/maven</url>
@@ -308,14 +316,6 @@
 			</snapshots>
 			<name>Springframework Maven OSGified Artifacts Repository</name>
 			<url>http://maven.springframework.org/osgi</url>
-		</repository>
-		<repository>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>central</id>
-			<name>Maven Repository Switchboard</name>
-			<url>http://repo1.maven.org/maven2</url>
 		</repository>
 	</repositories>
 
