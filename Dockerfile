@@ -1,4 +1,4 @@
-FROM tomcat:7.0-jdk8-openjdk-slim
+FROM tomcat:9-jdk8-openjdk-slim
 
 ENV PATH_WEBAPPS /usr/local/tomcat/webapps
 
