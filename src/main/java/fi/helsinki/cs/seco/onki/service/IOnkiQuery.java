@@ -18,7 +18,7 @@ import javax.xml.ws.WebServiceFeature;
  * Generated source version: 2.1
  * 
  */
-@WebServiceClient(name = "IOnkiQuery", targetNamespace = "http://service.onki.seco.cs.helsinki.fi", wsdlLocation = "http://www.yso.fi/onkiwebservice/wsdl/?o=koko&k=51d3cdaa81331c9117d77f443a2c5404")
+@WebServiceClient(name = "IOnkiQuery", targetNamespace = "http://service.onki.seco.cs.helsinki.fi", wsdlLocation = "https://onki.fi/api/v1/soap/wsdl/?o=koko")
 public class IOnkiQuery
     extends Service
 {
@@ -31,9 +31,9 @@ public class IOnkiQuery
         try {
             URL baseUrl;
             baseUrl = fi.helsinki.cs.seco.onki.service.IOnkiQuery.class.getResource(".");
-            url = new URL(baseUrl, "http://www.yso.fi/onkiwebservice/wsdl/?o=koko&k=51d3cdaa81331c9117d77f443a2c5404");
+            url = new URL(baseUrl, "https://onki.fi/api/v1/soap/wsdl/?o=koko");
         } catch (MalformedURLException e) {
-            logger.warning("Failed to create URL for the wsdl Location: 'http://www.yso.fi/onkiwebservice/wsdl/?o=koko&k=51d3cdaa81331c9117d77f443a2c5404', retrying as a local file");
+            logger.warning("Failed to create URL for the wsdl Location: 'https://onki.fi/api/v1/soap/wsdl/?o=koko', retrying as a local file");
             logger.warning(e.getMessage());
         }
         IONKIQUERY_WSDL_LOCATION = url;

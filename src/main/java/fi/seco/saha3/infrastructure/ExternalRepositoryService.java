@@ -193,7 +193,7 @@ public class ExternalRepositoryService {
 
 			URL url = null;
 			try {
-				url = ontology.startsWith("http://") ? new URL(ontology) : new URL("http://www.yso.fi/onkiwebservice/wsdl/?o=" + ontology + "&k=" + accessKey);
+				url = ontology.startsWith("http://") || ontology.startsWith("https://") ? new URL(ontology) : new URL("https://onki.fi/api/v1/soap/wsdl/?o=" + ontology + "&k=" + accessKey);
 			} catch (MalformedURLException e) {
 				log.error("", e);
 			}
