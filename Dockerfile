@@ -20,3 +20,5 @@ RUN mkdir "$PATH_WEBAPPS/ssaha/"
 RUN cp -r /tmp/saha/target/smetana/* "$PATH_WEBAPPS/ssaha/"
 # Remove now-unnecessary files
 RUN rm -rf /tmp/saha
+
+ENV JAVA_OPTS -Dhttp.agent=Saha/1.0.0
